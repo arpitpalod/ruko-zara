@@ -1,0 +1,52 @@
+# Builds an installable Android APK in the cloud on every push to main,
+# and publishes it as a download link: github.com/<you>/ruko-zara/releases/latest
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co' }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl' }}
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - run: npm ci
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Publish download link
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Ruko Zara — Android (latest)
+          body: Download app-release.apk on an Android phone, open it, and allow "Install unknown apps" when asked.
+          files: android/app/build/outputs/apk/release/app-release.apk
+          make_latest: true
