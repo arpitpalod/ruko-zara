@@ -1,0 +1,49 @@
+# Publishes the web version of the app to https://arpitpalod.github.io/ruko-zara/ on every push to main.
+name: Web app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: web
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co' }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl' }}
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Serve under /ruko-zara (GitHub Pages project path). Only changes the web build, not the phone apps.
+      - name: Set web base path
+        run: node -e 'const fs=require("fs");const a=JSON.parse(fs.readFileSync("app.json"));a.expo.experiments={...(a.expo.experiments||{}),baseUrl:"/ruko-zara"};fs.writeFileSync("app.json",JSON.stringify(a,null,2))'
+
+      - name: Build web app
+        run: |
+          npx expo export --platform web --output-dir dist
+          cp dist/index.html dist/404.html   # deep links like /request/<id> load the app instead of a 404
+          touch dist/.nojekyll               # keep the _expo folder
+
+      - name: Publish to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
