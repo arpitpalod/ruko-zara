@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { api } from './api';
 import { C } from './theme';
 import type { User } from './types';
@@ -17,15 +17,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
+  const connect = () => {
+    setErr(null);
     api.init().then(setUser).catch((e) => setErr(e?.message ?? String(e)));
-  }, []);
+  };
+
+  useEffect(connect, []);
 
   if (!user)
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg, padding: 24 }}>
         {err ? (
-          <Text style={{ color: C.no, textAlign: 'center' }}>Connect nahi ho paya: {err}</Text>
+          <View style={{ alignItems: 'center', gap: 16 }}>
+            <Text style={{ color: C.no, textAlign: 'center' }}>Connect nahi ho paya: {err}</Text>
+            <Pressable onPress={connect} style={{ backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12 }}>
+              <Text style={{ color: '#fff', fontWeight: '800' }}>Dobara try karo</Text>
+            </Pressable>
+          </View>
         ) : (
           <ActivityIndicator color={C.brand} />
         )}
