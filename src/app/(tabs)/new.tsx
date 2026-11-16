@@ -3,11 +3,13 @@ import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api } from '../../lib/api';
 import { inr } from '../../lib/format';
+import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import { CATEGORIES } from '../../lib/types';
 
 /** Nayi Arzi — the purchase request form. Writing the "why" is half the cure. */
 export default function NewRequest() {
+  const user = useUser();
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState<string>('Gadgets');
@@ -20,7 +22,7 @@ export default function NewRequest() {
   const valid = item.trim().length >= 2 && priceNum > 0 && reason.trim().length >= 10;
 
   const submit = async () => {
-    if (!valid || busy) return;
+    if (!valid || busy || !requireLogin(user)) return;
     setBusy(true);
     setErr(null);
     try {

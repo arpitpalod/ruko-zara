@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { RequestCard } from '../../components/RequestCard';
 import { api } from '../../lib/api';
 import { ago, applyVote } from '../../lib/format';
-import { useUser } from '../../lib/session';
+import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { Comment, FeedItem, Verdict } from '../../lib/types';
 
@@ -40,6 +40,7 @@ export default function RequestDetail() {
   );
 
   const onVote = async (rid: string, v: Verdict) => {
+    if (!requireLogin(user)) return;
     setR((x) => (x ? applyVote(x, v) : x));
     try {
       await api.vote(rid, v);
@@ -51,7 +52,7 @@ export default function RequestDetail() {
 
   const send = async () => {
     const text = body.trim();
-    if (!text) return;
+    if (!text || !requireLogin(user)) return;
     setBody('');
     try {
       await api.comment(id, text);

@@ -4,7 +4,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { api, isDemo } from '../../lib/api';
 import { applyVote } from '../../lib/format';
-import { useUser } from '../../lib/session';
+import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { FeedItem, Verdict } from '../../lib/types';
 
@@ -34,6 +34,7 @@ export default function Feed() {
   );
 
   const onVote = async (id: string, v: Verdict) => {
+    if (!requireLogin(user)) return;
     setItems((xs) => xs.map((x) => (x.id === id ? applyVote(x, v) : x)));
     try {
       await api.vote(id, v);

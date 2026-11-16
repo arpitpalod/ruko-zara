@@ -1,15 +1,27 @@
+import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { api } from './api';
 import { C } from './theme';
 import type { User } from './types';
 
-const Ctx = createContext<User | null>(null);
+const Ctx = createContext<{ user: User; setUser: (u: User) => void } | null>(null);
+
+export function useSession() {
+  const s = useContext(Ctx);
+  if (!s) throw new Error('useSession outside SessionProvider');
+  return s;
+}
 
 export function useUser(): User {
-  const u = useContext(Ctx);
-  if (!u) throw new Error('useUser outside SessionProvider');
-  return u;
+  return useSession().user;
+}
+
+/** Voting, posting and commenting need a verified email. Returns false (and opens login) if missing. */
+export function requireLogin(user: User): boolean {
+  if (user.email) return true;
+  router.push('/login');
+  return false;
 }
 
 /** Signs the user in anonymously on first launch; shows a loader until ready. */
@@ -40,5 +52,5 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       </View>
     );
 
-  return <Ctx.Provider value={user}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, setUser }}>{children}</Ctx.Provider>;
 }

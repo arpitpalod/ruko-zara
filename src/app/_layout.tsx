@@ -17,6 +17,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="request/[id]" options={{ title: 'Arzi' }} />
+        <Stack.Screen name="login" options={{ title: 'Login', presentation: 'modal' }} />
       </Stack>
     </SessionProvider>
   );

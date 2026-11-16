@@ -4,13 +4,14 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { api } from '../../lib/api';
 import { inr } from '../../lib/format';
-import { useUser } from '../../lib/session';
+import { useSession } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { FeedItem, Outcome } from '../../lib/types';
 
 /** Meri Arzi — your requests, outcomes and money saved. */
 export default function Mine() {
-  const user = useUser();
+  const { user, setUser } = useSession();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -43,6 +44,16 @@ export default function Mine() {
     }
   };
 
+  const deleteAccount = async () => {
+    try {
+      setUser(await api.deleteAccount());
+      setConfirmDelete(false);
+      load();
+    } catch (e: any) {
+      setErr(e.message);
+    }
+  };
+
   const saved = items.filter((x) => x.outcome === 'skipped').reduce((a, x) => a + x.price_inr, 0);
   const skipped = items.filter((x) => x.outcome === 'skipped').length;
 
@@ -61,6 +72,34 @@ export default function Mine() {
             {user.handle} · {items.length} arzi · {skipped} baar ruk gaye
           </Text>
           {err ? <Text style={{ color: C.no, marginTop: 6 }}>{err}</Text> : null}
+        </View>
+      }
+      ListFooterComponent={
+        <View style={s.account}>
+          {user.email ? (
+            <Text style={s.accT}>✅ Verified: {user.email}</Text>
+          ) : (
+            <Pressable style={s.loginBtn} onPress={() => router.push('/login')}>
+              <Text style={s.loginT}>Email verify karo (vote aur arzi ke liye)</Text>
+            </Pressable>
+          )}
+          {!confirmDelete ? (
+            <Pressable onPress={() => setConfirmDelete(true)}>
+              <Text style={s.del}>Account delete karo</Text>
+            </Pressable>
+          ) : (
+            <View style={{ gap: 8 }}>
+              <Text style={s.accT}>Pakka? Tumhari saari arzi, votes aur comments hamesha ke liye delete ho jayenge.</Text>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <Pressable onPress={deleteAccount}>
+                  <Text style={[s.del, { fontWeight: '800' }]}>Haan, delete karo</Text>
+                </Pressable>
+                <Pressable onPress={() => setConfirmDelete(false)}>
+                  <Text style={s.accT}>Rehne do</Text>
+                </Pressable>
+              </View>
+            </View>
+          )}
         </View>
       }
       ListEmptyComponent={loading ? undefined : <Text style={s.empty}>Abhi tak koi arzi nahi daali.</Text>}
@@ -97,4 +136,9 @@ const s = StyleSheet.create({
   decideQ: { fontSize: 13, color: C.sub, fontWeight: '600' },
   dBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
   dBtnT: { fontSize: 13, fontWeight: '700' },
+  account: { marginTop: 12, gap: 14, paddingHorizontal: 4, paddingBottom: 24 },
+  accT: { fontSize: 13, color: C.sub },
+  loginBtn: { backgroundColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  loginT: { color: '#fff', fontWeight: '800' },
+  del: { fontSize: 13, color: C.no },
 });

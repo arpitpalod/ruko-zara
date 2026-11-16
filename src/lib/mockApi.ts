@@ -2,7 +2,7 @@ import type { Api, Comment, FeedItem, Verdict } from './types';
 
 /** In-memory backend so the app runs with zero setup (demo / web preview). */
 
-const ME = { id: 'me', handle: 'Kanjoos Kabootar 42' };
+const ME: { id: string; handle: string; email: string | null } = { id: 'me', handle: 'Kanjoos Kabootar 42', email: null };
 const H = 3.6e6;
 const at = (hoursFromNow: number) => new Date(Date.now() + hoursFromNow * H).toISOString();
 
@@ -89,7 +89,7 @@ function simulateCrowd(id: string) {
 }
 
 export const mockApi: Api = {
-  init: () => delay(ME),
+  init: () => delay({ ...ME }),
   feed: () => delay(sorted().filter((r) => visible(r.user_id)).map(view)),
   mine: () => delay(sorted().filter((r) => r.user_id === ME.id).map(view)),
   get(id) {
@@ -124,5 +124,17 @@ export const mockApi: Api = {
   async block(userId) {
     blocked.add(userId);
     await delay(null);
+  },
+  // Demo: any email works, the code is always 123456.
+  sendEmailCode: () => delay('link' as const),
+  async verifyEmailCode(email, code) {
+    if (code !== '123456') throw new Error('Galat code (demo mein 123456 daalo)');
+    ME.email = email;
+    return delay({ ...ME });
+  },
+  async deleteAccount() {
+    for (let i = rows.length - 1; i >= 0; i--) if (rows[i].user_id === ME.id) rows.splice(i, 1);
+    ME.email = null;
+    return delay({ ...ME });
   },
 };

@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
-import type { Api, Comment, FeedItem } from './types';
+import type { Api, Comment, FeedItem, User } from './types';
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
   if (r.error) throw new Error(r.error.message);
@@ -23,17 +23,51 @@ export function createSupabaseApi(url: string, key: string): Api {
 
   let uid = '';
 
+  async function toUser(u: { id: string; email?: string | null }): Promise<User> {
+    uid = u.id;
+    const p = must<{ handle: string }>(await sb.from('profiles').select('handle').eq('id', uid).single());
+    return { id: uid, handle: p.handle, email: u.email || null };
+  }
+
+  async function startSession(): Promise<User> {
+    let session = (await sb.auth.getSession()).data.session;
+    if (!session) {
+      const r = await sb.auth.signInAnonymously();
+      if (r.error) throw new Error(r.error.message);
+      session = r.data.session;
+    }
+    return toUser(session!.user);
+  }
+
   return {
-    async init() {
-      let session = (await sb.auth.getSession()).data.session;
-      if (!session) {
-        const r = await sb.auth.signInAnonymously();
-        if (r.error) throw new Error(r.error.message);
-        session = r.data.session;
+    init: startSession,
+
+    async sendEmailCode(email) {
+      const session = (await sb.auth.getSession()).data.session;
+      if (session?.user?.is_anonymous) {
+        // Attach the email to this anonymous account so its requests and votes are kept.
+        const r = await sb.auth.updateUser({ email });
+        if (!r.error) return 'link';
+        if (r.error.code !== 'email_exists') throw new Error(r.error.message);
       }
-      uid = session!.user.id;
-      const p = must<{ handle: string }>(await sb.from('profiles').select('handle').eq('id', uid).single());
-      return { id: uid, handle: p.handle };
+      // Email already has an account (e.g. new phone): log in to it instead.
+      const r = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+      if (r.error) throw new Error(r.error.message);
+      return 'login';
+    },
+
+    async verifyEmailCode(email, code, mode) {
+      const r = await sb.auth.verifyOtp({ email, token: code, type: mode === 'link' ? 'email_change' : 'email' });
+      if (r.error) throw new Error(r.error.message);
+      const u = r.data.user ?? (await sb.auth.getUser()).data.user;
+      if (!u) throw new Error('Verify nahi ho paya, dobara try karo');
+      return toUser(u);
+    },
+
+    async deleteAccount() {
+      must(await sb.rpc('delete_my_account'));
+      await sb.auth.signOut({ scope: 'local' });
+      return startSession();
     },
 
     async feed() {

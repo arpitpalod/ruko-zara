@@ -4,7 +4,12 @@ export type Outcome = 'bought' | 'skipped';
 export interface User {
   id: string;
   handle: string;
+  /** Verified email; null while the user is still anonymous. */
+  email: string | null;
 }
+
+/** 'link' = add email to the current account (keeps history); 'login' = email already registered, switch to it. */
+export type CodeMode = 'link' | 'login';
 
 /** One purchase request ("arzi") with live vote counts. Mirrors the `request_feed` view. */
 export interface FeedItem {
@@ -54,6 +59,10 @@ export interface Api {
   setOutcome(id: string, o: Outcome): Promise<void>;
   report(type: 'request' | 'comment', id: string, reason?: string): Promise<void>;
   block(userId: string): Promise<void>;
+  sendEmailCode(email: string): Promise<CodeMode>;
+  verifyEmailCode(email: string, code: string, mode: CodeMode): Promise<User>;
+  /** Deletes the account and all its data, then starts a fresh anonymous session. */
+  deleteAccount(): Promise<User>;
 }
 
 export const CATEGORIES = ['Gadgets', 'Fashion', 'Khana', 'Beauty', 'Ghar', 'Travel', 'Fun', 'Other'] as const;
