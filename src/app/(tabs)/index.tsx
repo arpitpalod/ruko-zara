@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { api, isDemo } from '../../lib/api';
@@ -25,6 +25,8 @@ export default function Feed() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  // Which arzi were already voted on when the list loaded — a fresh vote doesn't jump the card away.
+  const [votedAtLoad, setVotedAtLoad] = useState<Set<string>>(new Set());
 
   const load = useCallback(
     async (which: Tab = tab) => {
@@ -32,8 +34,9 @@ export default function Feed() {
       try {
         setErr(null);
         const rows = await api.feed(which);
-        // Vote tab hides your own requests and ones you've already voted on (until the next refresh).
-        setItems(which === 'open' ? rows.filter((r) => r.user_id !== user.id && !r.my_vote) : rows);
+        // Vote tab: not-yet-voted first, then the ones you voted on (your own arzi live in Meri Arzi).
+        setItems(which === 'open' ? rows.filter((r) => r.user_id !== user.id) : rows);
+        setVotedAtLoad(new Set(rows.filter((r) => r.my_vote).map((r) => r.id)));
       } catch (e: any) {
         setErr(friendly(e, t));
       } finally {
@@ -65,11 +68,22 @@ export default function Feed() {
     }
   };
 
+  const todo = tab === 'open' ? items.filter((x) => !votedAtLoad.has(x.id)) : items;
+  const done = tab === 'open' ? items.filter((x) => votedAtLoad.has(x.id)) : [];
+  const sections =
+    tab === 'open'
+      ? [
+          { key: 'todo', data: todo },
+          { key: 'done', data: done },
+        ]
+      : [{ key: 'closed', data: items }];
+
   return (
-    <FlatList
-      data={items}
+    <SectionList
+      sections={sections}
       keyExtractor={(x) => x.id}
       contentContainerStyle={s.list}
+      stickySectionHeadersEnabled={false}
       refreshing={loading}
       onRefresh={() => load()}
       ListHeaderComponent={
@@ -89,18 +103,26 @@ export default function Feed() {
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }
-      ListEmptyComponent={
-        loading ? undefined : <Text style={s.empty}>{tab === 'open' ? t('feed.emptyVote') : t('feed.emptyResults')}</Text>
-      }
+      renderSectionHeader={({ section }) => {
+        if (loading && items.length === 0) return null;
+        if (section.key === 'todo' && section.data.length === 0) return <Text style={s.empty}>{t('feed.emptyVote')}</Text>;
+        if (section.key === 'closed' && section.data.length === 0) return <Text style={s.empty}>{t('feed.emptyResults')}</Text>;
+        if (section.key === 'done' && section.data.length > 0)
+          return <Text style={s.sectionH}>{t('feed.votedHeader', { n: section.data.length })}</Text>;
+        return null;
+      }}
       renderItem={({ item }) => (
-        <RequestCard r={item} meId={user.id} onVote={onVote} onPress={() => router.push(`/request/${item.id}`)} />
+        <View style={{ marginBottom: 12 }}>
+          <RequestCard r={item} meId={user.id} onVote={onVote} onPress={() => router.push(`/request/${item.id}`)} />
+        </View>
       )}
     />
   );
 }
 
 const s = StyleSheet.create({
-  list: { padding: 16, gap: 12 },
+  list: { padding: 16 },
+  sectionH: { fontSize: 14, fontWeight: '800', color: C.sub, marginTop: 8, marginBottom: 10 },
   tag: { fontSize: 15, color: C.sub },
   seg: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: C.line, padding: 4, gap: 4 },
   segBtn: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
@@ -108,5 +130,5 @@ const s = StyleSheet.create({
   segT: { fontSize: 14, fontWeight: '800', color: C.ink },
   demo: { fontSize: 12, color: C.brand, backgroundColor: C.brandSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
   err: { color: C.no },
-  empty: { textAlign: 'center', color: C.sub, marginTop: 40, lineHeight: 22 },
+  empty: { textAlign: 'center', color: C.sub, marginTop: 24, marginBottom: 24, lineHeight: 22 },
 });

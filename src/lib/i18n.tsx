@@ -135,6 +135,7 @@ const en = {
 
   'feed.tabVote': 'Vote',
   'feed.tabResults': 'Results',
+  'feed.votedHeader': 'You voted ({n}) · still open',
   'feed.emptyVote': "You've voted on everything 🎉\nPull down to refresh, or post your own request.",
   'feed.emptyResults': 'No results yet. Results show up when voting closes.',
 
@@ -270,6 +271,7 @@ const hi: Dict = {
 
   'feed.tabVote': 'वोट करें',
   'feed.tabResults': 'फ़ैसले',
+  'feed.votedHeader': 'आपने वोट किया ({n}) · अभी खुली हैं',
   'feed.emptyVote': 'आपने सब पर वोट कर दिया 🎉\nरिफ़्रेश करने के लिए नीचे खींचें, या अपनी अर्ज़ी डालें।',
   'feed.emptyResults': 'अभी कोई फ़ैसला नहीं। वोटिंग बंद होने पर फ़ैसला यहाँ दिखेगा।',
 
@@ -402,6 +404,7 @@ const hinglish: Dict = {
 
   'feed.tabVote': 'Vote karo',
   'feed.tabResults': 'Faisle',
+  'feed.votedHeader': 'Tumne vote kiya ({n}) · abhi khuli hain',
   'feed.emptyVote': 'Sab pe vote ho gaya 🎉\nNeeche kheench ke refresh karo, ya apni arzi daalo.',
   'feed.emptyResults': 'Abhi koi faisla nahi. Voting band hote hi faisla yahan dikhega.',
 
