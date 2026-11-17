@@ -23,6 +23,7 @@ export function timeLeft(iso: string, t: T): string | null {
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return null;
   const h = Math.floor(ms / 3.6e6);
+  if (h >= 48) return t('time.leftD', { n: Math.floor(h / 24) });
   return h >= 1 ? t('time.leftH', { n: h }) : t('time.leftM', { n: Math.max(1, Math.floor(ms / 6e4)) });
 }
 

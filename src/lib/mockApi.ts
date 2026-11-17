@@ -104,7 +104,8 @@ export const mockApi: Api = {
   comments: (id) => delay(comments.filter((c) => c.request_id === id && visible(c.user_id))),
   async create(r) {
     const id = `r${++seq}`;
-    rows.push({ ...r, id, user_id: ME.id, closes_at: at(24), outcome: null, created_at: new Date().toISOString() });
+    const { duration_hours, ...fields } = r;
+    rows.push({ ...fields, id, user_id: ME.id, closes_at: at(Math.min(duration_hours, 168)), outcome: null, created_at: new Date().toISOString() });
     votes.set(id, new Map());
     simulateCrowd(id);
     return delay(id);

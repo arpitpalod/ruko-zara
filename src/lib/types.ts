@@ -48,7 +48,12 @@ export interface NewRequest {
   reason: string;
   alternative: string | null;
   link: string | null;
+  /** How long voting stays open: 1 hour to 7 days (168 h). Fixed once posted. */
+  duration_hours: number;
 }
+
+/** Choices shown on the posting form. */
+export const DURATIONS = [6, 12, 24, 48, 72, 120, 168] as const;
 
 export type FeedKind = 'open' | 'closed';
 

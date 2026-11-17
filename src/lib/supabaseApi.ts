@@ -102,8 +102,10 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async create(r) {
+      const { duration_hours, ...fields } = r;
+      const closes_at = new Date(Date.now() + duration_hours * 3.6e6).toISOString(); // server caps at 7 days
       const d = must<{ id: string }>(
-        await sb.from('requests').insert({ ...r, user_id: uid }).select('id').single(),
+        await sb.from('requests').insert({ ...fields, closes_at, user_id: uid }).select('id').single(),
       );
       return d.id;
     },

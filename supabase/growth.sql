@@ -79,3 +79,20 @@ where not r.hidden or r.user_id = auth.uid();
 -- Verdict emails: Edge Function supabase/functions/verdict-emails, called every 15 minutes.
 -- (Applied as migration schedule_verdict_emails; vault holds project_url and anon_jwt.)
 -- select cron.schedule('verdict-emails-every-15-min', '*/15 * * * *', $$ select net.http_post(url, headers, body, timeout_milliseconds := 60000) $$);
+
+-- Voting duration chosen by the poster: 1 hour to 7 days, fixed at posting (applied as migration voting_duration_up_to_7_days).
+create or replace function public.set_request_times()
+returns trigger language plpgsql set search_path = public as $$
+begin
+  new.created_at := now();
+  if new.closes_at is null or new.closes_at < now() + interval '1 hour' then
+    new.closes_at := greatest(coalesce(new.closes_at, now() + interval '24 hours'), now() + interval '1 hour');
+  end if;
+  if new.closes_at > now() + interval '7 days' then
+    new.closes_at := now() + interval '7 days';
+  end if;
+  return new;
+end $$;
+drop trigger if exists requests_times on public.requests;
+create trigger requests_times before insert on public.requests for each row execute function public.set_request_times();
+revoke execute on function public.set_request_times() from public, anon, authenticated;

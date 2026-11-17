@@ -7,7 +7,7 @@ import { catLabel, domainOf, extractLink, inr } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
-import { CATEGORIES } from '../../lib/types';
+import { CATEGORIES, DURATIONS } from '../../lib/types';
 
 /** Nayi Arzi — the purchase request form. Writing the "why" is half the cure. */
 export default function NewRequest() {
@@ -19,6 +19,7 @@ export default function NewRequest() {
   const [reason, setReason] = useState('');
   const [alternative, setAlternative] = useState('');
   const [linkText, setLinkText] = useState('');
+  const [hours, setHours] = useState<number>(24);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -39,8 +40,9 @@ export default function NewRequest() {
         reason: reason.trim(),
         alternative: alternative.trim() || null,
         link,
+        duration_hours: hours,
       });
-      setItem(''); setPrice(''); setReason(''); setAlternative(''); setLinkText('');
+      setItem(''); setPrice(''); setReason(''); setAlternative(''); setLinkText(''); setHours(24);
       router.push(`/request/${id}`);
     } catch (e: any) {
       setErr(friendly(e, t));
@@ -80,6 +82,19 @@ export default function NewRequest() {
 
         <Field label={t('new.alt')}>
           <TextInput style={s.input} value={alternative} onChangeText={setAlternative} placeholder={t('new.altPh')} placeholderTextColor={C.sub} maxLength={200} />
+        </Field>
+
+        <Field label={t('new.duration')}>
+          <View style={s.chips}>
+            {DURATIONS.map((h) => (
+              <Pressable key={h} onPress={() => setHours(h)} style={[s.chip, hours === h && s.chipOn]}>
+                <Text style={[s.chipT, hours === h && { color: '#fff' }]}>
+                  {h < 24 ? t('dur.hours', { n: h }) : h === 24 ? t('dur.day1') : t('dur.days', { n: h / 24 })}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={s.hint}>{t('new.durationNote')}</Text>
         </Field>
 
         <Field label={t('new.link')}>
