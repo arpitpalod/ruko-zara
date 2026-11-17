@@ -13,8 +13,13 @@ interface Props {
   full?: boolean;
 }
 
-export function RequestCard({ r, meId, onVote, onPress, full }: Props) {
+export function RequestCard({ r: real, meId, onVote, onPress, full }: Props) {
   const { t } = useT();
+  // Example arzi carry demo vote counts; they're added for display and always tagged "demo".
+  const demo = (real.demo_approve ?? 0) + (real.demo_reject ?? 0) > 0;
+  const r = demo
+    ? { ...real, approve_count: real.approve_count + (real.demo_approve ?? 0), reject_count: real.reject_count + (real.demo_reject ?? 0) }
+    : real;
   const left = timeLeft(r.closes_at, t);
   const mine = r.user_id === meId;
   const total = r.approve_count + r.reject_count;
@@ -61,7 +66,9 @@ export function RequestCard({ r, meId, onVote, onPress, full }: Props) {
         )}
       </View>
       <View style={s.row}>
-        <Text style={[s.count, { color: C.yes }]}>👍 {r.approve_count} · {total ? yesPct : 0}%</Text>
+        <Text style={[s.count, { color: C.yes }]}>
+          👍 {r.approve_count} · {total ? yesPct : 0}%{demo ? <Text style={s.demoTag}> · {t('card.demo')}</Text> : null}
+        </Text>
         <Text style={s.meta}>{left ? `⏳ ${left}` : verdictText(r, t)}</Text>
         <Text style={[s.count, { color: C.no }]}>{r.reject_count} 👎</Text>
       </View>
@@ -110,6 +117,7 @@ const s = StyleSheet.create({
   linkT: { fontSize: 13, fontWeight: '700', color: C.brand },
   bar: { flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 14, marginBottom: 6 },
   count: { fontSize: 13, fontWeight: '700' },
+  demoTag: { fontSize: 11, fontWeight: '400', color: C.sub },
   badge: { marginTop: 10, alignSelf: 'flex-start', fontSize: 13, fontWeight: '600', color: C.ink, backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
   btns: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: { flex: 1, borderWidth: 1.5, borderRadius: 12, paddingVertical: 10, alignItems: 'center' },

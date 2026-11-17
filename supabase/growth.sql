@@ -96,3 +96,8 @@ end $$;
 drop trigger if exists requests_times on public.requests;
 create trigger requests_times before insert on public.requests for each row execute function public.set_request_times();
 revoke execute on function public.set_request_times() from public, anon, authenticated;
+
+-- Demo vote counts for the labelled example arzi (applied as migration demo_vote_counts).
+-- Stored as plain counts on requests (no fake accounts), exposed in request_feed, shown in the app with a "demo" tag.
+alter table public.requests add column if not exists demo_approve int not null default 0 check (demo_approve >= 0);
+alter table public.requests add column if not exists demo_reject int not null default 0 check (demo_reject >= 0);

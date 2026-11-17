@@ -30,6 +30,9 @@ export interface FeedItem {
   my_vote: Verdict | null;
   /** Optional shop link (allowed shopping sites only). */
   link: string | null;
+  /** Demo vote counts (example arzi only) — always shown with a "demo" tag. */
+  demo_approve?: number;
+  demo_reject?: number;
 }
 
 export interface Comment {

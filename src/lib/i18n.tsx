@@ -38,6 +38,7 @@ const en = {
   'card.skipped': "🎉 Didn't buy — saved {amt}",
   'card.bought': '🛍️ Bought it',
   'card.comments': '💬 {n} opinions',
+  'card.demo': 'demo',
 
   'time.now': 'now',
   'time.m': '{n}m',
@@ -170,6 +171,7 @@ const hi: Dict = {
   'card.skipped': '🎉 नहीं ख़रीदा — {amt} बचे',
   'card.bought': '🛍️ ख़रीद लिया',
   'card.comments': '💬 {n} राय',
+  'card.demo': 'डेमो',
 
   'time.now': 'अभी',
   'time.m': '{n} मि.',
@@ -299,6 +301,7 @@ const hinglish: Dict = {
   'card.skipped': '🎉 Nahi kharida — {amt} bache',
   'card.bought': '🛍️ Kharid liya',
   'card.comments': '💬 {n} raay',
+  'card.demo': 'demo',
 
   'time.now': 'abhi',
   'time.m': '{n}m',
