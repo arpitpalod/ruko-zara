@@ -26,7 +26,8 @@ export function createSupabaseApi(url: string, key: string): Api {
   async function toUser(u: { id: string; email?: string | null }): Promise<User> {
     uid = u.id;
     const p = must<{ handle: string }>(await sb.from('profiles').select('handle').eq('id', uid).single());
-    return { id: uid, handle: p.handle, email: u.email || null };
+    const admin = await sb.rpc('is_admin');
+    return { id: uid, handle: p.handle, email: u.email || null, isAdmin: admin.data === true };
   }
 
   async function startSession(): Promise<User> {
@@ -64,6 +65,10 @@ export function createSupabaseApi(url: string, key: string): Api {
       return toUser(u);
     },
 
+    async adminSetHidden(type, id, hide) {
+      must(await sb.rpc('admin_set_hidden', { target_type: type, target_id: id, hide }));
+    },
+
     async deleteAccount() {
       must(await sb.rpc('delete_my_account'));
       await sb.auth.signOut({ scope: 'local' });
@@ -94,7 +99,7 @@ export function createSupabaseApi(url: string, key: string): Api {
       const rows = must<any[]>(
         await sb
           .from('comments')
-          .select('id, request_id, user_id, body, created_at, profiles(handle)')
+          .select('id, request_id, user_id, body, created_at, hidden, profiles(handle)')
           .eq('request_id', id)
           .order('created_at'),
       );

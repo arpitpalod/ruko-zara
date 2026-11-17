@@ -39,6 +39,9 @@ const en = {
   'card.bought': '🛍️ Bought it',
   'card.comments': '💬 {n} opinions',
   'card.demo': 'demo',
+  'admin.hiddenBadge': '🙈 Hidden (only admins see this)',
+  'admin.hide': '🛡️ Hide for everyone',
+  'admin.unhide': '🛡️ Unhide',
   'web.android': '📱 Get the Android app (45 MB)',
   'web.ios': '📲 iPhone tip: tap Share → Add to Home Screen to use it like an app',
 
@@ -176,6 +179,9 @@ const hi: Dict = {
   'card.bought': '🛍️ ख़रीद लिया',
   'card.comments': '💬 {n} राय',
   'card.demo': 'डेमो',
+  'admin.hiddenBadge': '🙈 छिपा हुआ (सिर्फ़ एडमिन को दिखता है)',
+  'admin.hide': '🛡️ सबसे छिपाएँ',
+  'admin.unhide': '🛡️ वापस दिखाएँ',
   'web.android': '📱 Android ऐप डाउनलोड करें (45 MB)',
   'web.ios': '📲 iPhone टिप: Share → Add to Home Screen दबाएँ, ऐप की तरह चलेगा',
 
@@ -310,6 +316,9 @@ const hinglish: Dict = {
   'card.bought': '🛍️ Kharid liya',
   'card.comments': '💬 {n} raay',
   'card.demo': 'demo',
+  'admin.hiddenBadge': '🙈 Hidden (sirf admin ko dikhta hai)',
+  'admin.hide': '🛡️ Sabse chhupao',
+  'admin.unhide': '🛡️ Wapas dikhao',
   'web.android': '📱 Android app download karo (45 MB)',
   'web.ios': '📲 iPhone tip: Share → Add to Home Screen dabao, app jaisa chalega',
 

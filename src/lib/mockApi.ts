@@ -2,7 +2,7 @@ import type { Api, Comment, FeedItem, Verdict } from './types';
 
 /** In-memory backend so the app runs with zero setup (demo / web preview). */
 
-const ME: { id: string; handle: string; email: string | null } = { id: 'me', handle: 'Kanjoos Kabootar 42', email: null };
+const ME: { id: string; handle: string; email: string | null; isAdmin: boolean } = { id: 'me', handle: 'Kanjoos Kabootar 42', email: null, isAdmin: false };
 const H = 3.6e6;
 const at = (hoursFromNow: number) => new Date(Date.now() + hoursFromNow * H).toISOString();
 
@@ -127,6 +127,7 @@ export const mockApi: Api = {
     await delay(null);
   },
   report: () => delay(undefined),
+  adminSetHidden: () => delay(undefined),
   async block(userId) {
     blocked.add(userId);
     await delay(null);

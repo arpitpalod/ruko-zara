@@ -79,6 +79,16 @@ export default function RequestDetail() {
     }
   };
 
+  const moderate = async (type: 'request' | 'comment', tid: string, hide: boolean) => {
+    try {
+      setMsg(null);
+      await api.adminSetHidden(type, tid, hide);
+      load();
+    } catch (e: any) {
+      setMsg(friendly(e, t));
+    }
+  };
+
   const report = async (type: 'request' | 'comment', tid: string) => {
     try {
       await api.report(type, tid);
@@ -131,6 +141,11 @@ export default function RequestDetail() {
             </Pressable>
           </View>
         ) : null}
+        {user.isAdmin ? (
+          <Pressable onPress={() => moderate('request', r.id, !r.hidden)} style={s.adminBtn}>
+            <Text style={s.adminT}>{r.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
+          </Pressable>
+        ) : null}
         {msg ? <Text style={{ color: C.no }}>{msg}</Text> : null}
 
         <Text style={s.h}>{t('detail.comments', { n: comments.length })}</Text>
@@ -144,7 +159,13 @@ export default function RequestDetail() {
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
+            {user.isAdmin && c.hidden ? <Text style={s.cHidden}>{t('admin.hiddenBadge')}</Text> : null}
             <Text style={s.cBody}>{c.body}</Text>
+            {user.isAdmin ? (
+              <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
+                <Text style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
+              </Pressable>
+            ) : null}
             {c.user_id !== user.id ? (
               <View style={[s.actions, { justifyContent: 'flex-end' }]}>
                 <Pressable onPress={() => report('comment', c.id)} disabled={reported.has(c.id)}>
@@ -174,6 +195,10 @@ export default function RequestDetail() {
 const s = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 24 },
   empty: { textAlign: 'center', color: C.sub, marginTop: 40 },
+  adminBtn: { borderWidth: 1.5, borderColor: C.no, borderRadius: 12, paddingVertical: 10, alignItems: 'center', backgroundColor: C.noSoft },
+  adminT: { color: C.no, fontWeight: '800', fontSize: 14 },
+  cHidden: { fontSize: 11, fontWeight: '700', color: C.no },
+  cAdmin: { fontSize: 12, fontWeight: '700', color: C.no, alignSelf: 'flex-start' },
   nudge: { fontSize: 13, color: C.ink, textAlign: 'center' },
   wa: { backgroundColor: '#25D366', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   waT: { color: '#fff', fontWeight: '800', fontSize: 15 },

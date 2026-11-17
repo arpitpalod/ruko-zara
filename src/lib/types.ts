@@ -6,6 +6,8 @@ export interface User {
   handle: string;
   /** Verified email; null while the user is still anonymous. */
   email: string | null;
+  /** Moderator: sees hidden content and can hide/unhide anything. */
+  isAdmin: boolean;
 }
 
 /** 'link' = add email to the current account (keeps history); 'login' = email already registered, switch to it. */
@@ -33,6 +35,8 @@ export interface FeedItem {
   /** Demo vote counts (example arzi only) — always shown with a "demo" tag. */
   demo_approve?: number;
   demo_reject?: number;
+  /** Only admins (and the owner) ever receive hidden arzi. */
+  hidden?: boolean;
 }
 
 export interface Comment {
@@ -42,6 +46,7 @@ export interface Comment {
   handle: string;
   body: string;
   created_at: string;
+  hidden?: boolean;
 }
 
 export interface NewRequest {
@@ -76,6 +81,8 @@ export interface Api {
   verifyEmailCode(email: string, code: string, mode: CodeMode): Promise<User>;
   /** Deletes the account and all its data, then starts a fresh anonymous session. */
   deleteAccount(): Promise<User>;
+  /** Admin only: hide or unhide an arzi or comment for everyone. */
+  adminSetHidden(type: 'request' | 'comment', id: string, hide: boolean): Promise<void>;
 }
 
 export const CATEGORIES = ['Gadgets', 'Fashion', 'Khana', 'Beauty', 'Ghar', 'Travel', 'Fun', 'Other'] as const;

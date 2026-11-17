@@ -1,0 +1,5 @@
+-- APPLIED 2026-11-18 as migration admin_moderation.
+-- Admins see hidden content and can hide/unhide any arzi or comment from the app (🛡️ buttons).
+-- Add another moderator: insert into public.admins (user_id) values ('<auth user id>');
+-- See the migration for: admins table, is_admin(), admin_set_hidden(), updated read policies,
+-- and request_feed (now also returns `hidden`, and shows hidden rows to admins).
