@@ -110,7 +110,12 @@ export default function RequestDetail() {
           style={s.wa}
           onPress={() =>
             shareOnWhatsApp(
-              t(r.user_id === user.id ? 'share.mine' : 'share.other', { item: r.item, price: inr(r.price_inr), link: requestUrl(r.id) }),
+              t(r.user_id === user.id ? 'share.mine' : 'share.other', {
+                item: r.item,
+                price: inr(r.price_inr),
+                reason: r.reason.length > 110 ? r.reason.slice(0, 107).trimEnd() + '…' : r.reason,
+                link: requestUrl(r.id),
+              }),
             )
           }
         >

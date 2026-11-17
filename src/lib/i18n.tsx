@@ -128,8 +128,8 @@ const en = {
   'error.network': 'No internet? Check your connection.',
 
   'share.button': 'Share on WhatsApp',
-  'share.mine': 'Should I buy {item} for {price}? Vote on Ruko Zara 👉 {link}',
-  'share.other': '{item} for {price} — buy it or skip it? Vote on Ruko Zara 👉 {link}',
+  'share.mine': 'Should I buy *{item}* for {price}? 🤔\nMy reason: "{reason}"\n\nBuy it or skip it? Vote here — no login needed 👇\n{link}',
+  'share.other': 'Someone wants *{item}* for {price} 🤔\n"{reason}"\n\nBuy it or skip it? Vote — no login needed 👇\n{link}',
   'share.nudge': 'Want more votes, faster? Ask your friends on WhatsApp.',
   'share.savings': 'Ruko Zara helped me save {amt} so far 🎉 Ask the crowd before you buy 👉 {link}',
   'mine.shareSavings': 'Show off on WhatsApp',
@@ -265,8 +265,8 @@ const hi: Dict = {
   'error.network': 'इंटरनेट नहीं है? कनेक्शन जाँचें।',
 
   'share.button': 'WhatsApp पर शेयर करें',
-  'share.mine': 'क्या मैं {price} का {item} ख़रीदूँ? Ruko Zara पर वोट करें 👉 {link}',
-  'share.other': '{item} ({price}) — ले लें या रहने दें? Ruko Zara पर वोट करें 👉 {link}',
+  'share.mine': 'क्या मैं *{item}* ({price}) ख़रीदूँ? 🤔\nमेरी वजह: "{reason}"\n\nले लूँ या रहने दूँ? यहाँ वोट करें — लॉगिन की ज़रूरत नहीं 👇\n{link}',
+  'share.other': 'किसी को *{item}* ({price}) चाहिए 🤔\n"{reason}"\n\nले लें या रहने दें? वोट करें — लॉगिन की ज़रूरत नहीं 👇\n{link}',
   'share.nudge': 'जल्दी ज़्यादा वोट चाहिए? दोस्तों से WhatsApp पर पूछें।',
   'share.savings': 'Ruko Zara की मदद से मैंने अब तक {amt} बचाए 🎉 ख़रीदने से पहले जनता से पूछें 👉 {link}',
   'mine.shareSavings': 'WhatsApp पर दिखाएँ',
@@ -399,8 +399,8 @@ const hinglish: Dict = {
   'error.network': 'Internet nahi hai? Connection check karo.',
 
   'share.button': 'WhatsApp pe share karo',
-  'share.mine': '{item} ({price}) le loon ya rehne doon? Ruko Zara pe vote karo 👉 {link}',
-  'share.other': '{item} ({price}) — le le ya rehne de? Ruko Zara pe vote karo 👉 {link}',
+  'share.mine': '*{item}* ({price}) le loon ya rehne doon? 🤔\nMera reason: "{reason}"\n\nVote karo — login nahi chahiye 👇\n{link}',
+  'share.other': 'Kisi ko *{item}* ({price}) chahiye 🤔\n"{reason}"\n\nLe le ya rehne de? Vote karo — login nahi chahiye 👇\n{link}',
   'share.nudge': 'Jaldi votes chahiye? Doston se WhatsApp pe poocho.',
   'share.savings': 'Ruko Zara ki wajah se maine ab tak {amt} bachaye 🎉 Kharidne se pehle janta se poocho 👉 {link}',
   'mine.shareSavings': 'WhatsApp pe dikhao',
