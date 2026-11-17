@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { api, isDemo } from '../../lib/api';
 import { friendly } from '../../lib/errors';
@@ -74,6 +75,7 @@ export default function Feed() {
       ListHeaderComponent={
         <View style={{ gap: 10, marginBottom: 4 }}>
           <Text style={s.tag}>{t('feed.tagline')}</Text>
+          <InstallHint />
           <View style={s.seg}>
             {(['open', 'closed'] as Tab[]).map((k) => (
               <Pressable key={k} onPress={() => switchTab(k)} style={[s.segBtn, tab === k && s.segOn]}>

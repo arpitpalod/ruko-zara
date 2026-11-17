@@ -39,6 +39,8 @@ const en = {
   'card.bought': '🛍️ Bought it',
   'card.comments': '💬 {n} opinions',
   'card.demo': 'demo',
+  'web.android': '📱 Get the Android app (45 MB)',
+  'web.ios': '📲 iPhone tip: tap Share → Add to Home Screen to use it like an app',
 
   'time.now': 'now',
   'time.m': '{n}m',
@@ -172,6 +174,8 @@ const hi: Dict = {
   'card.bought': '🛍️ ख़रीद लिया',
   'card.comments': '💬 {n} राय',
   'card.demo': 'डेमो',
+  'web.android': '📱 Android ऐप डाउनलोड करें (45 MB)',
+  'web.ios': '📲 iPhone टिप: Share → Add to Home Screen दबाएँ, ऐप की तरह चलेगा',
 
   'time.now': 'अभी',
   'time.m': '{n} मि.',
@@ -302,6 +306,8 @@ const hinglish: Dict = {
   'card.bought': '🛍️ Kharid liya',
   'card.comments': '💬 {n} raay',
   'card.demo': 'demo',
+  'web.android': '📱 Android app download karo (45 MB)',
+  'web.ios': '📲 iPhone tip: Share → Add to Home Screen dabao, app jaisa chalega',
 
   'time.now': 'abhi',
   'time.m': '{n}m',

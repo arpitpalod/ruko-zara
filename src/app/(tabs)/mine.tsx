@@ -1,6 +1,7 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
@@ -101,6 +102,7 @@ export default function Mine() {
               ))}
             </View>
           </View>
+          <InstallHint />
           <View style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
             <Text style={s.legalLink} onPress={() => openLink(LEGAL.terms)}>{t('legal.terms')}</Text>
             <Text style={s.legalLink} onPress={() => openLink(LEGAL.privacy)}>{t('legal.privacy')}</Text>
