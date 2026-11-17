@@ -1,3 +1,4 @@
+import type { T } from './i18n';
 import type { FeedItem, Verdict } from './types';
 
 /** ₹ in Indian grouping: 134900 → ₹1,34,900 */
@@ -8,26 +9,33 @@ export function inr(n: number): string {
   return '₹' + head + ',' + s.slice(-3);
 }
 
-export function ago(iso: string): string {
+export function ago(iso: string, t: T): string {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return 'abhi';
-  if (m < 60) return `${m}m`;
+  if (m < 1) return t('time.now');
+  if (m < 60) return t('time.m', { n: m });
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
+  if (h < 24) return t('time.h', { n: h });
+  return t('time.d', { n: Math.floor(h / 24) });
 }
 
 /** Time left to vote, or null if voting closed. */
-export function timeLeft(iso: string): string | null {
+export function timeLeft(iso: string, t: T): string | null {
   const ms = new Date(iso).getTime() - Date.now();
   if (ms <= 0) return null;
   const h = Math.floor(ms / 3.6e6);
-  return h >= 1 ? `${h}h baaki` : `${Math.max(1, Math.floor(ms / 6e4))}m baaki`;
+  return h >= 1 ? t('time.leftH', { n: h }) : t('time.leftM', { n: Math.max(1, Math.floor(ms / 6e4)) });
 }
 
-export function verdictText(r: FeedItem): string {
-  if (r.approve_count === r.reject_count) return r.approve_count ? 'Tie — tum decide karo' : 'Kisi ne vote nahi kiya';
-  return r.approve_count > r.reject_count ? 'Janta: Le le ✅' : 'Janta: Rehne de ❌';
+export function verdictText(r: FeedItem, t: T): string {
+  if (r.approve_count === r.reject_count) return r.approve_count ? t('verdict.tie') : t('verdict.none');
+  return r.approve_count > r.reject_count ? t('verdict.yes') : t('verdict.no');
+}
+
+/** Category codes are stored in the database; this shows them in the chosen language. */
+export function catLabel(code: string, t: T): string {
+  const key = `cat.${code}` as Parameters<T>[0];
+  const label = t(key);
+  return label || code;
 }
 
 /** Optimistic local update when the user votes or changes their vote. */

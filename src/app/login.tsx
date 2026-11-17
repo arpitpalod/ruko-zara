@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api, isDemo } from '../lib/api';
+import { useT } from '../lib/i18n';
 import { useSession } from '../lib/session';
 import { C } from '../lib/theme';
 import type { CodeMode } from '../lib/types';
@@ -9,6 +10,7 @@ import type { CodeMode } from '../lib/types';
 /** Email login with a one-time code. An anonymous user keeps their requests and votes. */
 export default function Login() {
   const { setUser } = useSession();
+  const { t } = useT();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [mode, setMode] = useState<CodeMode | null>(null);
@@ -49,11 +51,8 @@ export default function Login() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
-        <Text style={s.h}>Pehle email verify karo ✉️</Text>
-        <Text style={s.p}>
-          Vote, arzi aur comment ke liye ek baar email verify karna zaroori hai — taaki votes asli logon ke hon. Email kisi ko
-          dikhega nahi.
-        </Text>
+        <Text style={s.h}>{t('login.title')}</Text>
+        <Text style={s.p}>{t('login.why')}</Text>
 
         {!mode ? (
           <>
@@ -61,7 +60,7 @@ export default function Login() {
               style={s.input}
               value={email}
               onChangeText={setEmail}
-              placeholder="tumhara@email.com"
+              placeholder={t('login.emailPh')}
               placeholderTextColor={C.sub}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -69,38 +68,35 @@ export default function Login() {
               autoComplete="email"
               onSubmitEditing={send}
             />
-            <Btn label={busy ? 'Bhej rahe hain…' : 'Code bhejo'} onPress={send} disabled={!validEmail || busy} />
+            <Btn label={busy ? t('common.sending') : t('login.send')} onPress={send} disabled={!validEmail || busy} />
           </>
         ) : (
           <>
             <Text style={s.p}>
-              <Text style={{ fontWeight: '700', color: C.ink }}>{clean}</Text> pe code bheja hai. Spam folder bhi dekh lena.
-              {isDemo ? ' (Demo: 123456)' : ''}
+              {t('login.sent', { email: clean })}
+              {isDemo ? t('login.demo') : ''}
             </Text>
             {mode === 'login' ? (
-              <Text style={s.note}>
-                Yeh email pehle se registered hai — verify karne pe us account mein login hoga. Is phone ki bina-login wali activity
-                us account mein nahi jayegi.
-              </Text>
+              <Text style={s.note}>{t('login.existing')}</Text>
             ) : null}
             <TextInput
               style={[s.input, s.code]}
               value={code}
               onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 10))}
-              placeholder="Code"
+              placeholder={t('login.codePh')}
               placeholderTextColor={C.sub}
               keyboardType="number-pad"
               autoComplete="one-time-code"
               textContentType="oneTimeCode"
               onSubmitEditing={verify}
             />
-            <Btn label={busy ? 'Check ho raha hai…' : 'Verify karo'} onPress={verify} disabled={code.length < 6 || busy} />
+            <Btn label={busy ? t('login.checking') : t('login.verify')} onPress={verify} disabled={code.length < 6 || busy} />
             <View style={s.row}>
               <Pressable onPress={() => setMode(null)}>
-                <Text style={s.link}>Email badlo</Text>
+                <Text style={s.link}>{t('login.changeEmail')}</Text>
               </Pressable>
               <Pressable onPress={send} disabled={busy}>
-                <Text style={s.link}>Code dobara bhejo</Text>
+                <Text style={s.link}>{t('login.resend')}</Text>
               </Pressable>
             </View>
           </>

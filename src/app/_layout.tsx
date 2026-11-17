@@ -1,24 +1,34 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
 import { C } from '../lib/theme';
 
 export default function RootLayout() {
   return (
-    <SessionProvider>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerStyle: { backgroundColor: C.bg },
-          headerTintColor: C.ink,
-          headerShadowVisible: false,
-          contentStyle: { backgroundColor: C.bg },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="request/[id]" options={{ title: 'Arzi' }} />
-        <Stack.Screen name="login" options={{ title: 'Login', presentation: 'modal' }} />
-      </Stack>
-    </SessionProvider>
+    <LanguageProvider>
+      <SessionProvider>
+        <StatusBar style="dark" />
+        <Nav />
+      </SessionProvider>
+    </LanguageProvider>
+  );
+}
+
+function Nav() {
+  const { t } = useT();
+  return (
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: C.bg },
+        headerTintColor: C.ink,
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: C.bg },
+      }}
+    >
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="request/[id]" options={{ title: t('title.request') }} />
+      <Stack.Screen name="login" options={{ title: t('title.login'), presentation: 'modal' }} />
+    </Stack>
   );
 }

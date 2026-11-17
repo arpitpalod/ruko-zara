@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { api } from './api';
+import { useT } from './i18n';
 import { C } from './theme';
 import type { User } from './types';
 
@@ -26,6 +27,7 @@ export function requireLogin(user: User): boolean {
 
 /** Signs the user in anonymously on first launch; shows a loader until ready. */
 export function SessionProvider({ children }: { children: ReactNode }) {
+  const { t } = useT();
   const [user, setUser] = useState<User | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -41,9 +43,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg, padding: 24 }}>
         {err ? (
           <View style={{ alignItems: 'center', gap: 16 }}>
-            <Text style={{ color: C.no, textAlign: 'center' }}>Connect nahi ho paya: {err}</Text>
+            <Text style={{ color: C.no, textAlign: 'center' }}>{t('conn.error', { err })}</Text>
             <Pressable onPress={connect} style={{ backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12 }}>
-              <Text style={{ color: '#fff', fontWeight: '800' }}>Dobara try karo</Text>
+              <Text style={{ color: '#fff', fontWeight: '800' }}>{t('conn.retry')}</Text>
             </Pressable>
           </View>
         ) : (

@@ -4,6 +4,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { api, isDemo } from '../../lib/api';
 import { applyVote } from '../../lib/format';
+import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { FeedItem, Verdict } from '../../lib/types';
@@ -11,6 +12,7 @@ import type { FeedItem, Verdict } from '../../lib/types';
 /** Chaupal — the public square where strangers vote on purchases. */
 export default function Feed() {
   const user = useUser();
+  const { t } = useT();
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -53,13 +55,13 @@ export default function Feed() {
       onRefresh={load}
       ListHeaderComponent={
         <View style={{ gap: 6, marginBottom: 4 }}>
-          <Text style={s.tag}>Kharidne se pehle, janta se poocho.</Text>
-          {isDemo ? <Text style={s.demo}>Demo mode · data sirf is device pe hai</Text> : null}
+          <Text style={s.tag}>{t('feed.tagline')}</Text>
+          {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }
       ListEmptyComponent={
-        loading ? undefined : <Text style={s.empty}>Abhi koi arzi nahi. Pehli arzi tum daalo! ✍️</Text>
+        loading ? undefined : <Text style={s.empty}>{t('feed.empty')}</Text>
       }
       renderItem={({ item }) => (
         <RequestCard r={item} meId={user.id} onVote={onVote} onPress={() => router.push(`/request/${item.id}`)} />

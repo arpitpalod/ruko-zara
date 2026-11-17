@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api } from '../../lib/api';
-import { inr } from '../../lib/format';
+import { catLabel, inr } from '../../lib/format';
+import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import { CATEGORIES } from '../../lib/types';
@@ -10,6 +11,7 @@ import { CATEGORIES } from '../../lib/types';
 /** Nayi Arzi — the purchase request form. Writing the "why" is half the cure. */
 export default function NewRequest() {
   const user = useUser();
+  const { t } = useT();
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState<string>('Gadgets');
@@ -45,40 +47,40 @@ export default function NewRequest() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
-        <Text style={s.lead}>Janta 24 ghante mein faisla karegi. Sach likhna — jhooth pakda jaata hai 😉</Text>
+        <Text style={s.lead}>{t('new.lead')}</Text>
 
-        <Field label="Kya kharidna hai?">
-          <TextInput style={s.input} value={item} onChangeText={setItem} placeholder="e.g. Noise-cancelling headphones" placeholderTextColor={C.sub} maxLength={80} />
+        <Field label={t('new.item')}>
+          <TextInput style={s.input} value={item} onChangeText={setItem} placeholder={t('new.itemPh')} placeholderTextColor={C.sub} maxLength={80} />
         </Field>
 
-        <Field label="Kitne ka? (₹)">
+        <Field label={t('new.price')}>
           <TextInput style={s.input} value={price} onChangeText={(t) => setPrice(t.replace(/\D/g, '').slice(0, 8))} placeholder="e.g. 8999" placeholderTextColor={C.sub} keyboardType="number-pad" />
           {priceNum > 0 ? <Text style={s.hint}>{inr(priceNum)}</Text> : null}
         </Field>
 
-        <Field label="Category">
+        <Field label={t('new.category')}>
           <View style={s.chips}>
             {CATEGORIES.map((c) => (
               <Pressable key={c} onPress={() => setCategory(c)} style={[s.chip, category === c && s.chipOn]}>
-                <Text style={[s.chipT, category === c && { color: '#fff' }]}>{c}</Text>
+                <Text style={[s.chipT, category === c && { color: '#fff' }]}>{catLabel(c, t)}</Text>
               </Pressable>
             ))}
           </View>
         </Field>
 
-        <Field label="Kyun chahiye? (sach bolna)">
-          <TextInput style={[s.input, s.multi]} value={reason} onChangeText={setReason} placeholder="Zaroorat hai ya shauk? Purana wala kya hua?" placeholderTextColor={C.sub} multiline maxLength={500} />
-          <Text style={s.hint}>{reason.trim().length < 10 ? `Kam se kam 10 characters (${reason.trim().length}/10)` : `${reason.length}/500`}</Text>
+        <Field label={t('new.reason')}>
+          <TextInput style={[s.input, s.multi]} value={reason} onChangeText={setReason} placeholder={t('new.reasonPh')} placeholderTextColor={C.sub} multiline maxLength={500} />
+          <Text style={s.hint}>{reason.trim().length < 10 ? t('new.reasonMin', { n: reason.trim().length }) : `${reason.length}/500`}</Text>
         </Field>
 
-        <Field label="Koi sasta option socha? (optional)">
-          <TextInput style={s.input} value={alternative} onChangeText={setAlternative} placeholder="e.g. Second-hand, purana repair karwana" placeholderTextColor={C.sub} maxLength={200} />
+        <Field label={t('new.alt')}>
+          <TextInput style={s.input} value={alternative} onChangeText={setAlternative} placeholder={t('new.altPh')} placeholderTextColor={C.sub} maxLength={200} />
         </Field>
 
         {err ? <Text style={{ color: C.no }}>{err}</Text> : null}
 
         <Pressable onPress={submit} disabled={!valid || busy} style={[s.submit, (!valid || busy) && { opacity: 0.4 }]}>
-          <Text style={s.submitT}>{busy ? 'Bhej rahe hain…' : 'Arzi bhejo 🙏'}</Text>
+          <Text style={s.submitT}>{busy ? t('common.sending') : t('new.submit')}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

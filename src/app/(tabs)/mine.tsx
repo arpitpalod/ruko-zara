@@ -4,6 +4,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { api } from '../../lib/api';
 import { inr } from '../../lib/format';
+import { LANGS, useT } from '../../lib/i18n';
 import { useSession } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { FeedItem, Outcome } from '../../lib/types';
@@ -11,6 +12,7 @@ import type { FeedItem, Outcome } from '../../lib/types';
 /** Meri Arzi — your requests, outcomes and money saved. */
 export default function Mine() {
   const { user, setUser } = useSession();
+  const { t, lang, setLang } = useT();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,55 +68,63 @@ export default function Mine() {
       onRefresh={load}
       ListHeaderComponent={
         <View style={s.hero}>
-          <Text style={s.heroLabel}>Ab tak bachaye</Text>
+          <Text style={s.heroLabel}>{t('mine.saved')}</Text>
           <Text style={s.heroAmt}>{inr(saved)}</Text>
-          <Text style={s.heroSub}>
-            {user.handle} · {items.length} arzi · {skipped} baar ruk gaye
-          </Text>
+          <Text style={s.heroSub}>{t('mine.stats', { handle: user.handle, n: items.length, k: skipped })}</Text>
           {err ? <Text style={{ color: C.no, marginTop: 6 }}>{err}</Text> : null}
         </View>
       }
       ListFooterComponent={
         <View style={s.account}>
           {user.email ? (
-            <Text style={s.accT}>✅ Verified: {user.email}</Text>
+            <Text style={s.accT}>{t('mine.verified', { email: user.email })}</Text>
           ) : (
             <Pressable style={s.loginBtn} onPress={() => router.push('/login')}>
-              <Text style={s.loginT}>Email verify karo (vote aur arzi ke liye)</Text>
+              <Text style={s.loginT}>{t('mine.verify')}</Text>
             </Pressable>
           )}
+          <View style={{ gap: 8 }}>
+            <Text style={s.accT}>{t('mine.language')} · भाषा</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {LANGS.map((l) => (
+                <Pressable key={l.id} onPress={() => setLang(l.id)} style={[s.langChip, lang === l.id && s.langOn]}>
+                  <Text style={[s.langT, lang === l.id && { color: '#fff' }]}>{l.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
           {!confirmDelete ? (
             <Pressable onPress={() => setConfirmDelete(true)}>
-              <Text style={s.del}>Account delete karo</Text>
+              <Text style={s.del}>{t('mine.delete')}</Text>
             </Pressable>
           ) : (
             <View style={{ gap: 8 }}>
-              <Text style={s.accT}>Pakka? Tumhari saari arzi, votes aur comments hamesha ke liye delete ho jayenge.</Text>
+              <Text style={s.accT}>{t('mine.deleteConfirm')}</Text>
               <View style={{ flexDirection: 'row', gap: 16 }}>
                 <Pressable onPress={deleteAccount}>
-                  <Text style={[s.del, { fontWeight: '800' }]}>Haan, delete karo</Text>
+                  <Text style={[s.del, { fontWeight: '800' }]}>{t('mine.deleteYes')}</Text>
                 </Pressable>
                 <Pressable onPress={() => setConfirmDelete(false)}>
-                  <Text style={s.accT}>Rehne do</Text>
+                  <Text style={s.accT}>{t('mine.deleteNo')}</Text>
                 </Pressable>
               </View>
             </View>
           )}
         </View>
       }
-      ListEmptyComponent={loading ? undefined : <Text style={s.empty}>Abhi tak koi arzi nahi daali.</Text>}
+      ListEmptyComponent={loading ? undefined : <Text style={s.empty}>{t('mine.empty')}</Text>}
       renderItem={({ item }) => (
         <View style={{ gap: 8 }}>
           <RequestCard r={item} meId={user.id} onPress={() => router.push(`/request/${item.id}`)} />
           {!item.outcome ? (
             <View style={s.decide}>
-              <Text style={s.decideQ}>Aakhir mein kya kiya?</Text>
+              <Text style={s.decideQ}>{t('mine.decideQ')}</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Pressable style={[s.dBtn, { backgroundColor: C.yesSoft }]} onPress={() => decide(item.id, 'skipped')}>
-                  <Text style={[s.dBtnT, { color: C.yes }]}>Nahi kharida 🎉</Text>
+                  <Text style={[s.dBtnT, { color: C.yes }]}>{t('mine.skip')}</Text>
                 </Pressable>
                 <Pressable style={[s.dBtn, { backgroundColor: C.brandSoft }]} onPress={() => decide(item.id, 'bought')}>
-                  <Text style={[s.dBtnT, { color: C.brand }]}>Kharid liya 🛍️</Text>
+                  <Text style={[s.dBtnT, { color: C.brand }]}>{t('mine.bought')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -138,6 +148,9 @@ const s = StyleSheet.create({
   dBtnT: { fontSize: 13, fontWeight: '700' },
   account: { marginTop: 12, gap: 14, paddingHorizontal: 4, paddingBottom: 24 },
   accT: { fontSize: 13, color: C.sub },
+  langChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' },
+  langOn: { backgroundColor: C.brand, borderColor: C.brand },
+  langT: { fontSize: 13, fontWeight: '700', color: C.ink },
   loginBtn: { backgroundColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   loginT: { color: '#fff', fontWeight: '800' },
   del: { fontSize: 13, color: C.no },

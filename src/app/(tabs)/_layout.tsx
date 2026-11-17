@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
+import { useT } from '../../lib/i18n';
 import { C } from '../../lib/theme';
 
 const icon = (emoji: string) =>
@@ -8,6 +9,7 @@ const icon = (emoji: string) =>
   };
 
 export default function TabsLayout() {
+  const { t } = useT();
   return (
     <Tabs
       screenOptions={{
@@ -21,9 +23,9 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: C.bg },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Chaupal', headerTitle: 'Ruko Zara ✋', tabBarIcon: icon('🏛️') }} />
-      <Tabs.Screen name="new" options={{ title: 'Nayi Arzi', headerTitle: 'Nayi Arzi', tabBarIcon: icon('✍️') }} />
-      <Tabs.Screen name="mine" options={{ title: 'Meri Arzi', headerTitle: 'Meri Arzi', tabBarIcon: icon('👛') }} />
+      <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: 'Ruko Zara ✋', tabBarIcon: icon('🏛️') }} />
+      <Tabs.Screen name="new" options={{ title: t('tab.new'), headerTitle: t('tab.new'), tabBarIcon: icon('✍️') }} />
+      <Tabs.Screen name="mine" options={{ title: t('tab.mine'), headerTitle: t('tab.mine'), tabBarIcon: icon('👛') }} />
     </Tabs>
   );
 }

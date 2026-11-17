@@ -4,6 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { RequestCard } from '../../components/RequestCard';
 import { api } from '../../lib/api';
 import { ago, applyVote } from '../../lib/format';
+import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { Comment, FeedItem, Verdict } from '../../lib/types';
@@ -12,6 +13,7 @@ import type { Comment, FeedItem, Verdict } from '../../lib/types';
 export default function RequestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const user = useUser();
+  const { t } = useT();
   const [r, setR] = useState<FeedItem | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [body, setBody] = useState('');
@@ -82,7 +84,7 @@ export default function RequestDetail() {
   };
 
   if (!loaded) return null;
-  if (!r) return <Text style={s.empty}>Yeh arzi nahi mili (shayad hata di gayi).</Text>;
+  if (!r) return <Text style={s.empty}>{t('detail.notFound')}</Text>;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
@@ -91,17 +93,17 @@ export default function RequestDetail() {
         {r.user_id !== user.id ? (
           <View style={s.actions}>
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>
-              <Text style={s.report}>{reported.has(r.id) ? 'Report bhej diya ✓' : '🚩 Report karo'}</Text>
+              <Text style={s.report}>{reported.has(r.id) ? t('detail.reported') : t('detail.report')}</Text>
             </Pressable>
             <Pressable onPress={() => block(r.user_id, true)}>
-              <Text style={s.report}>🚫 Block {r.handle}</Text>
+              <Text style={s.report}>{t('detail.block', { handle: r.handle })}</Text>
             </Pressable>
           </View>
         ) : null}
         {msg ? <Text style={{ color: C.no }}>{msg}</Text> : null}
 
-        <Text style={s.h}>Janta ki raay ({comments.length})</Text>
-        {comments.length === 0 ? <Text style={s.muted}>Abhi koi raay nahi. Pehle tum bolo.</Text> : null}
+        <Text style={s.h}>{t('detail.comments', { n: comments.length })}</Text>
+        {comments.length === 0 ? <Text style={s.muted}>{t('detail.noComments')}</Text> : null}
         {comments.map((c) => (
           <View key={c.id} style={s.comment}>
             <View style={s.cRow}>
@@ -109,17 +111,17 @@ export default function RequestDetail() {
                 {c.handle}
                 {c.user_id === r.user_id ? ' · OP' : ''}
               </Text>
-              <Text style={s.muted}>{ago(c.created_at)}</Text>
+              <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
             <Text style={s.cBody}>{c.body}</Text>
             {c.user_id !== user.id ? (
               <View style={[s.actions, { justifyContent: 'flex-end' }]}>
                 <Pressable onPress={() => report('comment', c.id)} disabled={reported.has(c.id)}>
-                  <Text style={s.cReport}>{reported.has(c.id) ? 'Reported ✓' : 'Report'}</Text>
+                  <Text style={s.cReport}>{reported.has(c.id) ? t('detail.reported') : t('detail.reportShort')}</Text>
                 </Pressable>
                 {c.user_id !== r.user_id ? (
                   <Pressable onPress={() => block(c.user_id, false)}>
-                    <Text style={s.cReport}>Block</Text>
+                    <Text style={s.cReport}>{t('detail.blockShort')}</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -129,9 +131,9 @@ export default function RequestDetail() {
       </ScrollView>
 
       <View style={s.composer}>
-        <TextInput style={s.input} value={body} onChangeText={setBody} placeholder="Apni raay do… (izzat se 🙏)" placeholderTextColor={C.sub} maxLength={300} onSubmitEditing={send} returnKeyType="send" />
+        <TextInput style={s.input} value={body} onChangeText={setBody} placeholder={t('detail.placeholder')} placeholderTextColor={C.sub} maxLength={300} onSubmitEditing={send} returnKeyType="send" />
         <Pressable onPress={send} style={[s.send, !body.trim() && { opacity: 0.4 }]} disabled={!body.trim()}>
-          <Text style={s.sendT}>Bhejo</Text>
+          <Text style={s.sendT}>{t('detail.send')}</Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>
