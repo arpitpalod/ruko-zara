@@ -1,5 +1,5 @@
--- Apply AFTER email login works end to end: the database itself then refuses
--- votes, requests and comments from accounts without a verified email.
+-- APPLIED 2026-11-17 as migration enforce_verified_login_for_writes.
+-- The database itself refuses votes, requests and comments from accounts without a verified email.
 drop policy if exists "verified users write requests" on public.requests;
 create policy "verified users write requests" on public.requests as restrictive for insert to authenticated
   with check ((select (auth.jwt() ->> 'is_anonymous')::boolean) is not true);
