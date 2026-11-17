@@ -54,7 +54,11 @@ Deno.serve(async () => {
   const errors: string[] = [];
 
   for (const r of due ?? []) {
-    const { data: u } = await sb.auth.admin.getUserById(r.user_id);
+    const { data: u, error: userErr } = await sb.auth.admin.getUserById(r.user_id);
+    if (userErr) {
+      errors.push(`user lookup: ${userErr.message}`);
+      continue; // not marked: retried on the next run
+    }
     const email = u?.user?.email;
 
     if (email) {
@@ -83,14 +87,17 @@ Deno.serve(async () => {
               <p style="font-size:22px;margin:14px 0 4px"><b>${verdict.hi}</b></p>
               <p style="font-size:16px;margin:0 0 12px;color:#78716C">The crowd says: <b>${verdict.en}</b></p>
               <p style="margin:0 0 18px">👍 ${yes} &nbsp;·&nbsp; 👎 ${no}</p>
-              <p><a href="${link}" style="background:#E8590C;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700">
-                देखें और बताएँ आपने क्या किया · See it and tell us what you did</a></p>
+              <p style="font-size:16px;line-height:1.6;margin:0">
+                👉 <a href="${link}" style="color:#E8590C;font-weight:700">देखें और बताएँ आपने क्या किया</a><br>
+                👉 <a href="${link}" style="color:#E8590C;font-weight:700">See it and tell us what you did</a></p>
               <p style="font-size:12px;color:#78716C;margin-top:24px">You got this because you posted on Ruko Zara.
                 <a href="${WEB}/privacy.html">Privacy</a></p>
             </div>`,
         });
         sent++;
+        console.log(`sent verdict email for ${r.id}`);
       } catch (e) {
+        console.error(`send failed for ${r.id}: ${String(e).slice(0, 300)}`);
         errors.push(String(e).slice(0, 200));
         continue; // not marked: retried on the next run
       }
@@ -101,5 +108,7 @@ Deno.serve(async () => {
     await sb.from('requests').update({ verdict_emailed_at: now.toISOString() }).eq('id', r.id);
   }
 
-  return json({ due: (due ?? []).length, sent, noEmail, errors });
+  const result = { due: (due ?? []).length, sent, noEmail, errors };
+  console.log(JSON.stringify(result));
+  return json(result);
 });
