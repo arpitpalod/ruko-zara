@@ -11,10 +11,10 @@ import { C } from './theme';
 
 export type Lang = 'en' | 'hi' | 'hinglish';
 
-export const LANGS: { id: Lang; label: string }[] = [
-  { id: 'en', label: 'English' },
-  { id: 'hi', label: 'हिन्दी' },
-  { id: 'hinglish', label: 'Hinglish' },
+export const LANGS: { id: Lang; label: string; short: string }[] = [
+  { id: 'en', label: 'English', short: 'EN' },
+  { id: 'hi', label: 'हिन्दी', short: 'हिं' },
+  { id: 'hinglish', label: 'Hinglish', short: 'Hi-En' },
 ];
 
 const en = {

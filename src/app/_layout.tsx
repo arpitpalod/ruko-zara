@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { LanguageButton } from '../components/LanguageButton';
 import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
 import { C } from '../lib/theme';
@@ -24,6 +25,7 @@ function Nav() {
         headerTintColor: C.ink,
         headerShadowVisible: false,
         contentStyle: { backgroundColor: C.bg },
+        headerRight: () => <LanguageButton />,
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

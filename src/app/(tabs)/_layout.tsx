@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Text } from 'react-native';
+import { LanguageButton } from '../../components/LanguageButton';
 import { useT } from '../../lib/i18n';
 import { C } from '../../lib/theme';
 
@@ -21,6 +22,7 @@ export default function TabsLayout() {
         headerTitleStyle: { fontWeight: '800' },
         tabBarStyle: { backgroundColor: '#fff', borderTopColor: C.line },
         sceneStyle: { backgroundColor: C.bg },
+        headerRight: () => <LanguageButton />,
       }}
     >
       <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: 'Ruko Zara ✋', tabBarIcon: icon('🏛️') }} />
