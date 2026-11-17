@@ -78,4 +78,4 @@ where not r.hidden or r.user_id = auth.uid();
 
 -- Verdict emails: Edge Function supabase/functions/verdict-emails, called every 15 minutes.
 -- (Applied as migration schedule_verdict_emails; vault holds project_url and anon_jwt.)
--- select cron.schedule('verdict-emails-every-15-min', '*/15 * * * *', $$ select net.http_post(...) $$);
+-- select cron.schedule('verdict-emails-every-15-min', '*/15 * * * *', $$ select net.http_post(url, headers, body, timeout_milliseconds := 60000) $$);
