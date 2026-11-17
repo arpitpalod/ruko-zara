@@ -4,6 +4,7 @@ import type { T } from './i18n';
 export function friendly(e: unknown, t: T): string {
   const m = String((e as { message?: string })?.message ?? e ?? '');
   if (m.includes('ABUSE_BLOCKED')) return t('error.abuse');
+  if (m.includes('CONTACT_BLOCKED')) return t('error.contact');
   if (m.includes('Daily limit')) return t('error.dailyLimit');
   if (m.includes('LINK_NOT_ALLOWED') || m.includes('requests_link_check')) return t('error.link');
   if (/row-level security/i.test(m)) return t('error.loginNeeded');

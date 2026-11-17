@@ -122,6 +122,7 @@ const en = {
 
   'error.abuse': "Please keep it clean — that wording isn't allowed.",
   'error.dailyLimit': 'Daily limit reached: 5 requests per day.',
+  'error.contact': 'For everyone\'s safety, phone numbers, emails, @handles and links aren\'t allowed. (Shop links go in the Product link field.)',
   'error.loginNeeded': 'Please verify your email first.',
   'error.badCode': 'Wrong or expired code. Try again or resend it.',
   'error.network': 'No internet? Check your connection.',
@@ -258,6 +259,7 @@ const hi: Dict = {
 
   'error.abuse': 'कृपया शालीन भाषा रखें — ये शब्द इस्तेमाल नहीं कर सकते।',
   'error.dailyLimit': 'आज की सीमा पूरी: दिन में 5 अर्ज़ी।',
+  'error.contact': 'सबकी सुरक्षा के लिए फ़ोन नंबर, ईमेल, @हैंडल और लिंक नहीं डाल सकते। (शॉपिंग लिंक "प्रोडक्ट लिंक" में डालें।)',
   'error.loginNeeded': 'पहले अपना ईमेल वेरिफ़ाई करें।',
   'error.badCode': 'कोड गलत है या एक्सपायर हो गया। फिर से कोशिश करें।',
   'error.network': 'इंटरनेट नहीं है? कनेक्शन जाँचें।',
@@ -391,6 +393,7 @@ const hinglish: Dict = {
 
   'error.abuse': 'Thoda tameez se 🙏 — yeh shabd allowed nahi hain.',
   'error.dailyLimit': 'Aaj ki limit poori: din mein 5 arzi.',
+  'error.contact': 'Sabki safety ke liye phone number, email, @handle aur link allowed nahi hain. (Shop link "Product link" mein daalo.)',
   'error.loginNeeded': 'Pehle email verify karo.',
   'error.badCode': 'Code galat hai ya expire ho gaya. Dobara try karo.',
   'error.network': 'Internet nahi hai? Connection check karo.',

@@ -63,3 +63,7 @@ insert into public.blocked_words (word) values
   ('मादरचोद'), ('भेनचोद'), ('बहनचोद'), ('चूतिया'), ('चुतिया'), ('चूत'), ('गांडू'), ('गाण्डू'), ('गांड'),
   ('लंड'), ('लौडा'), ('लौड़ा'), ('रंडी'), ('हरामी'), ('हरामखोर'), ('भोसडीके'), ('भोसड़ीके'), ('कुतिया'), ('चिनाल'), ('झाटू')
 on conflict do nothing;
+
+-- Contact-info block (applied 2026-11-17 as migration block_contact_info): emails, @handles/UPI IDs,
+-- 10+ digit numbers (incl. Devanagari digits), "at gmail dot com" tricks and links are rejected
+-- in arzi text and comments with CONTACT_BLOCKED. See function public.contains_contact_info.

@@ -69,9 +69,10 @@ export default function RequestDetail() {
       pendingComment.current = true; // send automatically once the email is verified
       return;
     }
-    setBody('');
     try {
+      setMsg(null);
       await api.comment(id, text);
+      setBody(''); // clear only after it's saved, so a blocked comment can be edited
       load();
     } catch (e: any) {
       setMsg(friendly(e, t));
