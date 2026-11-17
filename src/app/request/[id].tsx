@@ -2,8 +2,10 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
+import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
-import { ago, applyVote } from '../../lib/format';
+import { ago, applyVote, inr, timeLeft } from '../../lib/format';
+import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
@@ -27,7 +29,7 @@ export default function RequestDetail() {
       setR(req);
       setComments(cs);
     } catch (e: any) {
-      setMsg(e.message);
+      setMsg(friendly(e, t));
     } finally {
       setLoaded(true);
     }
@@ -47,7 +49,7 @@ export default function RequestDetail() {
     try {
       await api.vote(rid, v);
     } catch (e: any) {
-      setMsg(e.message);
+      setMsg(friendly(e, t));
       load();
     }
   };
@@ -60,7 +62,7 @@ export default function RequestDetail() {
       await api.comment(id, text);
       load();
     } catch (e: any) {
-      setMsg(e.message);
+      setMsg(friendly(e, t));
     }
   };
 
@@ -69,7 +71,7 @@ export default function RequestDetail() {
       await api.report(type, tid);
       setReported((s) => new Set(s).add(tid));
     } catch (e: any) {
-      setMsg(e.message);
+      setMsg(friendly(e, t));
     }
   };
 
@@ -79,7 +81,7 @@ export default function RequestDetail() {
       if (isAuthor) router.back();
       else load();
     } catch (e: any) {
-      setMsg(e.message);
+      setMsg(friendly(e, t));
     }
   };
 
@@ -90,6 +92,17 @@ export default function RequestDetail() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
         <RequestCard r={r} meId={user.id} onVote={onVote} full />
+        {r.user_id === user.id && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
+        <Pressable
+          style={s.wa}
+          onPress={() =>
+            shareOnWhatsApp(
+              t(r.user_id === user.id ? 'share.mine' : 'share.other', { item: r.item, price: inr(r.price_inr), link: requestUrl(r.id) }),
+            )
+          }
+        >
+          <Text style={s.waT}>{t('share.button')}</Text>
+        </Pressable>
         {r.user_id !== user.id ? (
           <View style={s.actions}>
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>
@@ -143,6 +156,9 @@ export default function RequestDetail() {
 const s = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 24 },
   empty: { textAlign: 'center', color: C.sub, marginTop: 40 },
+  nudge: { fontSize: 13, color: C.ink, textAlign: 'center' },
+  wa: { backgroundColor: '#25D366', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  waT: { color: '#fff', fontWeight: '800', fontSize: 15 },
   report: { fontSize: 13, color: C.sub },
   actions: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },
   h: { fontSize: 17, fontWeight: '800', color: C.ink, marginTop: 8 },

@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { catLabel, inr } from '../../lib/format';
 import { useT } from '../../lib/i18n';
@@ -38,7 +39,7 @@ export default function NewRequest() {
       setItem(''); setPrice(''); setReason(''); setAlternative('');
       router.push(`/request/${id}`);
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
     } finally {
       setBusy(false);
     }

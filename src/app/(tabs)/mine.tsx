@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
+import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { inr } from '../../lib/format';
 import { LANGS, useT } from '../../lib/i18n';
@@ -25,7 +26,7 @@ export default function Mine() {
       setErr(null);
       setItems(await api.mine());
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
     } finally {
       setLoading(false);
     }
@@ -42,7 +43,7 @@ export default function Mine() {
     try {
       await api.setOutcome(id, o);
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
       load();
     }
   };
@@ -53,7 +54,7 @@ export default function Mine() {
       setConfirmDelete(false);
       load();
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
     }
   };
 

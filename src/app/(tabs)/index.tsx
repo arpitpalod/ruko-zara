@@ -2,6 +2,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
+import { friendly } from '../../lib/errors';
 import { api, isDemo } from '../../lib/api';
 import { applyVote } from '../../lib/format';
 import { useT } from '../../lib/i18n';
@@ -23,7 +24,7 @@ export default function Feed() {
       setErr(null);
       setItems(await api.feed());
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
     } finally {
       setLoading(false);
     }
@@ -41,7 +42,7 @@ export default function Feed() {
     try {
       await api.vote(id, v);
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
       load();
     }
   };

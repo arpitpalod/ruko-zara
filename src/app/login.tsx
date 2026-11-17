@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { friendly } from '../lib/errors';
 import { api, isDemo } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { LEGAL, openLink } from '../lib/legal';
@@ -29,7 +30,7 @@ export default function Login() {
       setMode(await api.sendEmailCode(clean));
       setCode('');
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
     } finally {
       setBusy(false);
     }
@@ -43,7 +44,7 @@ export default function Login() {
       setUser(await api.verifyEmailCode(clean, code, mode));
       router.back();
     } catch (e: any) {
-      setErr(e.message);
+      setErr(friendly(e, t));
     } finally {
       setBusy(false);
     }

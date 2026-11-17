@@ -115,6 +115,17 @@ const en = {
   'legal.terms': 'Terms',
   'legal.privacy': 'Privacy Policy',
   'legal.contact': 'Complaints',
+
+  'error.abuse': "Please keep it clean — that wording isn't allowed.",
+  'error.dailyLimit': 'Daily limit reached: 5 requests per day.',
+  'error.loginNeeded': 'Please verify your email first.',
+  'error.badCode': 'Wrong or expired code. Try again or resend it.',
+  'error.network': 'No internet? Check your connection.',
+
+  'share.button': 'Share on WhatsApp',
+  'share.mine': 'Should I buy {item} for {price}? Vote on Ruko Zara 👉 {link}',
+  'share.other': '{item} for {price} — buy it or skip it? Vote on Ruko Zara 👉 {link}',
+  'share.nudge': 'Want more votes, faster? Ask your friends on WhatsApp.',
 } as const;
 
 export type Key = keyof typeof en;
@@ -218,6 +229,17 @@ const hi: Dict = {
   'legal.terms': 'उपयोग की शर्तें',
   'legal.privacy': 'प्राइवेसी पॉलिसी',
   'legal.contact': 'शिकायत',
+
+  'error.abuse': 'कृपया शालीन भाषा रखें — ये शब्द इस्तेमाल नहीं कर सकते।',
+  'error.dailyLimit': 'आज की सीमा पूरी: दिन में 5 अर्ज़ी।',
+  'error.loginNeeded': 'पहले अपना ईमेल वेरिफ़ाई करें।',
+  'error.badCode': 'कोड गलत है या एक्सपायर हो गया। फिर से कोशिश करें।',
+  'error.network': 'इंटरनेट नहीं है? कनेक्शन जाँचें।',
+
+  'share.button': 'WhatsApp पर शेयर करें',
+  'share.mine': 'क्या मैं {price} का {item} ख़रीदूँ? Ruko Zara पर वोट करें 👉 {link}',
+  'share.other': '{item} ({price}) — ले लें या रहने दें? Ruko Zara पर वोट करें 👉 {link}',
+  'share.nudge': 'जल्दी ज़्यादा वोट चाहिए? दोस्तों से WhatsApp पर पूछें।',
 };
 
 const hinglish: Dict = {
@@ -318,6 +340,17 @@ const hinglish: Dict = {
   'legal.terms': 'Terms',
   'legal.privacy': 'Privacy Policy',
   'legal.contact': 'Shikayat',
+
+  'error.abuse': 'Thoda tameez se 🙏 — yeh shabd allowed nahi hain.',
+  'error.dailyLimit': 'Aaj ki limit poori: din mein 5 arzi.',
+  'error.loginNeeded': 'Pehle email verify karo.',
+  'error.badCode': 'Code galat hai ya expire ho gaya. Dobara try karo.',
+  'error.network': 'Internet nahi hai? Connection check karo.',
+
+  'share.button': 'WhatsApp pe share karo',
+  'share.mine': '{item} ({price}) le loon ya rehne doon? Ruko Zara pe vote karo 👉 {link}',
+  'share.other': '{item} ({price}) — le le ya rehne de? Ruko Zara pe vote karo 👉 {link}',
+  'share.nudge': 'Jaldi votes chahiye? Doston se WhatsApp pe poocho.',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };
