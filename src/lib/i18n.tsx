@@ -110,6 +110,11 @@ const en = {
   'login.checking': 'Checking…',
   'login.changeEmail': 'Change email',
   'login.resend': 'Resend code',
+
+  'legal.consent': 'By continuing, you confirm you are 18 or older and agree to our',
+  'legal.terms': 'Terms',
+  'legal.privacy': 'Privacy Policy',
+  'legal.contact': 'Complaints',
 } as const;
 
 export type Key = keyof typeof en;
@@ -208,6 +213,11 @@ const hi: Dict = {
   'login.checking': 'जाँच हो रही है…',
   'login.changeEmail': 'ईमेल बदलें',
   'login.resend': 'कोड दोबारा भेजें',
+
+  'legal.consent': 'आगे बढ़कर आप पुष्टि करते हैं कि आपकी उम्र 18+ है और आप हमारी शर्तों से सहमत हैं:',
+  'legal.terms': 'उपयोग की शर्तें',
+  'legal.privacy': 'प्राइवेसी पॉलिसी',
+  'legal.contact': 'शिकायत',
 };
 
 const hinglish: Dict = {
@@ -303,6 +313,11 @@ const hinglish: Dict = {
   'login.checking': 'Check ho raha hai…',
   'login.changeEmail': 'Email badlo',
   'login.resend': 'Code dobara bhejo',
+
+  'legal.consent': 'Aage badhkar tum confirm karte ho ki tum 18+ ho aur in sharton se sehmat ho:',
+  'legal.terms': 'Terms',
+  'legal.privacy': 'Privacy Policy',
+  'legal.contact': 'Shikayat',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

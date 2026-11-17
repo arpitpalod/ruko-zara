@@ -222,3 +222,18 @@ begin
 end $$;
 revoke execute on function public.delete_my_account() from public, anon;
 grant execute on function public.delete_my_account() to authenticated;
+
+-- ───────────── Daily cleanup of empty anonymous accounts (applied 2026-11-17) ─────────────
+create extension if not exists pg_cron with schema pg_catalog;
+select cron.schedule(
+  'cleanup-empty-anonymous-accounts',
+  '30 3 * * *',
+  $$
+  delete from auth.users u
+  where u.is_anonymous
+    and u.created_at < now() - interval '30 days'
+    and not exists (select 1 from public.requests r where r.user_id = u.id)
+    and not exists (select 1 from public.votes v where v.user_id = u.id)
+    and not exists (select 1 from public.comments c where c.user_id = u.id)
+  $$
+);

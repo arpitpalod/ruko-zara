@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api, isDemo } from '../lib/api';
 import { useT } from '../lib/i18n';
+import { LEGAL, openLink } from '../lib/legal';
 import { useSession } from '../lib/session';
 import { C } from '../lib/theme';
 import type { CodeMode } from '../lib/types';
@@ -69,6 +70,16 @@ export default function Login() {
               onSubmitEditing={send}
             />
             <Btn label={busy ? t('common.sending') : t('login.send')} onPress={send} disabled={!validEmail || busy} />
+            <Text style={s.legal}>
+              {t('legal.consent')}{' '}
+              <Text style={s.legalLink} onPress={() => openLink(LEGAL.terms)}>
+                {t('legal.terms')}
+              </Text>
+              {' · '}
+              <Text style={s.legalLink} onPress={() => openLink(LEGAL.privacy)}>
+                {t('legal.privacy')}
+              </Text>
+            </Text>
           </>
         ) : (
           <>
@@ -127,4 +138,6 @@ const s = StyleSheet.create({
   btnT: { color: '#fff', fontSize: 17, fontWeight: '800' },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   link: { color: C.brand, fontWeight: '700', fontSize: 14 },
+  legal: { fontSize: 12, lineHeight: 18, color: C.sub, textAlign: 'center' },
+  legalLink: { color: C.brand, fontWeight: '700', textDecorationLine: 'underline' },
 });

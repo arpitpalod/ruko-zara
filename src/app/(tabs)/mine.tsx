@@ -5,6 +5,7 @@ import { RequestCard } from '../../components/RequestCard';
 import { api } from '../../lib/api';
 import { inr } from '../../lib/format';
 import { LANGS, useT } from '../../lib/i18n';
+import { LEGAL, openLink } from '../../lib/legal';
 import { useSession } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { FeedItem, Outcome } from '../../lib/types';
@@ -93,6 +94,11 @@ export default function Mine() {
               ))}
             </View>
           </View>
+          <View style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
+            <Text style={s.legalLink} onPress={() => openLink(LEGAL.terms)}>{t('legal.terms')}</Text>
+            <Text style={s.legalLink} onPress={() => openLink(LEGAL.privacy)}>{t('legal.privacy')}</Text>
+            <Text style={s.legalLink} onPress={() => openLink(LEGAL.grievance)}>{t('legal.contact')}</Text>
+          </View>
           {!confirmDelete ? (
             <Pressable onPress={() => setConfirmDelete(true)}>
               <Text style={s.del}>{t('mine.delete')}</Text>
@@ -151,6 +157,7 @@ const s = StyleSheet.create({
   langChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' },
   langOn: { backgroundColor: C.brand, borderColor: C.brand },
   langT: { fontSize: 13, fontWeight: '700', color: C.ink },
+  legalLink: { fontSize: 13, color: C.brand, fontWeight: '600' },
   loginBtn: { backgroundColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   loginT: { color: '#fff', fontWeight: '800' },
   del: { fontSize: 13, color: C.no },
