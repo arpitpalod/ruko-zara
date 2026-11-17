@@ -15,25 +15,25 @@ const handles: Record<string, string> = {
 const rows: Row[] = [
   { id: 'r1', user_id: 'u1', item: 'iPhone 17 Pro (256GB)', price_inr: 134900, category: 'Gadgets',
     reason: 'Mera iPhone 13 theek chal raha hai, bas camera upgrade chahiye aur sab office mein naya le aaye hain.',
-    alternative: 'Battery change ₹6,500 mein', closes_at: at(18), outcome: null, created_at: at(-6) },
+    alternative: 'Battery change ₹6,500 mein', closes_at: at(18), outcome: null, created_at: at(-6), link: 'https://www.apple.com/in/iphone/' },
   { id: 'r2', user_id: 'u2', item: 'Raat 1 baje Biryani order', price_inr: 480, category: 'Khana',
     reason: 'Ghar pe dal chawal pada hai par mann nahi kar raha. Aaj ka din bahut lamba tha.',
-    alternative: 'Maggi bana lo', closes_at: at(0.5), outcome: null, created_at: at(-23.5) },
+    alternative: 'Maggi bana lo', closes_at: at(0.5), outcome: null, created_at: at(-23.5), link: null },
   { id: 'r3', user_id: 'u3', item: 'Air fryer (sale price)', price_inr: 6499, category: 'Ghar',
     reason: 'Sale mein 40% off hai. Healthy khana banaunga, pakka. Last time wala sandwich maker bhi use karta hoon kabhi kabhi.',
-    alternative: null, closes_at: at(9), outcome: null, created_at: at(-15) },
+    alternative: null, closes_at: at(9), outcome: null, created_at: at(-15), link: null },
   { id: 'r4', user_id: 'u4', item: 'Goa trip with college friends', price_inr: 18000, category: 'Travel',
     reason: '5 saal se plan ban raha hai, is baar sab ready hain. Savings se jayega, EMI nahi.',
-    alternative: 'Gokarna — sasta aur kam crowd', closes_at: at(20), outcome: null, created_at: at(-4) },
+    alternative: 'Gokarna — sasta aur kam crowd', closes_at: at(20), outcome: null, created_at: at(-4), link: null },
   { id: 'r5', user_id: 'u5', item: 'Skincare haul (7 products)', price_inr: 3200, category: 'Beauty',
     reason: 'Reel mein dekha 10-step routine. Abhi mere paas sirf facewash aur moisturiser hai.',
-    alternative: 'Sirf sunscreen le lo pehle', closes_at: at(-2), outcome: null, created_at: at(-26) },
+    alternative: 'Sirf sunscreen le lo pehle', closes_at: at(-2), outcome: null, created_at: at(-26), link: null },
   { id: 'r6', user_id: 'u6', item: 'Mechanical keyboard', price_inr: 7800, category: 'Gadgets',
     reason: 'Din bhar coding karta hoon, wrist dard karti hai. Office wala keyboard bahut kharab hai.',
-    alternative: 'Office se maang lo', closes_at: at(12), outcome: null, created_at: at(-12) },
+    alternative: 'Office se maang lo', closes_at: at(12), outcome: null, created_at: at(-12), link: null },
   { id: 'r7', user_id: 'me', item: 'Sneakers (limited drop)', price_inr: 16995, category: 'Fashion',
     reason: 'Pichle 2 saal se ek hi joota pehen raha hoon. Par yeh wala thoda zyada mehenga hai.',
-    alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54) },
+    alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54), link: null },
 ];
 
 const votes = new Map<string, Map<string, Verdict>>(); // requestId → (userId → verdict)
@@ -90,7 +90,12 @@ function simulateCrowd(id: string) {
 
 export const mockApi: Api = {
   init: () => delay({ ...ME }),
-  feed: () => delay(sorted().filter((r) => visible(r.user_id)).map(view)),
+  feed: (kind) =>
+    delay(
+      sorted()
+        .filter((r) => visible(r.user_id) && (kind === 'open') === new Date(r.closes_at).getTime() > Date.now())
+        .map(view),
+    ),
   mine: () => delay(sorted().filter((r) => r.user_id === ME.id).map(view)),
   get(id) {
     const r = rows.find((x) => x.id === id && visible(x.user_id));

@@ -44,7 +44,6 @@ export default function RequestDetail() {
   );
 
   const onVote = async (rid: string, v: Verdict) => {
-    if (!requireLogin(user)) return;
     setR((x) => (x ? applyVote(x, v) : x));
     try {
       await api.vote(rid, v);

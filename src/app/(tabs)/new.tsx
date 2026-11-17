@@ -3,7 +3,7 @@ import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
-import { catLabel, inr } from '../../lib/format';
+import { catLabel, domainOf, extractLink, inr } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
@@ -18,11 +18,14 @@ export default function NewRequest() {
   const [category, setCategory] = useState<string>('Gadgets');
   const [reason, setReason] = useState('');
   const [alternative, setAlternative] = useState('');
+  const [linkText, setLinkText] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const priceNum = Number(price || 0);
-  const valid = item.trim().length >= 2 && priceNum > 0 && reason.trim().length >= 10;
+  const link = linkText.trim() ? extractLink(linkText) : null;
+  const linkBad = linkText.trim().length > 0 && !link;
+  const valid = item.trim().length >= 2 && priceNum > 0 && reason.trim().length >= 10 && !linkBad;
 
   const submit = async () => {
     if (!valid || busy || !requireLogin(user)) return;
@@ -35,8 +38,9 @@ export default function NewRequest() {
         category,
         reason: reason.trim(),
         alternative: alternative.trim() || null,
+        link,
       });
-      setItem(''); setPrice(''); setReason(''); setAlternative('');
+      setItem(''); setPrice(''); setReason(''); setAlternative(''); setLinkText('');
       router.push(`/request/${id}`);
     } catch (e: any) {
       setErr(friendly(e, t));
@@ -76,6 +80,22 @@ export default function NewRequest() {
 
         <Field label={t('new.alt')}>
           <TextInput style={s.input} value={alternative} onChangeText={setAlternative} placeholder={t('new.altPh')} placeholderTextColor={C.sub} maxLength={200} />
+        </Field>
+
+        <Field label={t('new.link')}>
+          <TextInput
+            style={s.input}
+            value={linkText}
+            onChangeText={setLinkText}
+            placeholder={t('new.linkPh')}
+            placeholderTextColor={C.sub}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            maxLength={600}
+          />
+          {link ? <Text style={s.hint}>🔗 {domainOf(link)}</Text> : null}
+          {linkBad ? <Text style={[s.hint, { color: C.no }]}>{t('new.linkBad')}</Text> : null}
         </Field>
 
         {err ? <Text style={{ color: C.no }}>{err}</Text> : null}

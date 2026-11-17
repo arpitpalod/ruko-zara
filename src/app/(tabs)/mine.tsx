@@ -6,7 +6,8 @@ import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { inr } from '../../lib/format';
 import { LANGS, useT } from '../../lib/i18n';
-import { LEGAL, openLink } from '../../lib/legal';
+import { LEGAL, WEB_BASE, openLink } from '../../lib/legal';
+import { shareOnWhatsApp } from '../../lib/share';
 import { useSession } from '../../lib/session';
 import { C } from '../../lib/theme';
 import type { FeedItem, Outcome } from '../../lib/types';
@@ -73,6 +74,11 @@ export default function Mine() {
           <Text style={s.heroLabel}>{t('mine.saved')}</Text>
           <Text style={s.heroAmt}>{inr(saved)}</Text>
           <Text style={s.heroSub}>{t('mine.stats', { handle: user.handle, n: items.length, k: skipped })}</Text>
+          {saved > 0 ? (
+            <Pressable style={s.brag} onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}>
+              <Text style={s.bragT}>{t('mine.shareSavings')}</Text>
+            </Pressable>
+          ) : null}
           {err ? <Text style={{ color: C.no, marginTop: 6 }}>{err}</Text> : null}
         </View>
       }
@@ -148,6 +154,8 @@ const s = StyleSheet.create({
   heroLabel: { color: '#D6D3D1', fontSize: 13, fontWeight: '600' },
   heroAmt: { color: '#fff', fontSize: 36, fontWeight: '900', marginTop: 2 },
   heroSub: { color: '#A8A29E', fontSize: 13, marginTop: 4 },
+  brag: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: '#25D366', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  bragT: { color: '#fff', fontWeight: '800', fontSize: 14 },
   empty: { textAlign: 'center', color: C.sub, marginTop: 30 },
   decide: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, flexWrap: 'wrap', gap: 8 },
   decideQ: { fontSize: 13, color: C.sub, fontWeight: '600' },

@@ -31,6 +31,20 @@ export function verdictText(r: FeedItem, t: T): string {
   return r.approve_count > r.reject_count ? t('verdict.yes') : t('verdict.no');
 }
 
+/** "https://www.amazon.in/dp/…" → "amazon.in" */
+export function domainOf(url: string): string {
+  const m = url.match(/^https?:\/\/([^/:?#]+)/i);
+  return (m ? m[1] : url).replace(/^www\./i, '').toLowerCase();
+}
+
+/** Pulls the first web link out of pasted text (shopping apps share "Check this out… https://…"). */
+export function extractLink(text: string): string | null {
+  const m = text.match(/https?:\/\/[^\s]+/i);
+  if (m) return m[0];
+  const bare = text.trim();
+  return /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(bare) ? `https://${bare}` : null;
+}
+
 /** Category codes are stored in the database; this shows them in the chosen language. */
 export function catLabel(code: string, t: T): string {
   const key = `cat.${code}` as Parameters<T>[0];

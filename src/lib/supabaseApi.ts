@@ -70,9 +70,13 @@ export function createSupabaseApi(url: string, key: string): Api {
       return startSession();
     },
 
-    async feed() {
+    async feed(kind) {
+      const now = new Date().toISOString();
+      const q = sb.from('request_feed').select('*');
       return must<FeedItem[]>(
-        await sb.from('request_feed').select('*').order('created_at', { ascending: false }).limit(50),
+        kind === 'open'
+          ? await q.gt('closes_at', now).order('created_at', { ascending: false }).limit(100)
+          : await q.lte('closes_at', now).order('closes_at', { ascending: false }).limit(50),
       );
     },
 

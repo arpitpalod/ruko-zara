@@ -126,6 +126,18 @@ const en = {
   'share.mine': 'Should I buy {item} for {price}? Vote on Ruko Zara 👉 {link}',
   'share.other': '{item} for {price} — buy it or skip it? Vote on Ruko Zara 👉 {link}',
   'share.nudge': 'Want more votes, faster? Ask your friends on WhatsApp.',
+  'share.savings': 'Ruko Zara helped me save {amt} so far 🎉 Ask the crowd before you buy 👉 {link}',
+  'mine.shareSavings': 'Show off on WhatsApp',
+
+  'feed.tabVote': 'Vote',
+  'feed.tabResults': 'Results',
+  'feed.emptyVote': "You've voted on everything 🎉\nPull down to refresh, or post your own request.",
+  'feed.emptyResults': 'No results yet. Requests close 24 hours after posting.',
+
+  'new.link': 'Product link (optional)',
+  'new.linkPh': 'Paste from Amazon, Flipkart, Myntra…',
+  'new.linkBad': "That doesn't look like a link.",
+  'error.link': 'Links are allowed from shopping sites only (Amazon, Flipkart, Myntra…).',
 } as const;
 
 export type Key = keyof typeof en;
@@ -240,6 +252,18 @@ const hi: Dict = {
   'share.mine': 'क्या मैं {price} का {item} ख़रीदूँ? Ruko Zara पर वोट करें 👉 {link}',
   'share.other': '{item} ({price}) — ले लें या रहने दें? Ruko Zara पर वोट करें 👉 {link}',
   'share.nudge': 'जल्दी ज़्यादा वोट चाहिए? दोस्तों से WhatsApp पर पूछें।',
+  'share.savings': 'Ruko Zara की मदद से मैंने अब तक {amt} बचाए 🎉 ख़रीदने से पहले जनता से पूछें 👉 {link}',
+  'mine.shareSavings': 'WhatsApp पर दिखाएँ',
+
+  'feed.tabVote': 'वोट करें',
+  'feed.tabResults': 'फ़ैसले',
+  'feed.emptyVote': 'आपने सब पर वोट कर दिया 🎉\nरिफ़्रेश करने के लिए नीचे खींचें, या अपनी अर्ज़ी डालें।',
+  'feed.emptyResults': 'अभी कोई फ़ैसला नहीं। अर्ज़ी डालने के 24 घंटे बाद फ़ैसला आता है।',
+
+  'new.link': 'प्रोडक्ट लिंक (वैकल्पिक)',
+  'new.linkPh': 'Amazon, Flipkart, Myntra… से पेस्ट करें',
+  'new.linkBad': 'यह लिंक जैसा नहीं लग रहा।',
+  'error.link': 'सिर्फ़ शॉपिंग साइट्स के लिंक चलेंगे (Amazon, Flipkart, Myntra…)।',
 };
 
 const hinglish: Dict = {
@@ -351,6 +375,18 @@ const hinglish: Dict = {
   'share.mine': '{item} ({price}) le loon ya rehne doon? Ruko Zara pe vote karo 👉 {link}',
   'share.other': '{item} ({price}) — le le ya rehne de? Ruko Zara pe vote karo 👉 {link}',
   'share.nudge': 'Jaldi votes chahiye? Doston se WhatsApp pe poocho.',
+  'share.savings': 'Ruko Zara ki wajah se maine ab tak {amt} bachaye 🎉 Kharidne se pehle janta se poocho 👉 {link}',
+  'mine.shareSavings': 'WhatsApp pe dikhao',
+
+  'feed.tabVote': 'Vote karo',
+  'feed.tabResults': 'Faisle',
+  'feed.emptyVote': 'Sab pe vote ho gaya 🎉\nNeeche kheench ke refresh karo, ya apni arzi daalo.',
+  'feed.emptyResults': 'Abhi koi faisla nahi. Arzi daalne ke 24 ghante baad faisla aata hai.',
+
+  'new.link': 'Product link (optional)',
+  'new.linkPh': 'Amazon, Flipkart, Myntra… se paste karo',
+  'new.linkBad': 'Yeh link jaisa nahi lag raha.',
+  'error.link': 'Sirf shopping sites ke link chalenge (Amazon, Flipkart, Myntra…).',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

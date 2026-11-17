@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ago, catLabel, inr, timeLeft, verdictText } from '../lib/format';
+import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
+import { openLink } from '../lib/legal';
 import { useT } from '../lib/i18n';
 import { C } from '../lib/theme';
 import type { FeedItem, Verdict } from '../lib/types';
@@ -42,6 +43,11 @@ export function RequestCard({ r, meId, onVote, onPress, full }: Props) {
         “{r.reason}”
       </Text>
       {r.alternative ? <Text style={s.alt}>{t('card.cheaper', { alt: r.alternative })}</Text> : null}
+      {r.link ? (
+        <Pressable onPress={() => openLink(r.link!)} style={s.linkChip} hitSlop={6}>
+          <Text style={s.linkT}>🔗 {domainOf(r.link)} ↗</Text>
+        </Pressable>
+      ) : null}
 
       {/* vote bar */}
       <View style={s.bar}>
@@ -100,6 +106,8 @@ const s = StyleSheet.create({
   price: { fontSize: 18, fontWeight: '800', color: C.brand },
   reason: { marginTop: 8, fontSize: 15, lineHeight: 21, color: C.ink },
   alt: { marginTop: 8, fontSize: 13, color: C.sub },
+  linkChip: { marginTop: 8, alignSelf: 'flex-start', backgroundColor: C.brandSoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  linkT: { fontSize: 13, fontWeight: '700', color: C.brand },
   bar: { flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 14, marginBottom: 6 },
   count: { fontSize: 13, fontWeight: '700' },
   badge: { marginTop: 10, alignSelf: 'flex-start', fontSize: 13, fontWeight: '600', color: C.ink, backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },

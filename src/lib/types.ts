@@ -28,6 +28,8 @@ export interface FeedItem {
   reject_count: number;
   comment_count: number;
   my_vote: Verdict | null;
+  /** Optional shop link (allowed shopping sites only). */
+  link: string | null;
 }
 
 export interface Comment {
@@ -45,11 +47,14 @@ export interface NewRequest {
   category: string;
   reason: string;
   alternative: string | null;
+  link: string | null;
 }
+
+export type FeedKind = 'open' | 'closed';
 
 export interface Api {
   init(): Promise<User>;
-  feed(): Promise<FeedItem[]>;
+  feed(kind: FeedKind): Promise<FeedItem[]>;
   mine(): Promise<FeedItem[]>;
   get(id: string): Promise<FeedItem | null>;
   comments(id: string): Promise<Comment[]>;
