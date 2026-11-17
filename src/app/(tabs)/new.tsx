@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useState, type ReactNode } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
@@ -28,8 +28,27 @@ export default function NewRequest() {
   const linkBad = linkText.trim().length > 0 && !link;
   const valid = item.trim().length >= 2 && priceNum > 0 && reason.trim().length >= 10 && !linkBad;
 
+  // Fill everything first; if login is needed, the arzi posts itself right after the email is verified.
+  const pendingPost = useRef(false);
+  useEffect(() => {
+    if (user.email && pendingPost.current) {
+      pendingPost.current = false;
+      submit();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.email]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user.email) pendingPost.current = false; // closed the login screen without verifying
+    }, [user.email]),
+  );
+
   const submit = async () => {
-    if (!valid || busy || !requireLogin(user)) return;
+    if (!valid || busy) return;
+    if (!requireLogin(user)) {
+      pendingPost.current = true; // post automatically once the email is verified
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {

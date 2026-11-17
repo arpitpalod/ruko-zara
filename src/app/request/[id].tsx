@@ -1,5 +1,5 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { friendly } from '../../lib/errors';
@@ -53,9 +53,22 @@ export default function RequestDetail() {
     }
   };
 
+  const pendingComment = useRef(false);
+  useEffect(() => {
+    if (user.email && pendingComment.current) {
+      pendingComment.current = false;
+      send();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.email]);
+
   const send = async () => {
     const text = body.trim();
-    if (!text || !requireLogin(user)) return;
+    if (!text) return;
+    if (!requireLogin(user)) {
+      pendingComment.current = true; // send automatically once the email is verified
+      return;
+    }
     setBody('');
     try {
       await api.comment(id, text);
