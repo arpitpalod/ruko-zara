@@ -5,7 +5,7 @@ select kind || ' ' || name || ' ' || md5(detail)
 from (
   select 'table' as kind, c.relname as name,
          c.relkind::text || c.relrowsecurity::text || coalesce((
-           select string_agg(regexp_replace(x::text, '/.*$', ''), ',' order by x::text) from unnest(c.relacl) x), '') as detail
+           select string_agg(regexp_replace(x::text, '/.*$', ''), ',' order by x::text) from unnest(coalesce(c.relacl, acldefault('r', c.relowner))) x), '') as detail
   from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname in ('public', 'private') and c.relkind in ('r', 'v')
   union all
@@ -17,7 +17,7 @@ from (
   union all
   select 'function', p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')',
          pg_get_functiondef(p.oid) || coalesce((
-           select string_agg(regexp_replace(x::text, '/.*$', ''), ',' order by x::text) from unnest(p.proacl) x), 'default')
+           select string_agg(regexp_replace(x::text, '/.*$', ''), ',' order by x::text) from unnest(coalesce(p.proacl, acldefault('f', p.proowner))) x), '')
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname in ('public', 'private') and p.prokind = 'f'
   union all
