@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { C } from './theme';
+import { Logo } from '../components/Logo';
 
 /**
  * All app text lives here — one dictionary per language, same keys.
@@ -554,7 +555,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 function LanguagePicker({ onPick }: { onPick: (l: Lang) => void }) {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', padding: 28, gap: 14 }}>
-      <Text style={{ fontSize: 30, fontWeight: '900', color: C.ink, textAlign: 'center' }}>Ruko Zara</Text>
+      <View style={{ alignItems: 'center' }}>
+        <Logo size={30} />
+      </View>
       <Text style={{ fontSize: 16, color: C.sub, textAlign: 'center', marginBottom: 12 }}>
         Choose your language · अपनी भाषा चुनें
       </Text>

@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
 import { LanguageButton } from '../../components/LanguageButton';
+import { Logo } from '../../components/Logo';
 import { TabIcon, type TabIconName } from '../../components/TabIcon';
 import { useT } from '../../lib/i18n';
 import { C } from '../../lib/theme';
@@ -26,7 +27,7 @@ export default function TabsLayout() {
         headerRight: () => <LanguageButton />,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: 'Ruko Zara', tabBarIcon: icon('home') }} />
+      <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: () => <Logo />, tabBarIcon: icon('home') }} />
       <Tabs.Screen name="new" options={{ title: t('tab.new'), headerTitle: t('tab.new'), tabBarIcon: icon('new') }} />
       <Tabs.Screen name="mine" options={{ title: t('tab.mine'), headerTitle: t('tab.mine'), tabBarIcon: icon('mine') }} />
     </Tabs>

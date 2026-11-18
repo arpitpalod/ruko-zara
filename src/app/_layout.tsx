@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { CaptchaHost } from '../components/CaptchaHost';
 import { LanguageButton } from '../components/LanguageButton';
+import { LogoFontReady, useLoadLogoFont } from '../components/Logo';
 import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
 import { C } from '../lib/theme';
@@ -12,7 +13,9 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const logoFont = useLoadLogoFont(); // never blocks: the name uses the system font until it's in
   return (
+    <LogoFontReady.Provider value={logoFont}>
     <LanguageProvider>
       <SessionProvider>
         <StatusBar style="dark" />
@@ -20,6 +23,7 @@ export default function RootLayout() {
       </SessionProvider>
       <CaptchaHost />
     </LanguageProvider>
+    </LogoFontReady.Provider>
   );
 }
 
