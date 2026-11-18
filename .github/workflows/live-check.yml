@@ -1,0 +1,58 @@
+# Checks the live app from the outside every hour (and after every release).
+# If anything is wrong it opens a GitHub issue, which emails the owner.
+name: Live check
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      wait_seconds:
+        type: number
+        default: 0
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for the new version to be served
+        if: ${{ inputs.wait_seconds > 0 }}
+        run: sleep ${{ inputs.wait_seconds }}
+      - name: Check
+        id: check
+        run: |
+          set +e
+          bash scripts/ci/live-check.sh | tee result.txt
+          echo "failed=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Raise the alarm
+        if: steps.check.outputs.failed != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "@arpitpalod the live check found a problem ($(date -u '+%d %b %H:%M UTC')):"
+            echo
+            grep '❌' result.txt
+            echo
+            echo "<details><summary>All checks</summary>"
+            echo
+            cat result.txt
+            echo "</details>"
+            echo
+            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          } > alert.md
+          gh label create live-check --color B60205 --description "Live app problem" --force
+          open=$(gh issue list --label live-check --state open --json number --jq '.[0].number')
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body-file alert.md
+          else
+            gh issue create --title "🚨 Ruko Zara live check failed" --label live-check --body-file alert.md
+          fi
+          exit 1

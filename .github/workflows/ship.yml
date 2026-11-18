@@ -1,0 +1,113 @@
+# Every change goes through the same checks. Only when all of them pass does it go live
+# (website + Android app). Other branches get the checks without going live.
+name: Ship
+
+on:
+  push:
+    branches-ignore: [gh-pages]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ship-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  app-checks:
+    name: Code checks + unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Unit tests
+        run: npx jest --ci
+
+  browser-tests:
+    name: Browser tests (demo app)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci
+      - name: Build demo web app (no live database)
+        run: npx expo export --platform web --output-dir dist-demo
+      - name: Install browser
+        run: |
+          pip install playwright==1.63.0 pytest
+          python -m playwright install --with-deps chromium
+      - name: Run browser tests
+        run: python -m pytest e2e -q --tb=short
+      - name: Screenshot on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-output
+          path: test-results/
+          if-no-files-found: ignore
+
+  database-tests:
+    name: Database security tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      HAS_DB: ${{ secrets.SUPABASE_DB_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - if: env.HAS_DB != 'true'
+        run: echo "::warning::Database tests skipped — add the SUPABASE_DB_PASSWORD secret to turn them on."
+      - if: env.HAS_DB == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start a throwaway local Supabase
+        if: env.HAS_DB == 'true'
+        run: supabase start
+      - name: Copy live structure, rehearse pending changes, run security tests
+        if: env.HAS_DB == 'true'
+        run: bash scripts/ci/db-test.sh
+
+  website:
+    name: Publish website
+    if: github.ref == 'refs/heads/main'
+    needs: [app-checks, browser-tests, database-tests]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/web.yml
+
+  android:
+    name: Build Android app
+    if: github.ref == 'refs/heads/main'
+    needs: [app-checks, browser-tests, database-tests]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/android-apk.yml
+
+  live-check:
+    name: Check the live app
+    if: github.ref == 'refs/heads/main'
+    needs: [website]
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/live-check.yml
+    with:
+      wait_seconds: 90

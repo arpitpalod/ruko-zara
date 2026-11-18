@@ -157,6 +157,7 @@ const en = {
   'error.guestLimit': "You've used your 20 guest votes. Verify your email to keep voting — takes 30 seconds.",
   'error.captcha': "Couldn't confirm you're a real person. Check your internet and try again.",
   'captcha.checking': "Quick check that you're a real person 🙏",
+  'update.available': '🆕 A new version of the app is ready — tap to update',
 } as const;
 
 export type Key = keyof typeof en;
@@ -302,6 +303,7 @@ const hi: Dict = {
   'error.guestLimit': 'आपके 20 मेहमान वोट पूरे हो गए। वोट जारी रखने के लिए ईमेल वेरिफ़ाई करें — 30 सेकंड लगेंगे।',
   'error.captcha': 'पुष्टि नहीं हो पाई कि आप असली इंसान हैं। इंटरनेट जाँचें और फिर कोशिश करें।',
   'captcha.checking': 'बस एक छोटी जाँच कि आप असली इंसान हैं 🙏',
+  'update.available': '🆕 ऐप का नया वर्ज़न आ गया है — अपडेट करने के लिए टैप करें',
 };
 
 const hinglish: Dict = {
@@ -444,6 +446,7 @@ const hinglish: Dict = {
   'error.guestLimit': 'Tumhare 20 guest vote ho gaye. Aage vote karne ke liye email verify karo — 30 second lagenge.',
   'error.captcha': 'Confirm nahi ho paya ki tum asli insaan ho. Internet check karke dobara try karo.',
   'captcha.checking': 'Bas ek chhota check ki tum asli insaan ho 🙏',
+  'update.available': '🆕 App ka naya version aa gaya — update karne ke liye tap karo',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

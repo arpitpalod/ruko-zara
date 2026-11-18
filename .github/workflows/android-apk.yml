@@ -1,10 +1,10 @@
-# Builds an installable Android APK in the cloud on every push to main,
-# and publishes it as a download link: github.com/<you>/ruko-zara/releases/latest
+# Builds an installable Android APK in the cloud and publishes it as a download link
+# (github.com/arpitpalod/ruko-zara/releases/latest), plus version.json for the in-app "update available" banner.
+# Runs from the Ship workflow once all checks pass (or by hand).
 name: Android APK
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -35,6 +35,10 @@ jobs:
       # ubuntu-latest already ships the Android SDK (ANDROID_HOME); Gradle fetches any missing parts.
       - run: npm ci
 
+      # Build number = build time; the app compares it with version.json to offer updates.
+      - name: Stamp build number
+        run: echo "EXPO_PUBLIC_APP_BUILD=$(date +%s)" >> "$GITHUB_ENV"
+
       - name: Generate Android project
         run: npx expo prebuild --platform android --no-install
 
@@ -42,11 +46,18 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=armeabi-v7a,arm64-v8a  # real phones only: smaller download
 
+      - name: Write version.json
+        run: |
+          printf '{"build": %s, "commit": "%s"}\n' "$EXPO_PUBLIC_APP_BUILD" "${GITHUB_SHA::7}" > version.json
+          cat version.json
+
       - name: Publish download link
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-latest
           name: Ruko Zara — Android (latest)
           body: Download app-release.apk on an Android phone, open it, and allow "Install unknown apps" when asked.
-          files: android/app/build/outputs/apk/release/app-release.apk
+          files: |
+            android/app/build/outputs/apk/release/app-release.apk
+            version.json
           make_latest: true

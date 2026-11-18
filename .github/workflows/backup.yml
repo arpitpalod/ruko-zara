@@ -1,0 +1,29 @@
+# Nightly encrypted backup of the live database (app data + login accounts), kept for 30 days.
+# The repo is public, so the file is encrypted: only the owner's private backup key can open it.
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: '41 21 * * *'   # 03:11 India time
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y -qq age
+      - name: Dump, compress, encrypt
+        run: bash scripts/ci/backup.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ruko-zara-backup-${{ github.run_number }}
+          path: backup/*.age
+          retention-days: 30
+          if-no-files-found: error

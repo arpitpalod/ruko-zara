@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
+import { UpdateBanner } from '../../components/UpdateBanner';
 import { api, isDemo } from '../../lib/api';
 import { friendly, isGuestLimit } from '../../lib/errors';
 import { applyVote } from '../../lib/format';
@@ -100,6 +101,7 @@ export default function Feed() {
       ListHeaderComponent={
         <View style={{ gap: 10, marginBottom: 4 }}>
           <Text style={s.tag}>{t('feed.tagline')}</Text>
+          <UpdateBanner />
           <InstallHint />
           <View style={s.seg}>
             {(['open', 'closed'] as Tab[]).map((k) => (

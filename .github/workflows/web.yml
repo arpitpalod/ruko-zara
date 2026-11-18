@@ -1,17 +1,13 @@
-# Publishes the web version of the app to https://arpitpalod.github.io/ruko-zara/ on every push to main.
+# Publishes the web version of the app to https://arpitpalod.github.io/ruko-zara/.
+# Runs from the Ship workflow once all checks pass (or by hand).
 name: Web app
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
   contents: write
-
-concurrency:
-  group: web
-  cancel-in-progress: true
 
 jobs:
   deploy:

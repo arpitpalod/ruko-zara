@@ -41,3 +41,10 @@ yarn-error.*
 /android
 
 .env
+
+# test outputs
+dist-demo/
+test-results/
+backup/
+.pytest_cache/
+__pycache__/
