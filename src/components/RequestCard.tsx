@@ -90,7 +90,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
               {demo ? ` · ${t('card.demo')}` : ''}
             </Text>
           </View>
-          {full && reasons?.length ? <ReasonTally reasons={reasons} /> : null}
+          {full && reasons?.length ? <ReasonTally reasons={reasons} votes={real.approve_count + real.reject_count} /> : null}
           {SHOW_VERIFIED_VOTES && vTotal > 0 && vTotal < total ? (
             <IconText icon={BadgeCheck} size={13} color={C.sub} style={s.verifiedT} box={{ marginTop: 6 }}>
               {t('card.verified', { p: Math.round((100 * (r.verified_approve ?? 0)) / vTotal), n: vTotal })}
@@ -195,14 +195,19 @@ function VoteBtn(p: { label: string; active: boolean; open: boolean; soft: strin
   );
 }
 
-/** "Why people voted": each reason with its count, most given first. */
-function ReasonTally({ reasons }: { reasons: ReasonCount[] }) {
+/** "Why people voted": each reason with its count, most given first. Votes cast before reasons
+ * existed (or from older apps) have none, so it says how many votes the tally covers. */
+function ReasonTally({ reasons, votes }: { reasons: ReasonCount[]; votes: number }) {
   const { t } = useT();
   const rows = reasons.filter((x) => x.n > 0).sort((a, b) => b.n - a.n);
   const max = Math.max(...rows.map((x) => x.n));
+  const given = rows.reduce((sum, x) => sum + x.n, 0);
   return (
     <View style={s.tally} testID="reason-tally">
-      <Text style={s.tallyH}>{t('reason.title')}</Text>
+      <View style={s.row}>
+        <Text style={s.tallyH}>{t('reason.title')}</Text>
+        {given < votes ? <Text style={s.tallyCover}>{t('reason.coverage', { n: given, total: votes })}</Text> : null}
+      </View>
       {rows.map((x) => {
         const color = sideOf(x.reason) === 'approve' ? C.yes : C.no;
         return (
@@ -249,6 +254,7 @@ const s = StyleSheet.create({
   chipT: { fontSize: 14, fontWeight: '600' },
   tally: { marginTop: 14, gap: 8 },
   tallyH: { fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 2 },
+  tallyCover: { fontSize: 12.5, color: C.sub },
   tallyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   tallyT: { width: 150, fontSize: 13.5, color: C.ink },
   tallyTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: C.line, overflow: 'hidden' },

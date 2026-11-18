@@ -48,8 +48,9 @@ const setReason = (id: string, who: string, code: VoteReason) =>
   (reasons.get(id) ?? reasons.set(id, new Map()).get(id)!).set(who, code);
 const seedVotes = (id: string, yes: number, no: number) => {
   const m = new Map<string, Verdict>();
-  for (let i = 0; i < yes; i++) m.set(`s${id}y${i}`, 'approve'), setReason(id, `s${id}y${i}`, YES_MIX[i % YES_MIX.length]);
-  for (let i = 0; i < no; i++) m.set(`s${id}n${i}`, 'reject'), setReason(id, `s${id}n${i}`, NO_MIX[i % NO_MIX.length]);
+  // Every 4th seeded vote has no reason, like the live votes cast before reasons existed.
+  for (let i = 0; i < yes; i++) m.set(`s${id}y${i}`, 'approve'), i % 4 !== 3 && setReason(id, `s${id}y${i}`, YES_MIX[i % YES_MIX.length]);
+  for (let i = 0; i < no; i++) m.set(`s${id}n${i}`, 'reject'), i % 4 !== 3 && setReason(id, `s${id}n${i}`, NO_MIX[i % NO_MIX.length]);
   [...m.keys()].forEach((k, i) => (i % 3 === 0 ? verifiedVoters.add(k) : null));
   votes.set(id, m);
 };

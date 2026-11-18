@@ -204,6 +204,8 @@ def test_reasons_tally_after_voting(page):
     tally.wait_for()
     text = tally.inner_text()
     assert "Why people voted" in text and "Wait for a sale" in text and "Don't need it" in text, text
+    # Votes from before reasons existed have none: the tally says how many votes it covers.
+    assert re.search(r"From \d+ of \d+ votes", text), text
 
 
 def test_reasons_in_hinglish(page):
