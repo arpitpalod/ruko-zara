@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { CAPTCHA_URL, captchaBroken, captchaInteractive, captchaOn, captchaSolved, isFatalCaptchaError, parseCaptchaMsg, subscribeCaptcha } from '../lib/captcha';
+import { CAPTCHA_URL, captchaBroken, captchaInteractive, captchaOn, captchaSolved, isFatalCaptchaError, parseCaptchaMsg, subscribeCaptcha, subscribeWanted } from '../lib/captcha';
 import { useT } from '../lib/i18n';
 import { C } from '../lib/theme';
 
@@ -9,16 +9,21 @@ import { C } from '../lib/theme';
 export function CaptchaHost() {
   const { t } = useT();
   const [round, setRound] = useState(0);
-  const [visible, setVisible] = useState(false);
+  // Cloudflare asked for a tap; shown only once someone is waiting on it (tapped vote, post,
+  // comment, login), so a check running in the background never interrupts reading.
+  const [asked, setAsked] = useState(false);
+  const [wanted, setWanted] = useState(false);
+  const visible = asked && wanted;
 
   useEffect(
     () =>
       subscribeCaptcha((r) => {
-        setVisible(false);
+        setAsked(false);
         setRound(r);
       }),
     [],
   );
+  useEffect(() => subscribeWanted(setWanted), []);
 
   if (!captchaOn || round === 0) return null;
 
@@ -39,7 +44,7 @@ export function CaptchaHost() {
             if (m.type === 'token' && m.token) captchaSolved(m.token);
             else if (m.type === 'interactive') {
               captchaInteractive();
-              setVisible(true);
+              setAsked(true);
             }
             else if (m.type === 'error' && isFatalCaptchaError(m.code)) captchaBroken(m.code!);
           }}

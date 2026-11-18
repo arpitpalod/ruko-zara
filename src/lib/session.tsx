@@ -1,9 +1,6 @@
 import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { api } from './api';
-import { useT } from './i18n';
-import { C } from './theme';
 import type { User } from './types';
 
 const Ctx = createContext<{ user: User; setUser: (u: User) => void } | null>(null);
@@ -25,34 +22,21 @@ export function requireLogin(user: User): boolean {
   return false;
 }
 
-/** Signs the user in anonymously on first launch; shows a loader until ready. */
+/** Stand-in until sign-in finishes: no id, no email. Never matches anyone's arzi. */
+export const SIGNING_IN: User = { id: '', handle: '', email: null, isAdmin: false };
+
+/**
+ * Shows the app straight away. Sign-in (a guest account and the bot check on a new phone) runs in
+ * the background; reading works without it, and actions that need an account wait for it.
+ */
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const { t } = useT();
-  const [user, setUser] = useState<User | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [user, setUser] = useState<User>(SIGNING_IN);
 
-  const connect = () => {
-    setErr(null);
-    api.init().then(setUser).catch((e) => setErr(e?.message ?? String(e)));
-  };
-
-  useEffect(connect, []);
-
-  if (!user)
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg, padding: 24 }}>
-        {err ? (
-          <View style={{ alignItems: 'center', gap: 16 }}>
-            <Text style={{ color: C.no, textAlign: 'center' }}>{t('conn.error', { err })}</Text>
-            <Pressable onPress={connect} style={{ backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12 }}>
-              <Text style={{ color: '#fff', fontWeight: '800' }}>{t('conn.retry')}</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <ActivityIndicator color={C.brand} />
-        )}
-      </View>
-    );
+  useEffect(() => {
+    const off = api.onSignedIn(setUser);
+    api.init().then(setUser, () => {}); // if it fails, the first vote or post tries again
+    return off;
+  }, []);
 
   return <Ctx.Provider value={{ user, setUser }}>{children}</Ctx.Provider>;
 }

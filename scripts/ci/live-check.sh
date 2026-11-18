@@ -31,6 +31,18 @@ done
 c=$(code -H "apikey: $KEY" "$API/rest/v1/banned_users?select=*")
 [[ "$c" =~ ^(401|403|404)$ ]] && ok "Ban list is not reachable" || bad "BAN LIST REACHABLE (HTTP $c)"
 
+# 2b. The read-only preview (new phones see arzi before sign-in) shows only what it should
+pv=$(curl -s --max-time 25 -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{"kind":"open"}' "$API/rest/v1/rpc/public_feed")
+if echo "$pv" | python3 -c 'import json,sys; r=json.load(sys.stdin); assert isinstance(r,list) and r' 2>/dev/null; then ok "Preview shows open arzi"; else bad "Preview of open arzi is broken"; fi
+echo "$pv" | python3 -c '
+import json,sys
+r=json.load(sys.stdin)
+assert all("user_id" not in x for x in r), "user ids"
+assert all(x["approve_count"]==0 and x["reject_count"]==0 for x in r), "vote split of open arzi"
+' 2>/dev/null && ok "Preview has no user ids and no open vote splits" || bad "PREVIEW LEAKS user ids or how people voted"
+pc=$(curl -s --max-time 25 -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{"target":"00000000-0000-0000-0000-000000000000"}' "$API/rest/v1/rpc/public_comments")
+echo "$pc" | python3 -c 'import json,sys; assert json.load(sys.stdin)==[]' 2>/dev/null && ok "Comment preview works" || bad "Comment preview is broken"
+
 # 3. Bots can't create accounts without passing the bot check
 body=$(curl -s --max-time 25 -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{}' "$API/auth/v1/signup")
 echo "$body" | grep -qi captcha && ok "Bot check is on" || bad "BOT CHECK IS OFF: accounts can be created without it"

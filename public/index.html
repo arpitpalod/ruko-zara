@@ -21,6 +21,9 @@
     <link rel="apple-touch-icon" href="https://arpitpalod.github.io/ruko-zara/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Ruko Zara" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Open connections to the database and the bot check while the app itself downloads -->
+    <link rel="preconnect" href="https://ehptarxgjmtbrxerwxim.supabase.co" crossorigin />
+    <link rel="preconnect" href="https://challenges.cloudflare.com" />
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
       html,
@@ -35,11 +38,24 @@
         height: 100%;
         flex: 1;
       }
+      /* Shown instantly while the app downloads; the app replaces it when it starts. */
+      body { margin: 0; background: #fff8f0; font-family: -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif; }
+      .boot { flex: 1; padding: 0 16px; }
+      .boot h1 { font-size: 20px; font-weight: 800; color: #1c1917; margin: 18px 0 22px; }
+      .boot .c { background: #fff; border: 1px solid #ede4da; border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+      .boot .b { height: 12px; border-radius: 6px; background: #ede4da; margin: 8px 0; }
     </style>
   </head>
 
   <body>
     <noscript> You need to enable JavaScript to run this app. </noscript>
-    <div id="root"></div>
+    <div id="root">
+      <div class="boot" aria-label="Loading">
+        <h1>Ruko Zara</h1>
+        <div class="c"><div class="b" style="width:60%;height:18px"></div><div class="b" style="width:40%"></div><div class="b" style="width:90%"></div><div class="b" style="width:70%"></div></div>
+        <div class="c"><div class="b" style="width:55%;height:18px"></div><div class="b" style="width:35%"></div><div class="b" style="width:85%"></div><div class="b" style="width:65%"></div></div>
+        <div class="c"><div class="b" style="width:50%;height:18px"></div><div class="b" style="width:45%"></div><div class="b" style="width:80%"></div><div class="b" style="width:60%"></div></div>
+      </div>
+    </div>
   </body>
 </html>

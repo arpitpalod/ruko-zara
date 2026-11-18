@@ -67,3 +67,17 @@ it('only trusts messages from its own page', () => {
   expect(c.parseCaptchaMsg('{"source":"other","type":"token","token":"x"}')).toBeNull();
   expect(c.parseCaptchaMsg('not json')).toBeNull();
 });
+
+it('a tap request waits until someone is waiting on the check', async () => {
+  const c = load('site-key');
+  const seen: boolean[] = [];
+  c.subscribeWanted((w) => seen.push(w));
+  c.subscribeCaptcha(() => {});
+  const token = c.getCaptchaToken();
+  expect(seen).toEqual([false]); // background sign-in: nobody asked yet
+  c.wantCaptcha();
+  expect(seen).toEqual([false, true]);
+  c.captchaSolved('tok');
+  await expect(token).resolves.toBe('tok');
+  expect(seen).toEqual([false, true, false]); // done: back to quiet
+});

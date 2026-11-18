@@ -37,6 +37,9 @@ export interface FeedItem {
   demo_reject?: number;
   /** Only admins (and the owner) ever receive hidden arzi. */
   hidden?: boolean;
+  /** Not signed in yet: a read-only preview. Open arzi then carry only the vote total, never the split. */
+  preview?: boolean;
+  vote_total?: number;
 }
 
 export interface Comment {
@@ -66,7 +69,10 @@ export const DURATIONS = [6, 12, 24, 48, 72, 120, 168] as const;
 export type FeedKind = 'open' | 'closed';
 
 export interface Api {
+  /** Signs in (a guest account on first launch). Runs once; actions that need an account wait for it. */
   init(): Promise<User>;
+  /** Called whenever a sign-in finishes, including one started by an action. Returns an unsubscribe. */
+  onSignedIn(fn: (u: User) => void): () => void;
   feed(kind: FeedKind): Promise<FeedItem[]>;
   mine(): Promise<FeedItem[]>;
   get(id: string): Promise<FeedItem | null>;

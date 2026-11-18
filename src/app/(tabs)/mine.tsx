@@ -74,7 +74,7 @@ export default function Mine() {
         <View style={s.hero}>
           <Text style={s.heroLabel}>{t('mine.saved')}</Text>
           <Text style={s.heroAmt}>{inr(saved)}</Text>
-          <Text style={s.heroSub}>{t('mine.stats', { handle: displayHandle(user.handle, lang), n: items.length, k: skipped })}</Text>
+          {user.handle ? <Text style={s.heroSub}>{t('mine.stats', { handle: displayHandle(user.handle, lang), n: items.length, k: skipped })}</Text> : null}
           {saved > 0 ? (
             <Pressable style={s.brag} onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}>
               <Text style={s.bragT}>{t('mine.shareSavings')}</Text>

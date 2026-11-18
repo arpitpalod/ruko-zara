@@ -91,6 +91,7 @@ function simulateCrowd(id: string) {
 
 export const mockApi: Api = {
   init: () => delay({ ...ME }),
+  onSignedIn: () => () => {},
   feed: (kind) =>
     delay(
       sorted()

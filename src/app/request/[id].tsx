@@ -15,6 +15,7 @@ import type { Comment, FeedItem, Verdict } from '../../lib/types';
 export default function RequestDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const user = useUser();
+  const own = (uid: string) => !!user.id && uid === user.id;
   const { t, lang } = useT();
   const [r, setR] = useState<FeedItem | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -41,7 +42,7 @@ export default function RequestDetail() {
     } finally {
       setLoaded(true);
     }
-  }, [id, user.isAdmin]);
+  }, [id, user.isAdmin, user.id]); // user.id: reload with your own view once sign-in finishes
 
   useFocusEffect(
     useCallback(() => {
@@ -52,9 +53,11 @@ export default function RequestDetail() {
   );
 
   const onVote = async (rid: string, v: Verdict) => {
-    setR((x) => (x ? applyVote(x, v) : x));
+    const wasPreview = !!r?.preview;
+    setR((x) => (x ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x));
     try {
       await api.vote(rid, v);
+      if (wasPreview) load();
     } catch (e: any) {
       setMsg(friendly(e, t));
       if (isGuestLimit(e)) router.push('/login');
@@ -141,12 +144,12 @@ export default function RequestDetail() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
         <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} />
-        {r.user_id === user.id && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
+        {own(r.user_id) && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
         <Pressable
           style={s.wa}
           onPress={() =>
             shareOnWhatsApp(
-              t(r.user_id === user.id ? 'share.mine' : 'share.other', {
+              t(own(r.user_id) ? 'share.mine' : 'share.other', {
                 item: r.item,
                 price: inr(r.price_inr),
                 reason: r.reason.length > 110 ? r.reason.slice(0, 107).trimEnd() + '…' : r.reason,
@@ -160,12 +163,12 @@ export default function RequestDetail() {
         <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={s.more}>
           <Text style={s.moreT}>{t('detail.more')}</Text>
         </Pressable>
-        {r.user_id !== user.id ? (
+        {!own(r.user_id) ? (
           <View style={s.actions}>
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>
               <Text style={s.report}>{reported.has(r.id) ? t('detail.reported') : t('detail.report')}</Text>
             </Pressable>
-            {!user.isAdmin ? (
+            {!user.isAdmin && r.user_id ? (
               <Pressable onPress={() => block(r.user_id, true)}>
                 <Text style={s.report}>{t('detail.block', { handle: displayHandle(r.handle, lang) })}</Text>
               </Pressable>
@@ -177,7 +180,7 @@ export default function RequestDetail() {
             <Text style={s.adminT}>{r.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
           </Pressable>
         ) : null}
-        {user.isAdmin && r.user_id !== user.id ? (
+        {user.isAdmin && !own(r.user_id) ? (
           <Pressable onPress={() => toggleBan(r.user_id)} style={s.adminBtn}>
             <Text style={s.adminT}>
               {banned.has(r.user_id)
@@ -197,7 +200,7 @@ export default function RequestDetail() {
             <View style={s.cRow}>
               <Text style={s.cHandle}>
                 {displayHandle(c.handle, lang)}
-                {c.user_id === r.user_id ? ' · OP' : ''}
+                {c.user_id && c.user_id === r.user_id ? ' · OP' : ''}
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
@@ -209,7 +212,7 @@ export default function RequestDetail() {
                 <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
                   <Text style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
                 </Pressable>
-                {c.user_id !== user.id ? (
+                {!own(c.user_id) ? (
                   <Pressable onPress={() => toggleBan(c.user_id)}>
                     <Text style={s.cAdmin}>
                       {banned.has(c.user_id)
@@ -222,12 +225,12 @@ export default function RequestDetail() {
                 ) : null}
               </View>
             ) : null}
-            {c.user_id !== user.id ? (
+            {!own(c.user_id) ? (
               <View style={[s.actions, { justifyContent: 'flex-end' }]}>
                 <Pressable onPress={() => report('comment', c.id)} disabled={reported.has(c.id)}>
                   <Text style={s.cReport}>{reported.has(c.id) ? t('detail.reported') : t('detail.reportShort')}</Text>
                 </Pressable>
-                {c.user_id !== r.user_id && !user.isAdmin ? (
+                {c.user_id && c.user_id !== r.user_id && !user.isAdmin ? (
                   <Pressable onPress={() => block(c.user_id, false)}>
                     <Text style={s.cReport}>{t('detail.blockShort')}</Text>
                   </Pressable>

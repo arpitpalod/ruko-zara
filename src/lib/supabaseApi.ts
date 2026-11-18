@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
-import { getCaptchaToken } from './captcha';
+import { getCaptchaToken, wantCaptcha } from './captcha';
 import type { Api, Comment, FeedItem, User } from './types';
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
@@ -43,10 +43,43 @@ export function createSupabaseApi(url: string, key: string): Api {
     return toUser(session!.user);
   }
 
+  // One sign-in at a time, shared by the app start and any action that needs an account.
+  let signingIn: Promise<User> | null = null;
+  const listeners = new Set<(u: User) => void>();
+  function init(): Promise<User> {
+    if (!signingIn) {
+      signingIn = startSession().then(
+        (u) => {
+          listeners.forEach((f) => f(u));
+          return u;
+        },
+        (e) => {
+          signingIn = null; // let the next action try again
+          throw e;
+        },
+      );
+    }
+    return signingIn;
+  }
+  /** Before anything that needs an account: from here on, a tap request from Cloudflare may be shown. */
+  async function ensure() {
+    wantCaptcha();
+    await init();
+  }
+  const hasSession = async () => !!(await sb.auth.getSession()).data.session;
+  /** Preview rows (not signed in yet) carry no user ids and no vote of yours. */
+  const fromPreview = (r: any): FeedItem => ({ ...r, user_id: '', my_vote: null, hidden: false });
+
   return {
-    init: startSession,
+    init,
+
+    onSignedIn(fn) {
+      listeners.add(fn);
+      return () => listeners.delete(fn);
+    },
 
     async sendEmailCode(email) {
+      await ensure().catch(() => {}); // a guest sign-in still running must not replace this login later
       const session = (await sb.auth.getSession()).data.session;
       if (session?.user?.is_anonymous) {
         // Attach the email to this anonymous account so its requests and votes are kept.
@@ -70,25 +103,35 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async adminSetBanned(userId, ban, reason) {
+      await ensure();
       must(await sb.rpc('admin_set_banned', { target: userId, ban, reason: reason ?? null }));
     },
 
     async adminBannedIds() {
+      await init();
       const r = await sb.rpc('admin_banned_ids');
       return r.error || !Array.isArray(r.data) ? [] : (r.data as string[]);
     },
 
     async adminSetHidden(type, id, hide) {
+      await ensure();
       must(await sb.rpc('admin_set_hidden', { target_type: type, target_id: id, hide }));
     },
 
     async deleteAccount() {
+      await ensure();
       must(await sb.rpc('delete_my_account'));
       await sb.auth.signOut({ scope: 'local' });
-      return startSession();
+      signingIn = null;
+      return init();
     },
 
     async feed(kind) {
+      if (!(await hasSession())) {
+        const p = await sb.rpc('public_feed', { kind });
+        if (!p.error && Array.isArray(p.data)) return p.data.map(fromPreview);
+        await ensure(); // preview unavailable: fall back to signing in first
+      }
       const now = new Date().toISOString();
       const q = sb.from('request_feed').select('*');
       return must<FeedItem[]>(
@@ -99,16 +142,27 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async mine() {
+      await ensure();
       return must<FeedItem[]>(
         await sb.from('request_feed').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
       );
     },
 
     async get(id) {
+      if (!(await hasSession())) {
+        const p = await sb.rpc('public_request', { target: id });
+        if (!p.error && Array.isArray(p.data)) return p.data[0] ? fromPreview(p.data[0]) : null;
+        await ensure();
+      }
       return must<FeedItem | null>(await sb.from('request_feed').select('*').eq('id', id).maybeSingle());
     },
 
     async comments(id) {
+      if (!(await hasSession())) {
+        const p = await sb.rpc('public_comments', { target: id });
+        if (!p.error && Array.isArray(p.data)) return p.data.map((c: any): Comment => ({ ...c, user_id: '' }));
+        await ensure();
+      }
       const rows = must<any[]>(
         await sb
           .from('comments')
@@ -120,6 +174,7 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async create(r) {
+      await ensure();
       const { duration_hours, ...fields } = r;
       const closes_at = new Date(Date.now() + duration_hours * 3.6e6).toISOString(); // server caps at 7 days
       const d = must<{ id: string }>(
@@ -129,6 +184,7 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async vote(id, v) {
+      await ensure();
       must(
         await sb
           .from('votes')
@@ -137,24 +193,29 @@ export function createSupabaseApi(url: string, key: string): Api {
     },
 
     async guestVotesLeft() {
+      await init(); // automatic, not a tap: never brings up a tap request
       const r = await sb.rpc('guest_votes_left');
       return r.error || typeof r.data !== 'number' ? null : r.data;
     },
 
     async comment(id, body) {
+      await ensure();
       must(await sb.from('comments').insert({ request_id: id, user_id: uid, body }));
     },
 
     async setOutcome(id, o) {
+      await ensure();
       must(await sb.from('requests').update({ outcome: o }).eq('id', id));
     },
 
     async report(type, id, reason) {
+      await ensure();
       const r = await sb.from('reports').insert({ target_type: type, target_id: id, user_id: uid, reason });
       if (r.error && r.error.code !== '23505') throw new Error(r.error.message); // 23505 = already reported
     },
 
     async block(userId) {
+      await ensure();
       const r = await sb.from('blocks').insert({ blocker_id: uid, blocked_id: userId });
       if (r.error && r.error.code !== '23505') throw new Error(r.error.message); // already blocked
     },

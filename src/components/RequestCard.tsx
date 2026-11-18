@@ -29,10 +29,11 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
     ? { ...real, approve_count: real.approve_count + (real.demo_approve ?? 0), reject_count: real.reject_count + (real.demo_reject ?? 0) }
     : real;
   const left = timeLeft(r.closes_at, t);
-  const mine = r.user_id === meId;
-  const total = r.approve_count + r.reject_count;
+  const mine = !!meId && r.user_id === meId;
+  // A preview (not signed in yet) of an open arzi carries only the total, never the split.
+  const total = r.preview && r.vote_total != null ? r.vote_total : r.approve_count + r.reject_count;
   const yesPct = total ? Math.round((r.approve_count / total) * 100) : 0;
-  const showResults = !!r.my_vote || mine || !left || viewer.isAdmin;
+  const showResults = !(r.preview && left) && (!!r.my_vote || mine || !left || viewer.isAdmin);
   const canVote = !mine && !!left && !!onVote;
   const footer = [left ?? verdictText(r, t), r.comment_count > 0 ? t('card.comments', { n: r.comment_count }) : null]
     .filter(Boolean)
@@ -80,7 +81,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
         </View>
       ) : (
         <Text style={[s.meta, s.results]}>
-          {total === 0 ? t('card.firstVote') : `${t('card.votes', { n: total })} · ${t('card.hidden')}`}
+          {total === 0 ? t('card.firstVote') : r.my_vote ? t('card.votes', { n: total }) : `${t('card.votes', { n: total })} · ${t('card.hidden')}`}
         </Text>
       )}
 

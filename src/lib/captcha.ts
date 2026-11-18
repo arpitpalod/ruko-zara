@@ -16,8 +16,27 @@ const waiters: Waiter[] = [];
 let host: ((round: number) => void) | null = null;
 let round = 0;
 
+// Whether a person is waiting on the check (tapped vote, post, comment, login). Until then a tap
+// request from Cloudflare stays out of the way, so reading is never interrupted.
+let wanted = false;
+const wantListeners = new Set<(w: boolean) => void>();
+function setWanted(w: boolean) {
+  if (wanted === w) return;
+  wanted = w;
+  wantListeners.forEach((f) => f(w));
+}
+export const wantCaptcha = () => setWanted(true);
+export function subscribeWanted(fn: (w: boolean) => void) {
+  wantListeners.add(fn);
+  fn(wanted);
+  return () => {
+    wantListeners.delete(fn);
+  };
+}
+
 /** Each token works once, so every caller gets a fresh widget run ("round"). 0 = nothing to do. */
 function next() {
+  if (!waiters.length) setWanted(false);
   host?.(waiters.length ? ++round : 0);
 }
 

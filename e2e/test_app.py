@@ -41,7 +41,7 @@ def test_vote_reveals_results(page):
 def test_results_tab(page):
     open_app(page, "English")
     page.get_by_text("Results", exact=True).click()
-    page.get_by_text(re.compile(r"No results yet|👍 \d+")).first.wait_for()
+    page.get_by_text(re.compile(r"No results yet|Crowd says|% say buy it")).first.wait_for()
 
 
 def test_post_arzi_asks_for_email_then_posts(page):
@@ -139,3 +139,14 @@ def test_hindi_mode_names_in_devanagari(page):
     open_app(page, "हिन्दी")
     page.get_by_text("ले लो", exact=True).first.wait_for()
     assert re.search(r"(कंजूस|बचत|सस्ता|समझदार|किफ़ायती|चिल्लर|हिसाबी|सब्र) ", page.inner_text("body"))
+
+
+def test_page_shell_and_no_icon_font(page):
+    """A placeholder shows before the app starts, and no 380 KB icon font is downloaded."""
+    fonts = []
+    page.on("request", lambda r: fonts.append(r.url) if r.url.endswith(".ttf") else None)
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    assert not [f for f in fonts if "Ionicons" in f], fonts
+    html = page.request.get(page.url.split("#")[0]).text()
+    assert 'class="boot"' in html and "preconnect" in html

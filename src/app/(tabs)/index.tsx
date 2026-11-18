@@ -1,8 +1,9 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
+import { SkeletonList } from '../../components/SkeletonCard';
 import { UpdateBanner } from '../../components/UpdateBanner';
 import { api, isDemo } from '../../lib/api';
 import { friendly, isGuestLimit } from '../../lib/errors';
@@ -34,9 +35,11 @@ export default function Feed() {
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
   const { picked, toggle, clear } = useInterests();
 
+  // The list refreshes quietly (no spinner) once it has something to show, e.g. when sign-in finishes.
+  const shown = useRef(false);
   const load = useCallback(
     async (which: Tab = tab) => {
-      setLoading(true);
+      if (!shown.current) setLoading(true);
       try {
         setErr(null);
         if (user.email) setLeft(null);
@@ -44,7 +47,8 @@ export default function Feed() {
         if (user.isAdmin) api.adminBannedIds().then((ids) => setBanned(new Set(ids)), () => {});
         const rows = await api.feed(which);
         // Vote tab: not-yet-voted first, then the ones you voted on (your own arzi live in Meri Arzi).
-        setItems(which === 'open' ? rows.filter((r) => r.user_id !== user.id) : rows);
+        setItems(which === 'open' ? rows.filter((r) => !user.id || r.user_id !== user.id) : rows);
+        shown.current = rows.length > 0;
         setVotedAtLoad(new Set(rows.filter((r) => r.my_vote).map((r) => r.id)));
       } catch (e: any) {
         setErr(friendly(e, t));
@@ -63,17 +67,21 @@ export default function Feed() {
 
   const switchTab = (next: Tab) => {
     if (next === tab) return;
+    shown.current = false;
     setItems([]);
     setTab(next);
   };
 
   const onVote = async (id: string, v: Verdict) => {
-    const isNew = !items.find((x) => x.id === id)?.my_vote;
+    const item = items.find((x) => x.id === id);
+    const isNew = !item?.my_vote;
     if (isNew && left === 0) return router.push('/login');
-    setItems((xs) => xs.map((x) => (x.id === id ? applyVote(x, v) : x)));
+    // A preview has no split to update yet: mark the vote, then load the real numbers.
+    setItems((xs) => xs.map((x) => (x.id === id ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x)));
     try {
       await api.vote(id, v);
       if (isNew) setLeft((n) => (n === null ? n : Math.max(0, n - 1)));
+      if (item?.preview) load();
     } catch (e: any) {
       setErr(friendly(e, t));
       if (isGuestLimit(e)) {
@@ -100,8 +108,12 @@ export default function Feed() {
       keyExtractor={(x) => x.id}
       contentContainerStyle={s.list}
       stickySectionHeadersEnabled={false}
-      refreshing={loading}
-      onRefresh={() => load()}
+      refreshing={loading && items.length > 0}
+      ListFooterComponent={loading && items.length === 0 && !err ? <SkeletonList /> : undefined}
+      onRefresh={() => {
+        setLoading(true);
+        load();
+      }}
       ListHeaderComponent={
         <View style={{ gap: 10, marginBottom: 4 }}>
           <Text style={s.tag}>{t('feed.tagline')}</Text>

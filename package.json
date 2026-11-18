@@ -4,7 +4,6 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/metro-runtime": "~58.0.17",
-    "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "^2.119.0",
     "expo": "~58.0.25",
@@ -25,8 +24,8 @@
     "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",
     "jest": "^30.5.2",
-    "typescript": "~6.0.3",
-    "jest-expo": "~58.0.14"
+    "jest-expo": "~58.0.14",
+    "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
