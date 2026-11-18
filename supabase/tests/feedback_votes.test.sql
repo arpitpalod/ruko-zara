@@ -61,6 +61,13 @@ select results_eq($$select approve_count, reject_count, verified_approve, verifi
                   $$values (1, 2, 1, 1)$$, 'the feed carries verified counts');
 reset role;
 
+-- nobody can write the counts themselves
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"33333333-3333-4333-8333-000000000001","role":"authenticated","is_anonymous":false}', true);
+select throws_ok($$update public.requests set verified_yes = 99 where id = '44444444-4444-4444-8444-000000000012'$$,
+                 '42501', null, 'the poster cannot set verified counts');
+reset role;
+
 -- outsiders see verified counts only once voting has closed
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
