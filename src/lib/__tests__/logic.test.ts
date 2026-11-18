@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 import { friendly, isGuestLimit } from '../errors';
-import { applyVote, displayHandle, domainOf, extractLink, inr, timeLeft, verdictText } from '../format';
+import { applyVote, domainOf, extractLink, inr, timeLeft, verdictText } from '../format';
 import type { T } from '../i18n';
 import { isNewer } from '../version';
 import type { FeedItem } from '../types';
@@ -83,9 +83,3 @@ describe('Android update check', () => {
   it('broken file → no update', () => expect(isNewer('200', 100)).toBe(false));
 });
 
-describe('random names in the chosen language', () => {
-  it('English', () => expect(displayHandle('Kanjoos Kabootar 42', 'en')).toBe('Frugal Pigeon 42'));
-  it('Hindi', () => expect(displayHandle('Sabar Panda 17', 'hi')).toBe('सब्र पांडा 17'));
-  it('Hinglish unchanged', () => expect(displayHandle('Kanjoos Kabootar 42', 'hinglish')).toBe('Kanjoos Kabootar 42'));
-  it('other names unchanged', () => expect(displayHandle('Ruko Zara · Example', 'en')).toBe('Ruko Zara · Example'));
-});

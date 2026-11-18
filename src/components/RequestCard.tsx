@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ago, catLabel, displayHandle, domainOf, inr, timeLeft, verdictText } from '../lib/format';
+import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
 import { useT } from '../lib/i18n';
 import { useUser } from '../lib/session';
@@ -51,7 +51,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
         <Text style={s.price}>{inr(r.price_inr)}</Text>
       </View>
       <Text style={s.meta} numberOfLines={1}>
-        {catLabel(r.category, t)} · {ago(r.created_at, t)} · {displayHandle(r.handle, lang)}
+        {catLabel(r.category, t)} · {ago(r.created_at, t)} · {r.handle}
         {mine ? t('card.you') : ''}
       </Text>
 

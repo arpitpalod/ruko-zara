@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { RequestCard } from '../../components/RequestCard';
 import { friendly, isGuestLimit } from '../../lib/errors';
 import { api } from '../../lib/api';
-import { ago, applyVote, inr, timeLeft, displayHandle } from '../../lib/format';
+import { ago, applyVote, inr, timeLeft } from '../../lib/format';
 import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
@@ -170,7 +170,7 @@ export default function RequestDetail() {
             </Pressable>
             {!user.isAdmin && r.user_id ? (
               <Pressable onPress={() => block(r.user_id, true)}>
-                <Text style={s.report}>{t('detail.block', { handle: displayHandle(r.handle, lang) })}</Text>
+                <Text style={s.report}>{t('detail.block', { handle: r.handle })}</Text>
               </Pressable>
             ) : null}
           </View>
@@ -184,10 +184,10 @@ export default function RequestDetail() {
           <Pressable onPress={() => toggleBan(r.user_id)} style={s.adminBtn}>
             <Text style={s.adminT}>
               {banned.has(r.user_id)
-                ? t('admin.unban', { handle: displayHandle(r.handle, lang) })
+                ? t('admin.unban', { handle: r.handle })
                 : confirmBan === r.user_id
-                  ? t('admin.banConfirm', { handle: displayHandle(r.handle, lang) })
-                  : t('admin.ban', { handle: displayHandle(r.handle, lang) })}
+                  ? t('admin.banConfirm', { handle: r.handle })
+                  : t('admin.ban', { handle: r.handle })}
             </Text>
           </Pressable>
         ) : null}
@@ -199,7 +199,7 @@ export default function RequestDetail() {
           <View key={c.id} style={s.comment}>
             <View style={s.cRow}>
               <Text style={s.cHandle}>
-                {displayHandle(c.handle, lang)}
+                {c.handle}
                 {c.user_id && c.user_id === r.user_id ? ' · OP' : ''}
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>

@@ -5,7 +5,7 @@ import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
-import { inr, displayHandle } from '../../lib/format';
+import { inr } from '../../lib/format';
 import { LANGS, useT } from '../../lib/i18n';
 import { LEGAL, WEB_BASE, openLink } from '../../lib/legal';
 import { shareOnWhatsApp } from '../../lib/share';
@@ -74,7 +74,7 @@ export default function Mine() {
         <View style={s.hero}>
           <Text style={s.heroLabel}>{t('mine.saved')}</Text>
           <Text style={s.heroAmt}>{inr(saved)}</Text>
-          {user.handle ? <Text style={s.heroSub}>{t('mine.stats', { handle: displayHandle(user.handle, lang), n: items.length, k: skipped })}</Text> : null}
+          {user.handle ? <Text style={s.heroSub}>{t('mine.stats', { handle: user.handle, n: items.length, k: skipped })}</Text> : null}
           {saved > 0 ? (
             <Pressable style={s.brag} onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}>
               <Text style={s.bragT}>{t('mine.shareSavings')}</Text>

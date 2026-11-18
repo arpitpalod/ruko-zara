@@ -124,21 +124,20 @@ def test_english_mode_is_english(page):
     open_app(page, "English")
     page.get_by_text("Buy it", exact=True).first.wait_for()
     body = page.inner_text("body")
-    for word in ["Kabootar", "Bhalu", "Chacha", "Mausi", "Tota", "Sabar", "Hisaabi", "arzi"]:
-        assert word not in body, f"Hinglish word in English mode: {word}"
+    assert "arzi" not in body, "Hinglish word in English mode: arzi"
     assert "1 opinions" not in body and "1 opinion" in body
 
 
-def test_hinglish_mode_keeps_hinglish_names(page):
-    open_app(page, "Hinglish")
-    page.get_by_text("Le le", exact=True).first.wait_for()
-    assert re.search(r"(Kanjoos|Bachat|Sasta|Samajhdar|Thrifty|Chillar|Hisaabi|Sabar) ", page.inner_text("body"))
-
-
-def test_hindi_mode_names_in_devanagari(page):
-    open_app(page, "हिन्दी")
+def test_names_never_change_with_language(page):
+    """A person's random name is their identity: the same in every language."""
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    names = re.findall(r"(?:Kanjoos|Bachat|Sasta|Samajhdar|Chillar|Hisaabi|Sabar) [A-Za-z]+ \d+", page.inner_text("body"))
+    assert names, "expected the usual random names"
+    page.get_by_label("Change language / भाषा बदलें").first.click()
+    page.get_by_text("हिन्दी", exact=True).last.click()
     page.get_by_text("ले लो", exact=True).first.wait_for()
-    assert re.search(r"(कंजूस|बचत|सस्ता|समझदार|किफ़ायती|चिल्लर|हिसाबी|सब्र) ", page.inner_text("body"))
+    assert names[0] in page.inner_text("body")
 
 
 def test_page_shell_and_no_icon_font(page):

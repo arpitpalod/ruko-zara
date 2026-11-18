@@ -64,30 +64,3 @@ export function applyVote(r: FeedItem, v: Verdict): FeedItem {
   return out;
 }
 
-/** Random names are made of these Hinglish words; English and Hindi readers see them in their language. */
-const HANDLE_WORDS: Record<string, { en: string; hi: string }> = {
-  Kanjoos: { en: 'Frugal', hi: 'कंजूस' },
-  Bachat: { en: 'Saver', hi: 'बचत' },
-  Sasta: { en: 'Budget', hi: 'सस्ता' },
-  Samajhdar: { en: 'Wise', hi: 'समझदार' },
-  Thrifty: { en: 'Thrifty', hi: 'किफ़ायती' },
-  Chillar: { en: 'Penny', hi: 'चिल्लर' },
-  Hisaabi: { en: 'Careful', hi: 'हिसाबी' },
-  Sabar: { en: 'Patient', hi: 'सब्र' },
-  Kabootar: { en: 'Pigeon', hi: 'कबूतर' },
-  Baba: { en: 'Sage', hi: 'बाबा' },
-  Tota: { en: 'Parrot', hi: 'तोता' },
-  Bhalu: { en: 'Bear', hi: 'भालू' },
-  Chacha: { en: 'Uncle', hi: 'चाचा' },
-  Mausi: { en: 'Auntie', hi: 'मौसी' },
-  Tiger: { en: 'Tiger', hi: 'टाइगर' },
-  Panda: { en: 'Panda', hi: 'पांडा' },
-};
-
-export function displayHandle(handle: string, lang: 'en' | 'hi' | 'hinglish'): string {
-  if (lang === 'hinglish') return handle;
-  const m = handle.match(/^(\S+) (\S+) (\d+)$/);
-  const a = m && HANDLE_WORDS[m[1]];
-  const b = m && HANDLE_WORDS[m[2]];
-  return a && b ? `${a[lang]} ${b[lang]} ${m![3]}` : handle;
-}

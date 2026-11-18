@@ -110,6 +110,12 @@ select ok(not public.contains_abuse('chutney maker'), 'chutney is fine');
 select ok(not public.contains_abuse('Gandhi jayanti sale'), 'Gandhi is fine');
 select ok(not public.contains_abuse('Kutiyana trip'), 'Kutiyana is fine');
 select ok(not public.contains_abuse('Dickens novels'), 'Dickens is fine');
+-- Sexual content (18 Nov)
+select ok(public.contains_abuse('Sex Doll 10000'), 'sexual items are blocked');
+select ok(public.contains_abuse('I am horny, should I buy or fap it out?'), 'sexual reasons are blocked');
+select ok(not public.contains_abuse('Unisex hoodie'), 'unisex is fine');
+select ok(not public.contains_abuse('nude lipstick shade'), 'nude (a colour) is fine');
+select ok(not public.contains_abuse('chodo yaar, mat lo'), 'chodo (leave it) is fine');
 
 select * from finish();
 rollback;
