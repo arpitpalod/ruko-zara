@@ -40,6 +40,9 @@ export interface FeedItem {
   /** Not signed in yet: a read-only preview. Open arzi then carry only the vote total, never the split. */
   preview?: boolean;
   vote_total?: number;
+  /** Votes from accounts with a verified email (guests are cheap to fake; these aren't). */
+  verified_approve?: number;
+  verified_reject?: number;
 }
 
 export interface Comment {

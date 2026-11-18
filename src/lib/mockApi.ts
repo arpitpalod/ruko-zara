@@ -38,10 +38,12 @@ const rows: Row[] = [
 
 const banned = new Set<string>();
 const votes = new Map<string, Map<string, Verdict>>(); // requestId → (userId → verdict)
+const verifiedVoters = new Set<string>(); // demo: about a third of voters verified their email
 const seedVotes = (id: string, yes: number, no: number) => {
   const m = new Map<string, Verdict>();
   for (let i = 0; i < yes; i++) m.set(`s${id}y${i}`, 'approve');
   for (let i = 0; i < no; i++) m.set(`s${id}n${i}`, 'reject');
+  [...m.keys()].forEach((k, i) => (i % 3 === 0 ? verifiedVoters.add(k) : null));
   votes.set(id, m);
 };
 seedVotes('r1', 9, 41); seedVotes('r2', 23, 19); seedVotes('r3', 6, 14); seedVotes('r4', 37, 5);
@@ -62,13 +64,19 @@ const delay = <T,>(v: T) => new Promise<T>((r) => setTimeout(() => r(v), 150));
 
 function view(r: Row): FeedItem {
   const m = votes.get(r.id) ?? new Map<string, Verdict>();
-  let a = 0, rej = 0;
-  m.forEach((v) => (v === 'approve' ? a++ : rej++));
+  let a = 0, rej = 0, va = 0, vr = 0;
+  m.forEach((v, who) => {
+    if (v === 'approve') a++;
+    else rej++;
+    if (verifiedVoters.has(who)) v === 'approve' ? va++ : vr++;
+  });
   return {
     ...r,
     handle: handles[r.user_id] ?? '—',
     approve_count: a,
     reject_count: rej,
+    verified_approve: va,
+    verified_reject: vr,
     comment_count: comments.filter((c) => c.request_id === r.id).length,
     my_vote: m.get(ME.id) ?? null,
   };

@@ -1,4 +1,4 @@
-import { Ban, EyeOff, IconText, PartyPopper, ShoppingBag } from './Icon';
+import { BadgeCheck, Ban, EyeOff, IconText, PartyPopper, ShoppingBag } from './Icon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
@@ -33,6 +33,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
   const mine = !!meId && r.user_id === meId;
   // A preview (not signed in yet) of an open arzi carries only the total, never the split.
   const total = r.preview && r.vote_total != null ? r.vote_total : r.approve_count + r.reject_count;
+  const vTotal = (r.verified_approve ?? 0) + (r.verified_reject ?? 0);
   const yesPct = total ? Math.round((r.approve_count / total) * 100) : 0;
   const showResults = !(r.preview && left) && (!!r.my_vote || mine || !left || viewer.isAdmin);
   const canVote = !mine && !!left && !!onVote;
@@ -79,6 +80,11 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
               {demo ? ` · ${t('card.demo')}` : ''}
             </Text>
           </View>
+          {vTotal > 0 && vTotal < total ? (
+            <IconText icon={BadgeCheck} size={13} color={C.sub} style={s.verifiedT} box={{ marginTop: 6 }}>
+              {t('card.verified', { p: Math.round((100 * (r.verified_approve ?? 0)) / vTotal), n: vTotal })}
+            </IconText>
+          ) : null}
         </View>
       ) : (
         <Text style={[s.meta, s.results]}>
@@ -134,6 +140,7 @@ const s = StyleSheet.create({
   link: { marginTop: 8, fontSize: 13.5, fontWeight: '600', color: C.brand },
   results: { marginTop: 14 },
   bar: { flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
+  verifiedT: { fontSize: 12.5, fontWeight: '600' },
   resultT: { fontSize: 13.5, fontWeight: '700', color: C.ink },
   flag: { backgroundColor: C.noSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
   flagT: { fontSize: 12, fontWeight: '700' },
