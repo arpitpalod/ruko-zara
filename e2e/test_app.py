@@ -283,6 +283,7 @@ def test_post_button_on_top_of_feed(page):
     page.wait_for_timeout(400)
     btn = page.get_by_test_id("post-button")
     assert btn.is_visible(), "post button scrolled away"
+    assert btn.inner_text().strip() == "Post to Save ₹", btn.inner_text()
     btn.click()
     page.get_by_text("What do you want to buy?").wait_for()
     assert page.locator('[data-testid="post-button"] >> visible=true').count() <= 1, "post button also on New request"

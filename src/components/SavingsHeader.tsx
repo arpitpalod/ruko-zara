@@ -43,7 +43,7 @@ export function SavingsHeader({ scrollY, postButton }: { scrollY: Animated.Value
               accessibilityRole="button"
               testID="post-button"
             >
-              <IconText icon={CirclePlus} size={15} color="#fff" style={s.postT}>{t('save.post')}</IconText>
+              <IconText icon={CirclePlus} size={15} color="#fff" style={s.postT}>{t('save.postTop')}</IconText>
             </Pressable>
           </View>
         ) : null}
