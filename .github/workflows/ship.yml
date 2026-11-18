@@ -78,7 +78,8 @@ jobs:
       - if: env.HAS_DB == 'true'
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # A fixed version: "latest" asks GitHub's API first, which hits rate limits and fails the run.
+          version: 3.2.0
       - name: Start a throwaway local Supabase
         if: env.HAS_DB == 'true'
         run: supabase start

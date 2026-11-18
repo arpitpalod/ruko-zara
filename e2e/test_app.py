@@ -163,3 +163,10 @@ def test_no_emojis_in_the_interface(page):
         # user-written text (demo arzi and comments) may contain emojis; check the app's own words only
         own = [l for l in body.split("\n") if emoji.search(l) and not re.search(r"[a-z]{4,} [a-z]{4,} [a-z]{4,}", l.lower())]
         assert not own, f"emoji in the interface on {tab}: {own}"
+
+
+def test_results_show_verified_voters_separately(page):
+    """Guests are cheap to fake; results also say what verified accounts voted."""
+    open_app(page, "English")
+    page.get_by_text("Results", exact=True).click()
+    page.get_by_text(re.compile(r"^Verified voters: \d+% say buy it \(\d+\)$")).first.wait_for()
