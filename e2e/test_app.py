@@ -165,8 +165,9 @@ def test_no_emojis_in_the_interface(page):
         assert not own, f"emoji in the interface on {tab}: {own}"
 
 
-def test_results_show_verified_voters_separately(page):
-    """Guests are cheap to fake; results also say what verified accounts voted."""
+def test_verified_voters_not_shown_yet(page):
+    """Verified votes are counted but not shown until Arpit says so (18 Nov)."""
     open_app(page, "English")
     page.get_by_text("Results", exact=True).click()
-    page.get_by_text(re.compile(r"^Verified voters: \d+% say buy it \(\d+\)$")).first.wait_for()
+    page.get_by_text(re.compile(r"% say buy it$")).first.wait_for()
+    assert "Verified voters" not in page.inner_text("body")

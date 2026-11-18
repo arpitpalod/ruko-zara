@@ -21,6 +21,9 @@ interface Props {
  * One arzi. Results stay hidden until you vote (seeing a lopsided count first nudges people to
  * follow the crowd), except on your own arzi, after voting closes, and for admins.
  */
+// Verified voters' split under each result: built and counted, but not shown for now (Arpit, 18 Nov).
+const SHOW_VERIFIED_VOTES = false;
+
 export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned }: Props) {
   const { t, lang } = useT();
   const viewer = useUser();
@@ -80,7 +83,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
               {demo ? ` · ${t('card.demo')}` : ''}
             </Text>
           </View>
-          {vTotal > 0 && vTotal < total ? (
+          {SHOW_VERIFIED_VOTES && vTotal > 0 && vTotal < total ? (
             <IconText icon={BadgeCheck} size={13} color={C.sub} style={s.verifiedT} box={{ marginTop: 6 }}>
               {t('card.verified', { p: Math.round((100 * (r.verified_approve ?? 0)) / vTotal), n: vTotal })}
             </IconText>
