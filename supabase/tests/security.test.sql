@@ -111,9 +111,19 @@ select throws_ok($$insert into public.comments (request_id, user_id, body)
 
 -- 20 free votes
 select is(public.guest_votes_left(), 19, 'guest has 19 free votes left after 1 vote');
+-- (in two batches: at most 10 new votes a minute; the first batch is moved back 2 minutes)
 select lives_ok($$insert into public.votes (request_id, user_id, verdict)
   select ('00000000-0000-0000-0001-' || lpad(g::text, 12, '0'))::uuid, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'approve'
-  from generate_series(2, 20) g$$, 'guest can cast votes 2 to 20');
+  from generate_series(2, 10) g$$, 'guest can cast votes 2 to 10');
+reset role;
+update public.votes set created_at = now() - interval '2 minutes' where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+set local role authenticated;
+select lives_ok($$insert into public.votes (request_id, user_id, verdict)
+  select ('00000000-0000-0000-0001-' || lpad(g::text, 12, '0'))::uuid, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'approve'
+  from generate_series(11, 20) g$$, 'guest can cast votes 11 to 20');
+reset role;
+update public.votes set created_at = now() - interval '2 minutes' where user_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+set local role authenticated;
 select throws_like($$insert into public.votes (request_id, user_id, verdict)
   values ('00000000-0000-0000-0001-000000000021', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'approve')$$,
   '%GUEST_VOTE_LIMIT%', 'the 21st guest vote is blocked');

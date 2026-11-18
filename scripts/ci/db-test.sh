@@ -59,11 +59,14 @@ fi
 status=0
 for f in supabase/tests/*.test.sql; do
   echo "::group::$f"
-  if ! local_sql -f "$f" > "$WORK/out.txt" 2>&1; then status=1; fi
+  # -tA: plain lines, so a failed check reads exactly "not ok ..." (psql's table layout indented it,
+  # and until 18 Nov failed checks went unnoticed; only crashes failed the run).
+  if ! local_sql -tA -f "$f" > "$WORK/out.txt" 2>&1; then status=1; fi
   cat "$WORK/out.txt"
-  if grep -qE '^not ok|^# Looks like' "$WORK/out.txt"; then status=1; fi
+  if grep -qE '^[[:space:]]*(not ok|# Looks like)' "$WORK/out.txt"; then status=1; fi
+  if ! grep -qE '^[[:space:]]*ok [0-9]' "$WORK/out.txt"; then echo "::error::$f ran no checks"; status=1; fi
   echo "::endgroup::"
-  grep -E '^not ok' "$WORK/out.txt" | sed 's/^/::error::/' || true
+  grep -E '^[[:space:]]*not ok' "$WORK/out.txt" | sed 's/^[[:space:]]*/::error::/' || true
 done
 [ $status -eq 0 ] && echo "All database tests passed"
 exit $status
