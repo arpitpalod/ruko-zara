@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 import { getCaptchaToken, wantCaptcha } from './captcha';
+import type { ReasonCount } from './reasons';
 import type { Api, Comment, FeedItem, User } from './types';
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
@@ -183,13 +184,24 @@ export function createSupabaseApi(url: string, key: string): Api {
       return d.id;
     },
 
-    async vote(id, v) {
+    async vote(id, v, reason) {
       await ensure();
-      must(
-        await sb
-          .from('votes')
-          .upsert({ request_id: id, user_id: uid, verdict: v }, { onConflict: 'request_id,user_id' }),
-      );
+      const row = { request_id: id, user_id: uid, verdict: v };
+      const res = await sb
+        .from('votes')
+        .upsert({ ...row, reason: reason ?? null }, { onConflict: 'request_id,user_id' });
+      // Database not updated for reasons yet: the vote still counts, without its reason.
+      if (res.error && /reason/i.test(res.error.message) && res.error.code === 'PGRST204') {
+        must(await sb.from('votes').upsert(row, { onConflict: 'request_id,user_id' }));
+        return;
+      }
+      must(res);
+    },
+
+    async voteReasons(id) {
+      if (!(await hasSession())) return []; // preview: no split yet, so no reasons either
+      const r = await sb.rpc('vote_reasons', { target: id });
+      return r.error || !Array.isArray(r.data) ? [] : (r.data as ReasonCount[]);
     },
 
     async guestVotesLeft() {

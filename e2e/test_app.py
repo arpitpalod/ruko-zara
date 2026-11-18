@@ -35,6 +35,7 @@ def test_vote_reveals_results(page):
     page.get_by_text("Buy it", exact=True).first.wait_for()
     assert page.get_by_text(re.compile("Vote to see what people said|No votes yet")).count() > 0
     page.get_by_text("Buy it", exact=True).first.click()
+    page.get_by_text("Worth the price", exact=True).click()   # the reason is the second tap
     page.get_by_text(re.compile(r"^\d+% say buy it$")).first.wait_for()
 
 
@@ -171,3 +172,43 @@ def test_verified_voters_not_shown_yet(page):
     page.get_by_text("Results", exact=True).click()
     page.get_by_text(re.compile(r"% say buy it$")).first.wait_for()
     assert "Verified voters" not in page.inner_text("body")
+
+
+def test_vote_needs_a_reason(page):
+    """Buy it / Skip it opens that side's reasons; the vote counts only once a reason is picked (18 Nov)."""
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.click()
+    for r in ("You need it", "Worth the price", "Treat yourself"):
+        page.get_by_text(r, exact=True).wait_for()
+    assert page.get_by_text("Wait for a sale", exact=True).count() == 0, "Skip reasons shown for Buy it"
+    assert page.get_by_text(re.compile(r"^\d+% say buy it$")).count() == 0, "results shown before a reason was picked"
+    page.get_by_text("Skip it", exact=True).first.click()           # switch sides: the other reasons
+    for r in ("Don't need it", "Wait for a sale", "Cheaper option exists", "Too much for this"):
+        page.get_by_text(r, exact=True).wait_for()
+    assert page.get_by_text("Treat yourself", exact=True).count() == 0
+    page.get_by_text("Skip it", exact=True).first.click()           # tap again: closes, still no vote
+    page.get_by_text("Wait for a sale", exact=True).wait_for(state="detached")
+    assert page.get_by_text(re.compile(r"^\d+% say buy it$")).count() == 0
+
+
+def test_reasons_tally_after_voting(page):
+    """On the arzi page, once you've voted, you see why people voted, your reason included."""
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.goto(BASE + "/request/r1")
+    page.get_by_text("Share on WhatsApp").wait_for()
+    assert page.get_by_text("Why people voted").count() == 0, "reasons shown before voting"
+    page.get_by_text("Skip it", exact=True).click()
+    page.get_by_text("Wait for a sale", exact=True).click()
+    tally = page.get_by_test_id("reason-tally")
+    tally.wait_for()
+    text = tally.inner_text()
+    assert "Why people voted" in text and "Wait for a sale" in text and "Don't need it" in text, text
+
+
+def test_reasons_in_hinglish(page):
+    open_app(page, "Hinglish")
+    page.get_by_text("Le le", exact=True).first.click()
+    page.get_by_text("Zaroorat hai", exact=True).wait_for()
+    page.get_by_text("Rehne de", exact=True).first.click()
+    page.get_by_text("Sale ka wait karo", exact=True).wait_for()

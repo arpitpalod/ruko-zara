@@ -1,3 +1,4 @@
+import { REASONS, type VoteReason } from './reasons';
 import type { Api, Comment, FeedItem, Verdict } from './types';
 
 /** In-memory backend so the app runs with zero setup (demo / web preview). */
@@ -39,10 +40,16 @@ const rows: Row[] = [
 const banned = new Set<string>();
 const votes = new Map<string, Map<string, Verdict>>(); // requestId → (userId → verdict)
 const verifiedVoters = new Set<string>(); // demo: about a third of voters verified their email
+const reasons = new Map<string, Map<string, VoteReason>>(); // requestId → (userId → reason)
+// Demo spread of reasons: mostly "need it" / "don't need it", the rest mixed.
+const YES_MIX: VoteReason[] = ['need_it', 'worth_price', 'need_it', 'treat_yourself', 'worth_price'];
+const NO_MIX: VoteReason[] = ['dont_need', 'wait_sale', 'dont_need', 'cheaper_option', 'too_much', 'dont_need', 'wait_sale'];
+const setReason = (id: string, who: string, code: VoteReason) =>
+  (reasons.get(id) ?? reasons.set(id, new Map()).get(id)!).set(who, code);
 const seedVotes = (id: string, yes: number, no: number) => {
   const m = new Map<string, Verdict>();
-  for (let i = 0; i < yes; i++) m.set(`s${id}y${i}`, 'approve');
-  for (let i = 0; i < no; i++) m.set(`s${id}n${i}`, 'reject');
+  for (let i = 0; i < yes; i++) m.set(`s${id}y${i}`, 'approve'), setReason(id, `s${id}y${i}`, YES_MIX[i % YES_MIX.length]);
+  for (let i = 0; i < no; i++) m.set(`s${id}n${i}`, 'reject'), setReason(id, `s${id}n${i}`, NO_MIX[i % NO_MIX.length]);
   [...m.keys()].forEach((k, i) => (i % 3 === 0 ? verifiedVoters.add(k) : null));
   votes.set(id, m);
 };
@@ -89,7 +96,12 @@ function simulateCrowd(id: string) {
   [3000, 7000, 12000].forEach((ms, i) =>
     setTimeout(() => {
       const m = votes.get(id) ?? new Map<string, Verdict>();
-      for (let k = 0; k < 2 + i; k++) m.set(`sim${id}${i}${k}`, Math.random() < 0.4 ? 'approve' : 'reject');
+      for (let k = 0; k < 2 + i; k++) {
+        const v: Verdict = Math.random() < 0.4 ? 'approve' : 'reject';
+        const pool = v === 'approve' ? YES_MIX : NO_MIX;
+        m.set(`sim${id}${i}${k}`, v);
+        setReason(id, `sim${id}${i}${k}`, pool[Math.floor(Math.random() * pool.length)]);
+      }
       votes.set(id, m);
       const uid = `u${1 + i}`;
       comments.push({ id: `c${++seq}`, request_id: id, user_id: uid, handle: handles[uid], body: lines[i], created_at: new Date().toISOString() });
@@ -127,13 +139,26 @@ export const mockApi: Api = {
     return delay(Math.max(0, 20 - n));
   },
 
-  async vote(id, v) {
+  async vote(id, v, reason) {
     const r = rows.find((x) => x.id === id);
     if (!r || r.user_id === ME.id) throw new Error('Apni arzi pe vote nahi kar sakte');
     if (new Date(r.closes_at).getTime() < Date.now()) throw new Error('Voting band ho gayi');
     if (!ME.email && !votes.get(id)?.has(ME.id) && (await this.guestVotesLeft()) === 0) throw new Error('GUEST_VOTE_LIMIT');
+    if (reason && !REASONS[v].includes(reason)) throw new Error('Wrong reason for this vote');
     (votes.get(id) ?? votes.set(id, new Map()).get(id)!).set(ME.id, v);
+    if (reason) setReason(id, ME.id, reason);
+    else reasons.get(id)?.delete(ME.id);
     await delay(null);
+  },
+  voteReasons(id) {
+    const r = rows.find((x) => x.id === id && visible(x.user_id));
+    const m = votes.get(id);
+    // Same rule as the database: only once you've voted, it's yours, or voting has closed.
+    const canSee = !!r && (r.user_id === ME.id || !!m?.has(ME.id) || new Date(r.closes_at).getTime() <= Date.now());
+    if (!canSee) return delay([]);
+    const n = new Map<VoteReason, number>();
+    reasons.get(id)?.forEach((code) => n.set(code, (n.get(code) ?? 0) + 1));
+    return delay([...n].map(([reason, count]) => ({ reason, n: count })));
   },
   async comment(id, body) {
     comments.push({ id: `c${++seq}`, request_id: id, user_id: ME.id, handle: ME.handle, body, created_at: new Date().toISOString() });

@@ -10,6 +10,7 @@ import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
+import type { ReasonCount, VoteReason } from '../../lib/reasons';
 import type { Comment, FeedItem, Verdict } from '../../lib/types';
 
 /** One arzi: full reason, live votes, and "janta ki raay" (comments). */
@@ -27,6 +28,7 @@ export default function RequestDetail() {
   // Admin only: who is banned, and which ban is waiting for a second tap.
   const [banned, setBanned] = useState<Set<string>>(new Set());
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
+  const [reasons, setReasons] = useState<ReasonCount[]>([]);
 
   const load = useCallback(async () => {
     try {
@@ -35,6 +37,10 @@ export default function RequestDetail() {
         api.comments(id),
         user.isAdmin ? api.adminBannedIds() : Promise.resolve([] as string[]),
       ]);
+      // Reasons only where the split is shown anyway (the database checks this too).
+      const split = !!req && !req.preview &&
+        (!!req.my_vote || (!!user.id && req.user_id === user.id) || new Date(req.closes_at).getTime() <= Date.now() || user.isAdmin);
+      setReasons(split ? await api.voteReasons(id).catch(() => []) : []);
       setR(req);
       setComments(cs);
       setBanned(new Set(ids));
@@ -53,12 +59,11 @@ export default function RequestDetail() {
     }, [load]),
   );
 
-  const onVote = async (rid: string, v: Verdict) => {
-    const wasPreview = !!r?.preview;
+  const onVote = async (rid: string, v: Verdict, reason: VoteReason) => {
     setR((x) => (x ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x));
     try {
-      await api.vote(rid, v);
-      if (wasPreview) load();
+      await api.vote(rid, v, reason);
+      load(); // results and reasons, now that you've voted
     } catch (e: any) {
       setMsg(friendly(e, t));
       if (isGuestLimit(e)) router.push('/login');
@@ -144,7 +149,7 @@ export default function RequestDetail() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
-        <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} />
+        <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} reasons={reasons} />
         {own(r.user_id) && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
         <Pressable
           style={s.wa}

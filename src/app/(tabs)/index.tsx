@@ -13,6 +13,7 @@ import { useT } from '../../lib/i18n';
 import { useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import { splitByInterest, useInterests } from '../../lib/interests';
+import type { VoteReason } from '../../lib/reasons';
 import { CATEGORIES, type FeedItem, type Verdict } from '../../lib/types';
 
 type Tab = 'open' | 'closed';
@@ -73,14 +74,14 @@ export default function Feed() {
     setTab(next);
   };
 
-  const onVote = async (id: string, v: Verdict) => {
+  const onVote = async (id: string, v: Verdict, reason: VoteReason) => {
     const item = items.find((x) => x.id === id);
     const isNew = !item?.my_vote;
     if (isNew && left === 0) return router.push('/login');
     // A preview has no split to update yet: mark the vote, then load the real numbers.
     setItems((xs) => xs.map((x) => (x.id === id ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x)));
     try {
-      await api.vote(id, v);
+      await api.vote(id, v, reason);
       if (isNew) setLeft((n) => (n === null ? n : Math.max(0, n - 1)));
       if (item?.preview) load();
     } catch (e: any) {

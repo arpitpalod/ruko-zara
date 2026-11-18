@@ -9,6 +9,7 @@ type Result = { data: unknown; error: { message: string; code?: string } | null 
 const log: string[] = [];
 let session: { user: { id: string; email: string | null; is_anonymous: boolean } } | null = null;
 let previewWorks = true;
+let reasonColumn = true; // false: the live database hasn't got vote reasons yet
 
 /** A query that accepts any chain of calls and resolves to `result`. */
 function query(table: string, result: () => Result) {
@@ -50,6 +51,12 @@ const mockSb = {
     if (table === 'profiles') return query(table, () => ({ data: { handle: 'Sabar Panda 7' }, error: null }));
     if (table === 'request_feed')
       return query(table, () => ({ data: [{ id: 'r1', user_id: 'someone', approve_count: 3, reject_count: 2, my_vote: null }], error: null }));
+    if (table === 'votes')
+      return query(table, () =>
+        !reasonColumn && log[log.length - 1].includes('"reason"')
+          ? { data: null, error: { message: "Could not find the 'reason' column of 'votes' in the schema cache", code: 'PGRST204' } }
+          : { data: null, error: null },
+      );
     return query(table, () => ({ data: null, error: null }));
   }),
 };
@@ -61,6 +68,7 @@ beforeEach(() => {
   log.length = 0;
   session = null;
   previewWorks = true;
+  reasonColumn = true;
   jest.clearAllMocks();
 });
 
@@ -73,9 +81,23 @@ it('shows the feed before any sign-in, without user ids or vote splits', async (
 
 it('signs in before voting, then votes as that account', async () => {
   const api = createSupabaseApi('https://x.supabase.co', 'key');
-  await api.vote('r1', 'approve');
+  await api.vote('r1', 'approve', 'need_it');
   expect(log[0]).toBe('signIn');
-  expect(log).toContain('upsert:votes:{"request_id":"r1","user_id":"guest-1","verdict":"approve"}');
+  expect(log).toContain('upsert:votes:{"request_id":"r1","user_id":"guest-1","verdict":"approve","reason":"need_it"}');
+});
+
+it('a vote still counts if the database has no reasons yet (reason dropped, not the vote)', async () => {
+  reasonColumn = false;
+  const api = createSupabaseApi('https://x.supabase.co', 'key');
+  await api.vote('r1', 'reject', 'wait_sale');
+  expect(log).toContain('upsert:votes:{"request_id":"r1","user_id":"guest-1","verdict":"reject"}');
+});
+
+it('reasons are not asked for before sign-in (no tap request, no extra call)', async () => {
+  const api = createSupabaseApi('https://x.supabase.co', 'key');
+  expect(await api.voteReasons('r1')).toEqual([]);
+  expect(log).not.toContain('signIn');
+  expect(log).not.toContain('rpc:vote_reasons');
 });
 
 it('the app start and a quick first vote share one sign-in', async () => {

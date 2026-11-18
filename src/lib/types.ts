@@ -1,3 +1,5 @@
+import type { ReasonCount, VoteReason } from './reasons';
+
 export type Verdict = 'approve' | 'reject';
 export type Outcome = 'bought' | 'skipped';
 
@@ -81,7 +83,10 @@ export interface Api {
   get(id: string): Promise<FeedItem | null>;
   comments(id: string): Promise<Comment[]>;
   create(r: NewRequest): Promise<string>;
-  vote(id: string, v: Verdict): Promise<void>;
+  /** The app always sends a reason; the database also takes none (older app versions). */
+  vote(id: string, v: Verdict, reason?: VoteReason): Promise<void>;
+  /** How many voters gave each reason. Empty unless you may see the split (voted, own, closed, admin). */
+  voteReasons(id: string): Promise<ReasonCount[]>;
   /** Free votes left for a guest (20 max); null once the email is verified. */
   guestVotesLeft(): Promise<number | null>;
   comment(id: string, body: string): Promise<void>;

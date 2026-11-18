@@ -1,7 +1,8 @@
 # Publishes the web version of the app. Runs from the Ship workflow once all checks pass (or by hand).
 #   target=live → https://arpitpalod.github.io/ruko-zara/      (from main)
 #   target=dev  → https://arpitpalod.github.io/ruko-zara/dev/  (from dev: try changes before release;
-#                 same live database, marked DEV, hidden from search engines)
+#                 demo data only: no database at all, so it can never touch live.
+#                 Marked DEV, hidden from search engines)
 name: Web app
 
 on:
@@ -31,9 +32,11 @@ jobs:
     env:
       TARGET: ${{ inputs.target || 'live' }}
       EXPO_PUBLIC_APP_ENV: ${{ inputs.target == 'dev' && 'dev' || 'live' }}
-      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co' }}
-      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl' }}
-      EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAGGbTOnIdnDDerME' }}
+      # Dev gets no database keys, so it runs on demo data (see src/lib/api.ts). Written as
+      # "not dev && keys || empty": "dev && empty || keys" would fall through to the keys.
+      EXPO_PUBLIC_SUPABASE_URL: ${{ inputs.target != 'dev' && (vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co') || '' }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ inputs.target != 'dev' && (vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl') || '' }}
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ inputs.target != 'dev' && (vars.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAGGbTOnIdnDDerME') || '' }}
       EXPO_NO_TELEMETRY: 1
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +61,11 @@ jobs:
             # Keep the dev site out of search results and link previews, and say DEV in the tab.
             sed -i -e 's|<head>|<head><meta name="robots" content="noindex,nofollow" />|' -e 's|<title>[^<]*</title>|<title>DEV · Ruko Zara</title>|' dist/index.html
             rm -f dist/captcha.html dist/privacy.html dist/terms.html   # the live copies are used
+            sed -i '/rel="preconnect" href="https:\/\/[a-z]*\.supabase\.co"/d' dist/index.html
+            # Hard stop: the dev site must never reach the live database.
+            if grep -rqE "[a-z0-9]{20}\.supabase\.(co|in)" dist; then
+              echo "::error::The dev build contains a database address. Dev must run on demo data only."; exit 1
+            fi
           else
             cp dist/index.html dist/404.html   # deep links like /request/<id> load the app instead of a 404
             # A reload on a dev page lands here (GitHub Pages has one 404 page): send it back to the dev site.
