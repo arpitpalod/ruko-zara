@@ -4,7 +4,7 @@ name: Nightly backup
 
 on:
   schedule:
-    - cron: '41 21 * * *'   # 03:11 India time
+    - cron: '43 21 * * *'   # 03:11 India time
   workflow_dispatch:
 
 permissions:
