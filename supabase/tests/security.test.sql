@@ -47,7 +47,38 @@ select throws_ok('select public.is_admin()', '42501', null, 'outsider cannot cal
 select throws_ok($$select public.admin_set_hidden('request', '00000000-0000-0000-0001-000000000001', true)$$,
                  '42501', null, 'outsider cannot call admin_set_hidden');
 select throws_ok('select public.delete_my_account()', '42501', null, 'outsider cannot call delete_my_account');
+-- Read-only preview, so a new phone sees arzi before sign-in finishes
+select is((select count(*) from public.public_feed('open')), 22::bigint, 'outsider preview shows the 22 open arzi, not the hidden one');
+select is((select count(*) from public.public_feed('closed')), 0::bigint, 'nothing has closed yet');
+select is((select count(*) from public.public_feed('anything else')), 0::bigint, 'unknown list name returns nothing');
+select results_eq($$select approve_count, reject_count, vote_total, preview from public.public_feed()
+                    where id = '00000000-0000-0000-0001-000000000002'$$,
+                  $$values (0, 0, 1, true)$$, 'outsider sees how many voted on an open arzi, never which way');
+select is((select count(*) from public.public_request('00000000-0000-0000-0002-000000000001')), 0::bigint,
+          'outsider cannot open the hidden arzi by link');
+select is((select count(*) from public.public_request('00000000-0000-0000-0001-000000000001')), 1::bigint,
+          'outsider can open a visible arzi by link');
+select throws_ok('select user_id from public.public_feed()', '42703', null, 'preview never includes user ids');
+select throws_ok('select user_id from public.public_comments(''00000000-0000-0000-0001-000000000001'')', '42703', null,
+                 'comment preview never includes user ids');
 reset role;
+
+-- Comments in the preview: visible ones only, and closed arzi show their result
+insert into public.comments (id, request_id, user_id, body, hidden) values
+  ('00000000-0000-0000-0003-000000000001', '00000000-0000-0000-0001-000000000001', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Battery badlo, phone theek hai', false),
+  ('00000000-0000-0000-0003-000000000002', '00000000-0000-0000-0001-000000000001', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Hidden comment text', true);
+update public.requests set closes_at = now() - interval '1 minute' where id = '00000000-0000-0000-0001-000000000002';
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select results_eq($$select body from public.public_comments('00000000-0000-0000-0001-000000000001')$$,
+                  $$values ('Battery badlo, phone theek hai'::text)$$, 'outsider sees visible comments only');
+select is((select comment_count from public.public_request('00000000-0000-0000-0001-000000000001')), 1,
+          'hidden comments are not counted');
+select results_eq($$select approve_count, reject_count, preview from public.public_feed('closed')$$,
+                  $$values (1, 0, false)$$, 'once voting closes, the result is public');
+reset role;
+delete from public.comments where id in ('00000000-0000-0000-0003-000000000001', '00000000-0000-0000-0003-000000000002');
+update public.requests set closes_at = now() + interval '1 day' where id = '00000000-0000-0000-0001-000000000002';
 
 -- ── 2. Guest (anonymous account) ──────────────────────────────────────────────
 set local role authenticated;

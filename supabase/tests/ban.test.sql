@@ -71,6 +71,16 @@ select is((select comment_count from public.request_feed where id = '22222222-22
 select is((select count(*) from public.profiles where id = '11111111-1111-4111-8111-000000000002'), 0::bigint, 'others can''t even see B''s profile');
 reset role;
 
+-- Outsiders (not signed in yet) see the same as everyone else: nothing from B
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select is((select count(*) from public.public_feed() where item in ('Spam arzi', 'More spam')), 0::bigint, 'outsiders don''t see B''s arzi');
+select is((select count(*) from public.public_request('22222222-2222-4222-8222-000000000002')), 0::bigint, 'outsiders can''t open B''s arzi by link');
+select is((select count(*) from public.public_comments('22222222-2222-4222-8222-000000000001')), 0::bigint, 'outsiders don''t see B''s comment');
+select results_eq($$select comment_count, vote_total from public.public_request('22222222-2222-4222-8222-000000000001')$$,
+                  $$values (0, 0)$$, 'B''s comment and vote aren''t counted for outsiders');
+reset role;
+
 -- Reports from B don't count towards auto-hiding
 insert into public.reports (target_type, target_id, user_id) values
   ('request', '22222222-2222-4222-8222-000000000001', '11111111-1111-4111-8111-000000000003'),
