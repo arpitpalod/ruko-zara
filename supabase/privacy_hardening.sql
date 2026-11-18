@@ -1,0 +1,10 @@
+-- APPLIED 2026-11-18 as migration privacy_hardening (after a Reddit user showed guests could read
+-- every profile and every individual vote through the public API).
+-- * requests.vote_yes / vote_no: totals kept in sync by trigger votes_sync_counts (security definer)
+-- * votes: each user can read only their own rows
+-- * profiles: readable only for yourself and people with visible arzi/comments; only (id, handle) columns
+-- * requests: internal columns (verdict_emailed_at) not readable by app users
+-- * request_feed reads stored totals
+-- * anon (not signed in) role: no access to any public table or view
+-- Verified (rolled back test): a fresh guest sees 14 profiles (was 376), 0 others' votes (was 1067),
+-- verdict_emailed_at blocked, anon blocked; voting, changing a vote, posting and outcomes still work.
