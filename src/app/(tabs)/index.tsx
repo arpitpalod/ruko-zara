@@ -36,8 +36,9 @@ export default function Feed() {
   // Guests get 20 free votes; null once the email is verified.
   const [left, setLeft] = useState<number | null>(null);
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
-  // Money saved (your arzi marked "Didn't buy"): shown with a nudge to post, once you've voted.
-  const [saved, setSaved] = useState<number | null>(null);
+  // Savings nudge (always on top): money saved, how many you posted, how many await "did you buy it?".
+  // null until known, so a returning poster doesn't see the "new person" version flash first.
+  const [mine, setMine] = useState<{ saved: number; posted: number; toDecide: number } | null>(null);
   const { picked, toggle, clear } = useInterests();
 
   // The list refreshes quietly (no spinner) once it has something to show, e.g. when sign-in finishes.
@@ -51,8 +52,13 @@ export default function Feed() {
         else api.guestVotesLeft().then(setLeft, () => setLeft(null));
         if (user.id)
           api.mine().then(
-            (mine) => setSaved(mine.filter((x) => x.outcome === 'skipped').reduce((a, x) => a + x.price_inr, 0)),
-            () => setSaved(null),
+            (xs) =>
+              setMine({
+                saved: xs.filter((x) => x.outcome === 'skipped').reduce((a, x) => a + x.price_inr, 0),
+                posted: xs.length,
+                toDecide: xs.filter((x) => !x.outcome && new Date(x.closes_at).getTime() <= Date.now()).length,
+              }),
+            () => {},
           );
         const [all, bannedIds] = await Promise.all([
           api.feed(which),
@@ -161,7 +167,7 @@ export default function Feed() {
               <IconText icon={Vote} size={17} color={C.brand} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
           ) : null}
-          {tab === 'open' && saved !== null && items.some((x) => x.my_vote) ? <SavingsNudge saved={saved} /> : null}
+          {mine ? <SavingsNudge {...mine} /> : !user.id && items.length > 0 ? <SavingsNudge saved={0} posted={0} toDecide={0} /> : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }

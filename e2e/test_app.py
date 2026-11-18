@@ -73,7 +73,7 @@ def test_wrong_code_shows_error(page):
 
 def test_whatsapp_share_sends_full_message(page):
     open_app(page, "Hinglish")
-    page.get_by_text(re.compile(r"^₹")).first.click()  # open an arzi
+    page.get_by_text("Goa trip with college friends").click()  # open an arzi
     page.get_by_text("WhatsApp pe share karo").click()
     shared = page.evaluate("window.__shared")
     assert len(shared) == 1 and "url" not in shared[0], shared
@@ -216,17 +216,17 @@ def test_reasons_in_hinglish(page):
     page.get_by_text("Sale ka wait karo", exact=True).wait_for()
 
 
-def test_savings_nudge_after_voting(page):
-    """Once you've voted, the feed shows what you've saved and asks you to post your own (19 Nov)."""
-    open_app(page, "English")
-    page.get_by_text("Buy it", exact=True).first.wait_for()
-    assert page.get_by_test_id("savings-nudge").count() == 0, "nudge shown before voting"
-    page.get_by_text("Buy it", exact=True).first.click()
-    page.get_by_text("You need it", exact=True).click()
+def test_savings_nudge_always_on_top(page):
+    """The feed always shows what you've saved and the next step (19 Nov: always, not only after voting)."""
+    page.goto(BASE + "/?new=1")  # a brand-new person
+    page.get_by_text("English", exact=True).click()
     nudge = page.get_by_test_id("savings-nudge")
     nudge.wait_for()
-    assert "Saved so far" in nudge.inner_text() and "Post a request" in nudge.inner_text()
-    nudge.get_by_text("Post a request").click()
+    assert "Saved so far" in nudge.inner_text()
+    page.get_by_text("Results", exact=True).click()
+    page.get_by_text(re.compile(r"% say buy it$")).first.wait_for()
+    assert page.get_by_test_id("savings-nudge").count() == 1, "nudge missing on Results"
+    page.get_by_test_id("savings-nudge").get_by_text("Post a request").click()
     page.get_by_text("What do you want to buy?").wait_for()
 
 
@@ -234,7 +234,7 @@ def test_my_requests_has_post_button(page):
     open_app(page, "English")
     page.get_by_text("My requests", exact=True).click()
     page.get_by_text("Saved so far").wait_for()
-    page.get_by_text("Post a request", exact=True).click()
+    page.locator('text="Post a request" >> visible=true').first.click()
     page.get_by_text("What do you want to buy?").wait_for()
 
 
@@ -264,3 +264,22 @@ def test_admin_hidden_posts_out_of_feed(page):
     page.get_by_text("Spam from a banned account").wait_for()
     page.get_by_text(re.compile("^Hidden \\(only admins")).wait_for()
     page.get_by_text(re.compile("^Banned")).wait_for()
+
+
+def test_nudge_follows_your_progress(page):
+    """Pause is done on arrival; after the crowd votes it asks what you did; marking it adds the savings."""
+    page.goto(BASE + "/?new=1")
+    page.get_by_text("English", exact=True).click()
+    nudge = page.get_by_test_id("savings-nudge")
+    nudge.wait_for()
+    text = nudge.inner_text()
+    assert "₹0" in text and "you paused" in text and "Post a request" in text, text
+
+    page.goto(BASE + "/")  # the demo person: one closed arzi, not marked yet
+    nudge.get_by_text("Tell us").wait_for()
+    assert "Did you buy it?" in nudge.inner_text(), nudge.inner_text()
+    nudge.get_by_text("Tell us").click()
+    page.get_by_text("Didn't buy", exact=True).click()
+    page.get_by_text("Feed", exact=True).click()
+    nudge.get_by_text("Ask before your next buy").wait_for()   # back on the feed, it has caught up
+    assert "₹16,995" in nudge.inner_text(), nudge.inner_text()

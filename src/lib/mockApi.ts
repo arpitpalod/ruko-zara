@@ -37,7 +37,8 @@ const rows: Row[] = [
     alternative: 'Office se maang lo', closes_at: at(12), outcome: null, created_at: at(-12), link: null },
   { id: 'r7', user_id: 'me', item: 'Sneakers (limited drop)', price_inr: 16995, category: 'Fashion',
     reason: 'Pichle 2 saal se ek hi joota pehen raha hoon. Par yeh wala thoda zyada mehenga hai.',
-    alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54), link: null },
+    // Closed, not marked yet: the feed asks "Did you buy it?" (mark it in My requests to see savings grow).
+    alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: null, created_at: at(-54), link: null },
   // Only admins see these two (demo of the "Hidden and banned" page).
   { id: 'r8', user_id: 'u7', item: 'Something reported three times', price_inr: 999, category: 'Other',
     reason: 'Demo: an arzi hidden after reports.', alternative: null, closes_at: at(10), outcome: null, created_at: at(-3), link: null, hidden: true },
@@ -46,6 +47,10 @@ const rows: Row[] = [
 ];
 
 const banned = new Set<string>(['u8']);
+// Dev site: ?new=1 shows the app as a brand-new person (no arzi of your own yet).
+if (typeof window !== 'undefined' && /[?&]new=1\b/.test(window.location?.search ?? '')) {
+  for (let i = rows.length - 1; i >= 0; i--) if (rows[i].user_id === ME.id) rows.splice(i, 1);
+}
 const votes = new Map<string, Map<string, Verdict>>(); // requestId → (userId → verdict)
 const verifiedVoters = new Set<string>(); // demo: about a third of voters verified their email
 const reasons = new Map<string, Map<string, VoteReason>>(); // requestId → (userId → reason)
