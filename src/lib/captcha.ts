@@ -33,12 +33,12 @@ function settle(w: Waiter, token?: string, err?: Error) {
 
 const fail = (w: Waiter, ms: number) => setTimeout(() => settle(w, undefined, new Error('CAPTCHA_FAILED: timeout')), ms);
 
-/** A one-time token, or undefined when the check is switched off. Rejects after 15 s (2 min if a tap is asked). */
+/** A one-time token, or undefined when the check is switched off. Rejects after 30 s (2 min if a tap is asked). */
 export function getCaptchaToken(): Promise<string | undefined> {
   if (!captchaOn) return Promise.resolve(undefined);
   return new Promise<string>((resolve, reject) => {
     const w = { resolve, reject } as Waiter;
-    w.timer = fail(w, 15000);
+    w.timer = fail(w, 30000);
     waiters.push(w);
     if (waiters.length === 1) next();
   });

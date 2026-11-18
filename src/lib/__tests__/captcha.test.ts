@@ -39,12 +39,12 @@ it('waits for the widget, even if sign-in asks before the widget is ready', asyn
   expect(rounds).toEqual([1, 2, 0]); // idle again
 });
 
-it('gives up after 15 s, or 2 min once a tap is asked for', async () => {
+it('gives up after 30 s, or 2 min once a tap is asked for', async () => {
   jest.useFakeTimers();
   const c = load('0xTEST');
   c.subscribeCaptcha(() => {});
   const quick = c.getCaptchaToken();
-  jest.advanceTimersByTime(15001);
+  jest.advanceTimersByTime(30001);
   await expect(quick).rejects.toThrow('timeout');
 
   const tap = c.getCaptchaToken();

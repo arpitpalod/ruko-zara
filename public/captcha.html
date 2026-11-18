@@ -7,7 +7,7 @@
 <title>Ruko Zara · quick check</title>
 <style>
   html, body { margin: 0; background: transparent; }
-  body { display: flex; justify-content: center; align-items: center; min-height: 80px; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 65px; }
 </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
     try {
       window.turnstile.render('#w', {
         sitekey: key,
-        appearance: standalone ? 'always' : 'interaction-only',
+        appearance: window.ReactNativeWebView ? 'interaction-only' : 'always',
         callback: function (t) { send({ type: 'token', token: t }); },
         'before-interactive-callback': function () { send({ type: 'interactive' }); },
         'error-callback': function (c) { send({ type: 'error', code: String(c) }); },

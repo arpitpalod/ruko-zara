@@ -4,7 +4,11 @@ import { CAPTCHA_ORIGIN, CAPTCHA_URL, captchaBroken, captchaInteractive, captcha
 import { useT } from '../lib/i18n';
 import { C } from '../lib/theme';
 
-/** Web: runs the bot check in a hidden same-site iframe; shows it only if Cloudflare asks for a tap. */
+/**
+ * Web: runs the bot check in a small card at the bottom of the screen while signing in.
+ * It must stay visible: Chrome on Android throttles hidden or off-screen frames, and the check then
+ * never finishes. The full overlay appears only if Cloudflare asks for a tap.
+ */
 export function CaptchaHost() {
   const { t } = useT();
   const [round, setRound] = useState(0);
@@ -38,9 +42,9 @@ export function CaptchaHost() {
   if (!captchaOn || round === 0) return null;
 
   return (
-    <View style={visible ? s.overlay : s.hidden} pointerEvents={visible ? 'auto' : 'none'}>
-      <View style={visible ? s.card : undefined}>
-        {visible ? <Text style={s.h}>{t('captcha.checking')}</Text> : null}
+    <View style={visible ? s.overlay : s.dock} pointerEvents={visible ? 'auto' : 'box-none'}>
+      <View style={s.card}>
+        <Text style={s.h}>{t('captcha.checking')}</Text>
         <iframe
           key={round}
           src={CAPTCHA_URL}
@@ -54,8 +58,8 @@ export function CaptchaHost() {
 }
 
 const s = StyleSheet.create({
-  hidden: { position: 'absolute', left: -1000, top: 0, width: 320, height: 90, opacity: 0 },
+  dock: { position: 'absolute', left: 0, right: 0, bottom: 24, alignItems: 'center', zIndex: 1000 },
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  card: { backgroundColor: C.card, borderRadius: 16, padding: 16, gap: 10, alignItems: 'center' },
+  card: { backgroundColor: C.card, borderRadius: 16, padding: 12, gap: 8, alignItems: 'center', borderWidth: 1, borderColor: C.line, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12 },
   h: { fontSize: 15, fontWeight: '800', color: C.ink },
 });
