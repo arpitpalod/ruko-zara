@@ -1,5 +1,6 @@
 # Checks the live app from the outside every hour (and after every release).
-# If anything is wrong it opens a GitHub issue, which emails the owner.
+# A new problem opens a GitHub issue and emails the owner; when everything passes again,
+# the issue is closed and an all-clear email is sent.
 name: Live check
 
 on:
@@ -20,6 +21,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
       - name: Wait for the new version to be served
@@ -31,28 +36,30 @@ jobs:
           set +e
           bash scripts/ci/live-check.sh | tee result.txt
           echo "failed=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+          gh label create live-check --color B60205 --description "Live app problem" --force >/dev/null
+          echo "open=$(gh issue list --label live-check --state open --json number --jq '.[0].number')" >> "$GITHUB_OUTPUT"
+
       - name: Raise the alarm
         if: steps.check.outputs.failed != '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          {
-            echo "@arpitpalod the live check found a problem ($(date -u '+%d %b %H:%M UTC')):"
-            echo
-            grep '❌' result.txt
-            echo
-            echo "<details><summary>All checks</summary>"
-            echo
-            cat result.txt
-            echo "</details>"
-            echo
-            echo "Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          } > alert.md
-          gh label create live-check --color B60205 --description "Live app problem" --force
-          open=$(gh issue list --label live-check --state open --json number --jq '.[0].number')
-          if [ -n "$open" ]; then
-            gh issue comment "$open" --body-file alert.md
+          when=$(TZ=Asia/Kolkata date '+%d %b %H:%M IST')
+          { echo "@arpitpalod the live check found a problem ($when):"; echo; grep '❌' result.txt; echo
+            echo "<details><summary>All checks</summary>"; echo; cat result.txt; echo "</details>"; echo; echo "Run: $RUN_URL"; } > alert.md
+          if [ -n "${{ steps.check.outputs.open }}" ]; then
+            gh issue comment "${{ steps.check.outputs.open }}" --body-file alert.md   # already reported: no new email
           else
-            gh issue create --title "🚨 Ruko Zara live check failed" --label live-check --body-file alert.md
+            url=$(gh issue create --title "🚨 Ruko Zara live check failed" --label live-check --body-file alert.md)
+            { echo "The hourly check of the live app found a problem ($when):"; echo; grep '❌' result.txt; echo
+              echo "Details: $url"; echo "Run: $RUN_URL"; echo
+              echo "You'll get an all-clear email when it's fixed."; } > email.txt
+            bash scripts/ci/alert.sh "🚨 Live check failed" email.txt || echo "::warning::Alert email could not be queued (database unreachable?)"
           fi
           exit 1
+
+      - name: All clear
+        if: steps.check.outputs.failed == '0' && steps.check.outputs.open != ''
+        run: |
+          when=$(TZ=Asia/Kolkata date '+%d %b %H:%M IST')
+          gh issue close "${{ steps.check.outputs.open }}" --comment "✅ All checks pass again ($when). $RUN_URL"
+          { echo "All live checks pass again ($when)."; echo; cat result.txt; } > email.txt
+          bash scripts/ci/alert.sh "✅ Resolved: live app is healthy again" email.txt || true

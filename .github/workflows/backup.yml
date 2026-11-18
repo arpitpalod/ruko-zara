@@ -27,3 +27,11 @@ jobs:
           path: backup/*.age
           retention-days: 30
           if-no-files-found: error
+      - name: Email the owner if the backup failed
+        if: failure()
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          printf 'Tonight'"'"'s database backup failed.\n\nRun: %s\n' "$RUN_URL" > email.txt
+          bash scripts/ci/alert.sh "⚠️ Nightly backup failed" email.txt
+
