@@ -22,6 +22,8 @@ live pg_dump --data-only --table=public.blocked_words --table=public.allowed_lin
 live psql -X -tA -f supabase/ci/fingerprint.sql > "$WORK/fp_live.txt"
 # The local database already has a public schema.
 sed -i -e '/^CREATE SCHEMA public;$/d' -e '/^COMMENT ON SCHEMA public IS/d' "$WORK/live_schema.sql"
+# Default privileges of Supabase's internal roles can't be set by the local postgres user (and don't affect the tests).
+sed -i -E '/^ALTER DEFAULT PRIVILEGES FOR ROLE [a-z_]+ /{/FOR ROLE postgres /!d}' "$WORK/live_schema.sql"
 echo "Live: $(wc -l < "$WORK/fp_live.txt") rules and permissions"
 echo "::endgroup::"
 
