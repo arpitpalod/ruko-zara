@@ -17,7 +17,7 @@ jobs:
     env:
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co' }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl' }}
-      EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '' }}
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAGGbTOnIdnDDerME' }}
       EXPO_NO_TELEMETRY: 1
     steps:
       - uses: actions/checkout@v4

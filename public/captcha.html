@@ -12,11 +12,22 @@
 </head>
 <body>
 <div id="w"></div>
+<p id="status" style="display:none;font:16px system-ui,sans-serif;text-align:center;padding:16px"></p>
 <script>
 (function () {
   // Runs Cloudflare Turnstile and hands the one-time token to the app (Android WebView or the web app around this iframe).
   var key = new URLSearchParams(location.search).get('k') || '';
+  // Opened directly in a browser (not inside the app): show the result, so the setup can be checked from a phone.
+  var standalone = !window.ReactNativeWebView && window.parent === window;
+  var statusEl = document.getElementById('status');
+  if (standalone) { statusEl.style.display = 'block'; statusEl.textContent = 'Checking…'; document.body.style.flexDirection = 'column'; }
   function send(m) {
+    if (standalone) {
+      if (m.type === 'token') statusEl.textContent = '✅ Bot check is working. You can close this page.';
+      else if (m.type === 'error') statusEl.textContent = '❌ Not working — error ' + m.code;
+      else if (m.type === 'interactive') statusEl.textContent = 'Tap the box above.';
+      return;
+    }
     m.source = 'rz-captcha';
     var s = JSON.stringify(m);
     if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(s);
@@ -26,7 +37,7 @@
     try {
       window.turnstile.render('#w', {
         sitekey: key,
-        appearance: 'interaction-only',
+        appearance: standalone ? 'always' : 'interaction-only',
         callback: function (t) { send({ type: 'token', token: t }); },
         'before-interactive-callback': function () { send({ type: 'interactive' }); },
         'error-callback': function (c) { send({ type: 'error', code: String(c) }); },
