@@ -1,10 +1,21 @@
-# Publishes the web version of the app to https://arpitpalod.github.io/ruko-zara/.
-# Runs from the Ship workflow once all checks pass (or by hand).
+# Publishes the web version of the app. Runs from the Ship workflow once all checks pass (or by hand).
+#   target=live → https://arpitpalod.github.io/ruko-zara/      (from main)
+#   target=dev  → https://arpitpalod.github.io/ruko-zara/dev/  (from dev: try changes before release;
+#                 same live database, marked DEV, hidden from search engines)
 name: Web app
 
 on:
   workflow_call:
+    inputs:
+      target:
+        type: string
+        default: live
   workflow_dispatch:
+    inputs:
+      target:
+        type: choice
+        options: [live, dev]
+        default: live
 
 permissions:
   contents: write
@@ -12,8 +23,14 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Live and dev both publish to the gh-pages branch: one at a time.
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
     timeout-minutes: 20
     env:
+      TARGET: ${{ inputs.target || 'live' }}
+      EXPO_PUBLIC_APP_ENV: ${{ inputs.target == 'dev' && 'dev' || 'live' }}
       EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co' }}
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl' }}
       EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAGGbTOnIdnDDerME' }}
@@ -28,19 +45,43 @@ jobs:
 
       - run: npm ci
 
-      # Serve under /ruko-zara (GitHub Pages project path). Only changes the web build, not the phone apps.
+      # Serve under /ruko-zara (or /ruko-zara/dev). Only changes the web build, not the phone apps.
       - name: Set web base path
-        run: node -e 'const fs=require("fs");const a=JSON.parse(fs.readFileSync("app.json"));a.expo.experiments={...(a.expo.experiments||{}),baseUrl:"/ruko-zara"};fs.writeFileSync("app.json",JSON.stringify(a,null,2))'
+        run: |
+          base=/ruko-zara; [ "$TARGET" = dev ] && base=/ruko-zara/dev
+          BASE="$base" node -e 'const fs=require("fs");const a=JSON.parse(fs.readFileSync("app.json"));a.expo.experiments={...(a.expo.experiments||{}),baseUrl:process.env.BASE};fs.writeFileSync("app.json",JSON.stringify(a,null,2))'
 
       - name: Build web app
         run: |
           npx expo export --platform web --output-dir dist
-          cp dist/index.html dist/404.html   # deep links like /request/<id> load the app instead of a 404
+          if [ "$TARGET" = dev ]; then
+            # Keep the dev site out of search results and link previews, and say DEV in the tab.
+            sed -i -e 's|<head>|<head><meta name="robots" content="noindex,nofollow" />|' -e 's|<title>[^<]*</title>|<title>DEV · Ruko Zara</title>|' dist/index.html
+            rm -f dist/captcha.html dist/privacy.html dist/terms.html   # the live copies are used
+          else
+            cp dist/index.html dist/404.html   # deep links like /request/<id> load the app instead of a 404
+            # A reload on a dev page lands here (GitHub Pages has one 404 page): send it back to the dev site.
+            sed -i 's|<head>|<head><script>if(location.pathname.indexOf("/ruko-zara/dev/")===0)location.replace("/ruko-zara/dev/")</script>|' dist/404.html
+            # Keep the dev site that lives next to the live one.
+            if git fetch -q --depth=1 origin gh-pages 2>/dev/null && git cat-file -e FETCH_HEAD:dev 2>/dev/null; then
+              git archive FETCH_HEAD dev | tar -x -C dist
+            fi
+          fi
           touch dist/.nojekyll               # keep the _expo folder
 
-      - name: Publish to gh-pages branch
+      - name: Publish live site
+        if: env.TARGET != 'dev'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           force_orphan: true
+
+      - name: Publish dev site (replaces only /dev)
+        if: env.TARGET == 'dev'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: dev
+          keep_files: false

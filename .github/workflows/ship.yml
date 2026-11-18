@@ -1,5 +1,6 @@
 # Every change goes through the same checks. Only when all of them pass does it go live
-# (website + Android app). Other branches get the checks without going live.
+# (website + Android app) from main, or to the dev site (/ruko-zara/dev/) from dev.
+# Other branches get the checks only.
 name: Ship
 
 on:
@@ -92,6 +93,16 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/web.yml
+
+  dev-website:
+    name: Publish dev site
+    if: github.ref == 'refs/heads/dev'
+    needs: [app-checks, browser-tests, database-tests]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/web.yml
+    with:
+      target: dev
 
   android:
     name: Build Android app
