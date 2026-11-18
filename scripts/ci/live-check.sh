@@ -28,6 +28,10 @@ for f in is_admin guest_votes_left delete_my_account admin_set_hidden admin_set_
   [[ "$c" =~ ^(401|403|404)$ ]] && ok "Outsider can't call $f" || bad "OUTSIDER CAN CALL $f (HTTP $c)"
 done
 
+# Called with a real argument: an empty body would miss the function and pass for the wrong reason.
+c=$(code -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{"target":"00000000-0000-0000-0000-000000000000"}' "$API/rest/v1/rpc/vote_reasons")
+[[ "$c" =~ ^(401|403)$ ]] && ok "Outsider can't read vote reasons" || bad "OUTSIDER CAN READ VOTE REASONS (HTTP $c)"
+
 c=$(code -H "apikey: $KEY" "$API/rest/v1/banned_users?select=*")
 [[ "$c" =~ ^(401|403|404)$ ]] && ok "Ban list is not reachable" || bad "BAN LIST REACHABLE (HTTP $c)"
 

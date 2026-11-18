@@ -54,6 +54,11 @@ async function check(): Promise<string[]> {
       if (!CLOSED.includes(r.status)) bad.push(`OUTSIDER CAN CALL ${f} (HTTP ${r.status})`);
     }));
 
+  // Called with a real argument: an empty body would miss the function and pass for the wrong reason.
+  t.push(hit(`${API}/rest/v1/rpc/vote_reasons`, { method: 'POST', headers: anonJson, body: '{"target":"00000000-0000-0000-0000-000000000000"}' }).then((r) => {
+    if (r.status !== 401 && r.status !== 403) bad.push(`OUTSIDER CAN READ VOTE REASONS (HTTP ${r.status})`);
+  }));
+
   // 2b. The read-only preview shows only what it should
   t.push(hit(`${API}/rest/v1/rpc/public_feed`, { method: 'POST', headers: anonJson, body: '{"kind":"open"}' }).then((r) => {
     let rows: Record<string, unknown>[] = [];
