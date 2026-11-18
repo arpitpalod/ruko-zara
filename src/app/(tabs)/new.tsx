@@ -1,7 +1,8 @@
 import { IconText, Link2 } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { catLabel, domainOf, extractLink, inr } from '../../lib/format';
@@ -12,6 +13,7 @@ import { CATEGORIES, DURATIONS } from '../../lib/types';
 
 /** Nayi Arzi — the purchase request form. Writing the "why" is half the cure. */
 export default function NewRequest() {
+  const scrollY = useRef(new Animated.Value(0)).current; // shrinks the savings header
   const user = useUser();
   const { t } = useT();
   const [item, setItem] = useState('');
@@ -73,7 +75,8 @@ export default function NewRequest() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
+      <SavingsHeader scrollY={scrollY} />
+      <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled" onScroll={trackScroll(scrollY)} scrollEventThrottle={16}>
         <Text style={s.lead}>{t('new.lead')}</Text>
 
         <Field label={t('new.item')}>

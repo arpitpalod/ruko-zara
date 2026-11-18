@@ -216,24 +216,10 @@ def test_reasons_in_hinglish(page):
     page.get_by_text("Sale ka wait karo", exact=True).wait_for()
 
 
-def test_savings_nudge_always_on_top(page):
-    """The feed always shows what you've saved and the next step (19 Nov: always, not only after voting)."""
-    page.goto(BASE + "/?new=1")  # a brand-new person
-    page.get_by_text("English", exact=True).click()
-    nudge = page.get_by_test_id("savings-nudge")
-    nudge.wait_for()
-    assert "Saved so far" in nudge.inner_text()
-    page.get_by_text("Results", exact=True).click()
-    page.get_by_text(re.compile(r"% say buy it$")).first.wait_for()
-    assert page.get_by_test_id("savings-nudge").count() == 1, "nudge missing on Results"
-    page.get_by_test_id("savings-nudge").get_by_text("Post a request").click()
-    page.get_by_text("What do you want to buy?").wait_for()
-
-
 def test_my_requests_has_post_button(page):
     open_app(page, "English")
     page.get_by_text("My requests", exact=True).click()
-    page.get_by_text("Saved so far").wait_for()
+    page.get_by_text(re.compile("^Verify email")).wait_for()   # My requests is open
     page.locator('text="Post a request" >> visible=true').first.click()
     page.get_by_text("What do you want to buy?").wait_for()
 
@@ -244,7 +230,7 @@ def test_hidden_posts_reach_nobody_but_admins(page):
     body = page.inner_text("body")
     assert "Something reported three times" not in body and "Spam from a banned account" not in body
     page.get_by_text("My requests", exact=True).click()
-    page.get_by_text("Saved so far").wait_for()
+    page.get_by_text(re.compile("^Verify email")).wait_for()   # My requests is open
     assert page.get_by_text(re.compile("Hidden and banned posts")).count() == 0, "admin link shown to a non-admin"
 
 
@@ -266,20 +252,24 @@ def test_admin_hidden_posts_out_of_feed(page):
     page.get_by_text(re.compile("^Banned")).wait_for()
 
 
-def test_nudge_follows_your_progress(page):
-    """Pause is done on arrival; after the crowd votes it asks what you did; marking it adds the savings."""
-    page.goto(BASE + "/?new=1")
+def test_savings_always_on_top(page):
+    """One constant thing on top of Feed and New request: savings. Big at the top, slim once you scroll."""
+    page.goto(BASE + "/?new=1")  # a brand-new person
     page.get_by_text("English", exact=True).click()
-    nudge = page.get_by_test_id("savings-nudge")
-    nudge.wait_for()
-    text = nudge.inner_text()
-    assert "₹0" in text and "you paused" in text and "Post a request" in text, text
+    header = page.get_by_test_id("savings-header")
+    header.wait_for()
+    assert "₹0" in header.inner_text() and "Saved so far" in header.inner_text()
+    tall = header.bounding_box()["height"]
+    page.mouse.move(195, 500)
+    page.mouse.wheel(0, 600)
+    page.wait_for_timeout(400)
+    short = header.bounding_box()["height"]
+    assert short < tall * 0.6, (tall, short)
+    assert header.is_visible(), "savings header scrolled away"
+    header.click()                                                    # tap: My requests
+    page.get_by_text(re.compile("^Verify email")).wait_for()
+    page.get_by_text("New request", exact=True).click()
+    page.get_by_text("What do you want to buy?").wait_for()
+    # Tabs stay mounted, so count the headers in view: the feed's and this page's.
+    assert page.locator('[data-testid="savings-header"] >> visible=true').count() >= 2, "no savings on New request"
 
-    page.goto(BASE + "/")  # the demo person: one closed arzi, not marked yet
-    nudge.get_by_text("Tell us").wait_for()
-    assert "Did you buy it?" in nudge.inner_text(), nudge.inner_text()
-    nudge.get_by_text("Tell us").click()
-    page.get_by_text("Didn't buy", exact=True).click()
-    page.get_by_text("Feed", exact=True).click()
-    nudge.get_by_text("Ask before your next buy").wait_for()   # back on the feed, it has caught up
-    assert "₹16,995" in nudge.inner_text(), nudge.inner_text()

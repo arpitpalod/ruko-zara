@@ -1,10 +1,10 @@
 import { IconText, Vote } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
-import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
-import { SavingsNudge } from '../../components/SavingsNudge';
+import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { UpdateBanner } from '../../components/UpdateBanner';
 import { api, isDemo } from '../../lib/api';
@@ -36,9 +36,7 @@ export default function Feed() {
   // Guests get 20 free votes; null once the email is verified.
   const [left, setLeft] = useState<number | null>(null);
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
-  // Savings nudge (always on top): money saved, how many you posted, how many await "did you buy it?".
-  // null until known, so a returning poster doesn't see the "new person" version flash first.
-  const [mine, setMine] = useState<{ saved: number; posted: number; toDecide: number } | null>(null);
+  const scrollY = useRef(new Animated.Value(0)).current; // shrinks the savings header
   const { picked, toggle, clear } = useInterests();
 
   // The list refreshes quietly (no spinner) once it has something to show, e.g. when sign-in finishes.
@@ -50,16 +48,6 @@ export default function Feed() {
         setErr(null);
         if (user.email) setLeft(null);
         else api.guestVotesLeft().then(setLeft, () => setLeft(null));
-        if (user.id)
-          api.mine().then(
-            (xs) =>
-              setMine({
-                saved: xs.filter((x) => x.outcome === 'skipped').reduce((a, x) => a + x.price_inr, 0),
-                posted: xs.length,
-                toDecide: xs.filter((x) => !x.outcome && new Date(x.closes_at).getTime() <= Date.now()).length,
-              }),
-            () => {},
-          );
         const [all, bannedIds] = await Promise.all([
           api.feed(which),
           user.isAdmin ? api.adminBannedIds().catch(() => [] as string[]) : Promise.resolve([] as string[]),
@@ -125,7 +113,11 @@ export default function Feed() {
   ];
 
   return (
+    <View style={{ flex: 1 }}>
+    <SavingsHeader scrollY={scrollY} />
     <SectionList
+      onScroll={trackScroll(scrollY)}
+      scrollEventThrottle={16}
       sections={sections}
       keyExtractor={(x) => x.id}
       contentContainerStyle={s.list}
@@ -138,7 +130,6 @@ export default function Feed() {
       }}
       ListHeaderComponent={
         <View style={{ gap: 10, marginBottom: 4 }}>
-          <Text style={s.tag}>{t('feed.tagline')}</Text>
           <UpdateBanner />
           <InstallHint />
           <View style={s.seg}>
@@ -167,7 +158,6 @@ export default function Feed() {
               <IconText icon={Vote} size={17} color={C.brand} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
           ) : null}
-          {mine ? <SavingsNudge {...mine} /> : !user.id && items.length > 0 ? <SavingsNudge saved={0} posted={0} toDecide={0} /> : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }
@@ -192,13 +182,13 @@ export default function Feed() {
         </View>
       )}
     />
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   list: { padding: 16 },
   sectionH: { fontSize: 13, fontWeight: '700', color: C.sub, marginTop: 8, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  tag: { fontSize: 14, color: C.sub },
   seg: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: C.line, padding: 3, gap: 3 },
   segBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
   segOn: { backgroundColor: C.ink },
