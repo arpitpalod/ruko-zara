@@ -1,4 +1,5 @@
-import { BadgeCheck, IconText, PartyPopper, ShoppingBag } from '../../components/Icon';
+import { BadgeCheck, CirclePlus, EyeOff, IconText, PartyPopper, ShoppingBag } from '../../components/Icon';
+import { adminHiddenArzi } from '../../lib/adminHidden';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -22,9 +23,11 @@ export default function Mine() {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [hiddenCount, setHiddenCount] = useState<number | null>(null); // admins only
 
   const load = useCallback(async () => {
     setLoading(true);
+    if (user.isAdmin) adminHiddenArzi().then((r) => setHiddenCount(r.items.length), () => setHiddenCount(null));
     try {
       setErr(null);
       setItems(await api.mine());
@@ -33,7 +36,7 @@ export default function Mine() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user.isAdmin]);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,16 +79,27 @@ export default function Mine() {
           <Text style={s.heroLabel}>{t('mine.saved')}</Text>
           <Text style={s.heroAmt}>{inr(saved)}</Text>
           {user.handle ? <Text style={s.heroSub}>{t('mine.stats', { handle: user.handle, n: items.length, k: skipped })}</Text> : null}
-          {saved > 0 ? (
-            <Pressable style={s.brag} onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}>
-              <Text style={s.bragT}>{t('mine.shareSavings')}</Text>
+          {saved === 0 ? <Text style={s.heroSub}>{t('save.how')}</Text> : null}
+          <View style={s.heroBtns}>
+            <Pressable style={s.post} onPress={() => router.push('/new')} accessibilityRole="button">
+              <IconText icon={CirclePlus} size={16} color="#fff" style={s.bragT}>{t('save.post')}</IconText>
             </Pressable>
-          ) : null}
+            {saved > 0 ? (
+              <Pressable style={s.brag} onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}>
+                <Text style={s.bragT}>{t('mine.shareSavings')}</Text>
+              </Pressable>
+            ) : null}
+          </View>
           {err ? <Text style={{ color: C.no, marginTop: 6 }}>{err}</Text> : null}
         </View>
       }
       ListFooterComponent={
         <View style={s.account}>
+          {user.isAdmin ? (
+            <Pressable onPress={() => router.push('/hidden')} accessibilityRole="button">
+              <IconText icon={EyeOff} color={C.sub} style={s.accT}>{t('admin.hiddenLink', { n: hiddenCount ?? '…' })}</IconText>
+            </Pressable>
+          ) : null}
           {user.email ? (
             <IconText icon={BadgeCheck} color={C.yes} style={s.accT}>{t('mine.verified', { email: user.email })}</IconText>
           ) : (
@@ -157,7 +171,9 @@ const s = StyleSheet.create({
   heroLabel: { color: '#D6D3D1', fontSize: 13, fontWeight: '600' },
   heroAmt: { color: '#fff', fontSize: 36, fontWeight: '900', marginTop: 2 },
   heroSub: { color: '#A8A29E', fontSize: 13, marginTop: 4 },
-  brag: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: '#25D366', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  heroBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  post: { backgroundColor: C.brand, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  brag: { alignSelf: 'flex-start', backgroundColor: '#25D366', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
   bragT: { color: '#fff', fontWeight: '800', fontSize: 14 },
   empty: { textAlign: 'center', color: C.sub, marginTop: 30 },
   decide: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, flexWrap: 'wrap', gap: 8 },

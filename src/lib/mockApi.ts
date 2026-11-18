@@ -3,7 +3,9 @@ import type { Api, Comment, FeedItem, Verdict } from './types';
 
 /** In-memory backend so the app runs with zero setup (demo / web preview). */
 
-const ME: { id: string; handle: string; email: string | null; isAdmin: boolean } = { id: 'me', handle: 'Kanjoos Kabootar 42', email: null, isAdmin: false };
+// Dev site: open it with ?admin=1 to see the app as an admin (demo data only, nothing real).
+const asAdmin = typeof window !== 'undefined' && /[?&]admin=1\b/.test(window.location?.search ?? '');
+const ME: { id: string; handle: string; email: string | null; isAdmin: boolean } = { id: 'me', handle: 'Kanjoos Kabootar 42', email: null, isAdmin: asAdmin };
 const H = 3.6e6;
 const at = (hoursFromNow: number) => new Date(Date.now() + hoursFromNow * H).toISOString();
 
@@ -11,6 +13,7 @@ type Row = Omit<FeedItem, 'my_vote' | 'approve_count' | 'reject_count' | 'commen
 const handles: Record<string, string> = {
   me: ME.handle, u1: 'Sabar Panda 17', u2: 'Hisaabi Chacha 88', u3: 'Thrifty Tota 205',
   u4: 'Bachat Baba 9', u5: 'Samajhdar Mausi 61', u6: 'Chillar Tiger 340',
+  u7: 'Jugaadu Bhalu 12', u8: 'Spammy Sher 99',
 };
 
 const rows: Row[] = [
@@ -35,9 +38,14 @@ const rows: Row[] = [
   { id: 'r7', user_id: 'me', item: 'Sneakers (limited drop)', price_inr: 16995, category: 'Fashion',
     reason: 'Pichle 2 saal se ek hi joota pehen raha hoon. Par yeh wala thoda zyada mehenga hai.',
     alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54), link: null },
+  // Only admins see these two (demo of the "Hidden and banned" page).
+  { id: 'r8', user_id: 'u7', item: 'Something reported three times', price_inr: 999, category: 'Other',
+    reason: 'Demo: an arzi hidden after reports.', alternative: null, closes_at: at(10), outcome: null, created_at: at(-3), link: null, hidden: true },
+  { id: 'r9', user_id: 'u8', item: 'Spam from a banned account', price_inr: 1, category: 'Other',
+    reason: 'Demo: an arzi from a banned account. Nobody else sees it.', alternative: null, closes_at: at(16), outcome: null, created_at: at(-2), link: null },
 ];
 
-const banned = new Set<string>();
+const banned = new Set<string>(['u8']);
 const votes = new Map<string, Map<string, Verdict>>(); // requestId → (userId → verdict)
 const verifiedVoters = new Set<string>(); // demo: about a third of voters verified their email
 const reasons = new Map<string, Map<string, VoteReason>>(); // requestId → (userId → reason)
@@ -68,6 +76,8 @@ const comments: Comment[] = [
 let seq = 100;
 const blocked = new Set<string>();
 const visible = (userId: string) => !blocked.has(userId);
+// Hidden arzi and banned people's arzi reach only admins and the author (silent ban).
+const shown = (r: Row) => visible(r.user_id) && (ME.isAdmin || r.user_id === ME.id || (!r.hidden && !banned.has(r.user_id)));
 const delay = <T,>(v: T) => new Promise<T>((r) => setTimeout(() => r(v), 150));
 
 function view(r: Row): FeedItem {
@@ -116,12 +126,12 @@ export const mockApi: Api = {
   feed: (kind) =>
     delay(
       sorted()
-        .filter((r) => visible(r.user_id) && (kind === 'open') === new Date(r.closes_at).getTime() > Date.now())
+        .filter((r) => shown(r) && (kind === 'open') === new Date(r.closes_at).getTime() > Date.now())
         .map(view),
     ),
   mine: () => delay(sorted().filter((r) => r.user_id === ME.id).map(view)),
   get(id) {
-    const r = rows.find((x) => x.id === id && visible(x.user_id));
+    const r = rows.find((x) => x.id === id && shown(x));
     return delay(r ? view(r) : null);
   },
   comments: (id) => delay(comments.filter((c) => c.request_id === id && visible(c.user_id))),
@@ -171,7 +181,12 @@ export const mockApi: Api = {
     await delay(null);
   },
   report: () => delay(undefined),
-  adminSetHidden: () => delay(undefined),
+  adminSetHidden(type, id, hide) {
+    if (!ME.isAdmin) throw new Error('NOT_ADMIN');
+    const r = type === 'request' ? rows.find((x) => x.id === id) : undefined;
+    if (r) r.hidden = hide;
+    return delay(undefined);
+  },
   async adminSetBanned(userId, ban) {
     if (!ME.isAdmin) throw new Error('NOT_ADMIN');
     if (ban) banned.add(userId);

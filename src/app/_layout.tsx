@@ -42,6 +42,7 @@ function Nav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="request/[id]" options={{ title: t('title.request') }} />
       <Stack.Screen name="login" options={{ title: t('title.login'), presentation: 'modal' }} />
+      <Stack.Screen name="hidden" options={{ title: t('title.hidden') }} />
     </Stack>
   );
 }

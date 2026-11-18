@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
+import { SavingsNudge } from '../../components/SavingsNudge';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { UpdateBanner } from '../../components/UpdateBanner';
 import { api, isDemo } from '../../lib/api';
@@ -35,6 +36,8 @@ export default function Feed() {
   // Guests get 20 free votes; null once the email is verified.
   const [left, setLeft] = useState<number | null>(null);
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
+  // Money saved (your arzi marked "Didn't buy"): shown with a nudge to post, once you've voted.
+  const [saved, setSaved] = useState<number | null>(null);
   const { picked, toggle, clear } = useInterests();
 
   // The list refreshes quietly (no spinner) once it has something to show, e.g. when sign-in finishes.
@@ -46,8 +49,19 @@ export default function Feed() {
         setErr(null);
         if (user.email) setLeft(null);
         else api.guestVotesLeft().then(setLeft, () => setLeft(null));
-        if (user.isAdmin) api.adminBannedIds().then((ids) => setBanned(new Set(ids)), () => {});
-        const rows = await api.feed(which);
+        if (user.id)
+          api.mine().then(
+            (mine) => setSaved(mine.filter((x) => x.outcome === 'skipped').reduce((a, x) => a + x.price_inr, 0)),
+            () => setSaved(null),
+          );
+        const [all, bannedIds] = await Promise.all([
+          api.feed(which),
+          user.isAdmin ? api.adminBannedIds().catch(() => [] as string[]) : Promise.resolve([] as string[]),
+        ]);
+        const bannedSet = new Set(bannedIds);
+        setBanned(bannedSet);
+        // Admins: hidden arzi and banned people's arzi live on their own page, not in the feed.
+        const rows = user.isAdmin ? all.filter((r) => !r.hidden && !bannedSet.has(r.user_id)) : all;
         // Vote tab: not-yet-voted first, then the ones you voted on (your own arzi live in Meri Arzi).
         setItems(which === 'open' ? rows.filter((r) => !user.id || r.user_id !== user.id) : rows);
         shown.current = rows.length > 0;
@@ -147,6 +161,7 @@ export default function Feed() {
               <IconText icon={Vote} size={17} color={C.brand} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
           ) : null}
+          {tab === 'open' && saved !== null && items.some((x) => x.my_vote) ? <SavingsNudge saved={saved} /> : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }

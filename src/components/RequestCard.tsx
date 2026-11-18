@@ -53,8 +53,8 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
 
   return (
     <CardBox onPress={onPress}>
-      {viewer.isAdmin && authorBanned ? <IconText icon={Ban} color={C.no} box={s.flag} style={s.flagT}>{t('admin.bannedBadge')}</IconText> : null}
-      {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} color={C.no} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
+      {viewer.isAdmin && authorBanned ? <IconText icon={Ban} color={C.sub} box={s.flag} style={s.flagT}>{t('admin.bannedBadge')}</IconText> : null}
+      {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} color={C.sub} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
 
       <View style={s.top}>
         <Text style={s.item} numberOfLines={full ? undefined : 2}>
@@ -240,7 +240,7 @@ const s = StyleSheet.create({
   bar: { flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
   verifiedT: { fontSize: 12.5, fontWeight: '600' },
   resultT: { fontSize: 13.5, fontWeight: '700', color: C.ink },
-  flag: { backgroundColor: C.noSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
+  flag: { backgroundColor: C.line, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
   flagT: { fontSize: 12, fontWeight: '700' },
   badge: { marginTop: 10, alignSelf: 'flex-start', backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
   badgeT: { fontSize: 13, fontWeight: '600' },

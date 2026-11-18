@@ -183,14 +183,14 @@ export default function RequestDetail() {
         ) : null}
         {user.isAdmin ? (
           <Pressable onPress={() => moderate('request', r.id, !r.hidden)} style={s.adminBtn}>
-            <IconText icon={r.hidden ? Eye : EyeOff} color={C.no} style={s.adminT}>
+            <IconText icon={r.hidden ? Eye : EyeOff} color={C.sub} style={s.adminT}>
               {r.hidden ? t('admin.unhide') : t('admin.hide')}
             </IconText>
           </Pressable>
         ) : null}
         {user.isAdmin && !own(r.user_id) ? (
           <Pressable onPress={() => toggleBan(r.user_id)} style={s.adminBtn}>
-            <IconText icon={banned.has(r.user_id) ? CircleCheck : Ban} color={C.no} style={s.adminT}>
+            <IconText icon={banned.has(r.user_id) ? CircleCheck : Ban} color={C.sub} style={s.adminT}>
               {banned.has(r.user_id)
                 ? t('admin.unban', { handle: r.handle })
                 : confirmBan === r.user_id
@@ -212,13 +212,13 @@ export default function RequestDetail() {
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
-            {user.isAdmin && banned.has(c.user_id) ? <IconText icon={Ban} size={12} color={C.no} style={s.cHidden}>{t('admin.bannedBadge')}</IconText> : null}
-            {user.isAdmin && c.hidden ? <IconText icon={EyeOff} size={12} color={C.no} style={s.cHidden}>{t('admin.hiddenBadge')}</IconText> : null}
+            {user.isAdmin && banned.has(c.user_id) ? <IconText icon={Ban} size={12} color={C.sub} style={s.cHidden}>{t('admin.bannedBadge')}</IconText> : null}
+            {user.isAdmin && c.hidden ? <IconText icon={EyeOff} size={12} color={C.sub} style={s.cHidden}>{t('admin.hiddenBadge')}</IconText> : null}
             <Text style={s.cBody}>{c.body}</Text>
             {user.isAdmin ? (
               <View style={[s.actions, { justifyContent: 'flex-start' }]}>
                 <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
-                  <IconText icon={c.hidden ? Eye : EyeOff} size={13} color={C.no} style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</IconText>
+                  <IconText icon={c.hidden ? Eye : EyeOff} size={13} color={C.sub} style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</IconText>
                 </Pressable>
                 {!own(c.user_id) ? (
                   <Pressable onPress={() => toggleBan(c.user_id)}>
@@ -264,10 +264,11 @@ const s = StyleSheet.create({
   empty: { textAlign: 'center', color: C.sub, marginTop: 40 },
   more: { borderWidth: 1.5, borderColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center', backgroundColor: C.card },
   moreT: { color: C.brand, fontWeight: '800', fontSize: 15 },
-  adminBtn: { borderWidth: 1.5, borderColor: C.no, borderRadius: 12, paddingVertical: 10, alignItems: 'center', backgroundColor: C.noSoft },
-  adminT: { color: C.no, fontWeight: '800', fontSize: 14 },
-  cHidden: { fontSize: 11, fontWeight: '700', color: C.no },
-  cAdmin: { fontSize: 12, fontWeight: '700', color: C.no, alignSelf: 'flex-start' },
+  // Admin tools in calm grey: they show on every arzi, and red all day wears you down (Arpit, 19 Nov).
+  adminBtn: { borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingVertical: 10, alignItems: 'center', backgroundColor: C.card },
+  adminT: { color: C.sub, fontWeight: '700', fontSize: 14 },
+  cHidden: { fontSize: 11, fontWeight: '700', color: C.sub },
+  cAdmin: { fontSize: 12, fontWeight: '700', color: C.sub, alignSelf: 'flex-start' },
   nudge: { fontSize: 13, color: C.ink, textAlign: 'center' },
   wa: { backgroundColor: '#25D366', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   waT: { color: '#fff', fontWeight: '800', fontSize: 15 },
