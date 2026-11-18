@@ -81,7 +81,7 @@ export default function Mine() {
           {user.handle ? <Text style={s.heroSub}>{t('mine.stats', { handle: user.handle, n: items.length, k: skipped })}</Text> : null}
           {saved === 0 ? <Text style={s.heroSub}>{t('save.how')}</Text> : null}
           <View style={s.heroBtns}>
-            <Pressable style={s.post} onPress={() => router.push('/new')} accessibilityRole="button">
+            <Pressable style={s.post} onPress={() => router.push('/new')} accessibilityRole="button" testID="mine-post">
               <IconText icon={CirclePlus} size={16} color="#fff" style={s.bragT}>{t('save.post')}</IconText>
             </Pressable>
             {saved > 0 ? (

@@ -220,7 +220,7 @@ def test_my_requests_has_post_button(page):
     open_app(page, "English")
     page.get_by_text("My requests", exact=True).click()
     page.get_by_text(re.compile("^Verify email")).wait_for()   # My requests is open
-    page.locator('text="Post a request" >> visible=true').first.click()
+    page.get_by_test_id("mine-post").click()
     page.get_by_text("What do you want to buy?").wait_for()
 
 
@@ -272,4 +272,18 @@ def test_savings_always_on_top(page):
     page.get_by_text("What do you want to buy?").wait_for()
     # Tabs stay mounted, so count the headers in view: the feed's and this page's.
     assert page.locator('[data-testid="savings-header"] >> visible=true').count() >= 2, "no savings on New request"
+
+
+def test_post_button_on_top_of_feed(page):
+    """Feed: a 'Post a request' button in the savings header, still there after scrolling (19 Nov)."""
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.mouse.move(195, 500)
+    page.mouse.wheel(0, 800)
+    page.wait_for_timeout(400)
+    btn = page.get_by_test_id("post-button")
+    assert btn.is_visible(), "post button scrolled away"
+    btn.click()
+    page.get_by_text("What do you want to buy?").wait_for()
+    assert page.locator('[data-testid="post-button"] >> visible=true').count() <= 1, "post button also on New request"
 

@@ -114,7 +114,7 @@ export default function Feed() {
 
   return (
     <View style={{ flex: 1 }}>
-    <SavingsHeader scrollY={scrollY} />
+    <SavingsHeader scrollY={scrollY} postButton />
     <SectionList
       onScroll={trackScroll(scrollY)}
       scrollEventThrottle={16}
