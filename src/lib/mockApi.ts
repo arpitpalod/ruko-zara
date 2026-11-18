@@ -110,10 +110,18 @@ export const mockApi: Api = {
     simulateCrowd(id);
     return delay(id);
   },
+  guestVotesLeft() {
+    if (ME.email) return delay(null);
+    let n = 0;
+    votes.forEach((m) => m.has(ME.id) && n++);
+    return delay(Math.max(0, 20 - n));
+  },
+
   async vote(id, v) {
     const r = rows.find((x) => x.id === id);
     if (!r || r.user_id === ME.id) throw new Error('Apni arzi pe vote nahi kar sakte');
     if (new Date(r.closes_at).getTime() < Date.now()) throw new Error('Voting band ho gayi');
+    if (!ME.email && !votes.get(id)?.has(ME.id) && (await this.guestVotesLeft()) === 0) throw new Error('GUEST_VOTE_LIMIT');
     (votes.get(id) ?? votes.set(id, new Map()).get(id)!).set(ME.id, v);
     await delay(null);
   },

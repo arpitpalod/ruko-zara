@@ -106,7 +106,7 @@ const en = {
   'detail.send': 'Send',
 
   'login.title': 'Verify your email first ✉️',
-  'login.why': 'Verify your email once to vote, post or comment — so votes come from real people. Nobody sees your email.',
+  'login.why': 'Verify your email once to post, comment and vote without limits — so votes come from real people. Nobody sees your email.',
   'login.emailPh': 'you@email.com',
   'login.send': 'Send code',
   'login.sent': 'We sent a code to {email}. Check your spam folder too.',
@@ -152,6 +152,11 @@ const en = {
   'new.linkPh': 'Paste from Amazon, Flipkart, Myntra…',
   'new.linkBad': "That doesn't look like a link.",
   'error.link': 'Links are allowed from shopping sites only (Amazon, Flipkart, Myntra…).',
+  'feed.guestLeft': '🗳️ {n} free guest votes left · Verify your email for unlimited voting →',
+  'feed.guestOut': "🗳️ You've used your 20 guest votes · Verify your email to keep voting →",
+  'error.guestLimit': "You've used your 20 guest votes. Verify your email to keep voting — takes 30 seconds.",
+  'error.captcha': "Couldn't confirm you're a real person. Check your internet and try again.",
+  'captcha.checking': "Quick check that you're a real person 🙏",
 } as const;
 
 export type Key = keyof typeof en;
@@ -246,7 +251,7 @@ const hi: Dict = {
   'detail.send': 'भेजें',
 
   'login.title': 'पहले ईमेल वेरिफ़ाई करें ✉️',
-  'login.why': 'वोट, अर्ज़ी और कमेंट के लिए एक बार ईमेल वेरिफ़ाई करना ज़रूरी है — ताकि वोट असली लोगों के हों। आपका ईमेल किसी को नहीं दिखेगा।',
+  'login.why': 'अर्ज़ी, कमेंट और बेहिसाब वोट के लिए एक बार ईमेल वेरिफ़ाई करें — ताकि वोट असली लोगों के हों। आपका ईमेल किसी को नहीं दिखेगा।',
   'login.emailPh': 'aapka@email.com',
   'login.send': 'कोड भेजें',
   'login.sent': '{email} पर कोड भेजा है। स्पैम फ़ोल्डर भी देख लें।',
@@ -292,6 +297,11 @@ const hi: Dict = {
   'new.linkPh': 'Amazon, Flipkart, Myntra… से पेस्ट करें',
   'new.linkBad': 'यह लिंक जैसा नहीं लग रहा।',
   'error.link': 'सिर्फ़ शॉपिंग साइट्स के लिंक चलेंगे (Amazon, Flipkart, Myntra…)।',
+  'feed.guestLeft': '🗳️ मेहमान के तौर पर {n} वोट बाक़ी · बेहिसाब वोट के लिए ईमेल वेरिफ़ाई करें →',
+  'feed.guestOut': '🗳️ आपके 20 मेहमान वोट पूरे हो गए · वोट जारी रखने के लिए ईमेल वेरिफ़ाई करें →',
+  'error.guestLimit': 'आपके 20 मेहमान वोट पूरे हो गए। वोट जारी रखने के लिए ईमेल वेरिफ़ाई करें — 30 सेकंड लगेंगे।',
+  'error.captcha': 'पुष्टि नहीं हो पाई कि आप असली इंसान हैं। इंटरनेट जाँचें और फिर कोशिश करें।',
+  'captcha.checking': 'बस एक छोटी जाँच कि आप असली इंसान हैं 🙏',
 };
 
 const hinglish: Dict = {
@@ -383,7 +393,7 @@ const hinglish: Dict = {
   'detail.send': 'Bhejo',
 
   'login.title': 'Pehle email verify karo ✉️',
-  'login.why': 'Vote, arzi aur comment ke liye ek baar email verify karna zaroori hai — taaki votes asli logon ke hon. Email kisi ko dikhega nahi.',
+  'login.why': 'Arzi, comment aur unlimited vote ke liye ek baar email verify karo — taaki votes asli logon ke hon. Email kisi ko dikhega nahi.',
   'login.emailPh': 'tumhara@email.com',
   'login.send': 'Code bhejo',
   'login.sent': '{email} pe code bheja hai. Spam folder bhi dekh lena.',
@@ -429,6 +439,11 @@ const hinglish: Dict = {
   'new.linkPh': 'Amazon, Flipkart, Myntra… se paste karo',
   'new.linkBad': 'Yeh link jaisa nahi lag raha.',
   'error.link': 'Sirf shopping sites ke link chalenge (Amazon, Flipkart, Myntra…).',
+  'feed.guestLeft': '🗳️ Guest ke {n} free vote bache · Unlimited vote ke liye email verify karo →',
+  'feed.guestOut': '🗳️ Tumhare 20 guest vote ho gaye · Aage vote karne ke liye email verify karo →',
+  'error.guestLimit': 'Tumhare 20 guest vote ho gaye. Aage vote karne ke liye email verify karo — 30 second lagenge.',
+  'error.captcha': 'Confirm nahi ho paya ki tum asli insaan ho. Internet check karke dobara try karo.',
+  'captcha.checking': 'Bas ek chhota check ki tum asli insaan ho 🙏',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

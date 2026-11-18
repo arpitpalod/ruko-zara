@@ -2,7 +2,7 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
-import { friendly } from '../../lib/errors';
+import { friendly, isGuestLimit } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { ago, applyVote, inr, timeLeft } from '../../lib/format';
 import { requestUrl, shareOnWhatsApp } from '../../lib/share';
@@ -49,6 +49,7 @@ export default function RequestDetail() {
       await api.vote(rid, v);
     } catch (e: any) {
       setMsg(friendly(e, t));
+      if (isGuestLimit(e)) router.push('/login');
       load();
     }
   };

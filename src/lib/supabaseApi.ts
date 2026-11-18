@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
+import { getCaptchaToken } from './captcha';
 import type { Api, Comment, FeedItem, User } from './types';
 
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
@@ -33,7 +34,9 @@ export function createSupabaseApi(url: string, key: string): Api {
   async function startSession(): Promise<User> {
     let session = (await sb.auth.getSession()).data.session;
     if (!session) {
-      const r = await sb.auth.signInAnonymously();
+      // Bot check; if it can't run, try anyway (the server decides whether a token is required).
+      const captchaToken = await getCaptchaToken().catch(() => undefined);
+      const r = await sb.auth.signInAnonymously({ options: { captchaToken } });
       if (r.error) throw new Error(r.error.message);
       session = r.data.session;
     }
@@ -52,7 +55,8 @@ export function createSupabaseApi(url: string, key: string): Api {
         if (r.error.code !== 'email_exists') throw new Error(r.error.message);
       }
       // Email already has an account (e.g. new phone): log in to it instead.
-      const r = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+      const captchaToken = await getCaptchaToken().catch(() => undefined);
+      const r = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, captchaToken } });
       if (r.error) throw new Error(r.error.message);
       return 'login';
     },
@@ -121,6 +125,11 @@ export function createSupabaseApi(url: string, key: string): Api {
           .from('votes')
           .upsert({ request_id: id, user_id: uid, verdict: v }, { onConflict: 'request_id,user_id' }),
       );
+    },
+
+    async guestVotesLeft() {
+      const r = await sb.rpc('guest_votes_left');
+      return r.error || typeof r.data !== 'number' ? null : r.data;
     },
 
     async comment(id, body) {

@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { CaptchaHost } from '../components/CaptchaHost';
 import { LanguageButton } from '../components/LanguageButton';
 import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
@@ -12,6 +13,7 @@ export default function RootLayout() {
         <StatusBar style="dark" />
         <Nav />
       </SessionProvider>
+      <CaptchaHost />
     </LanguageProvider>
   );
 }

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ruko Zara · quick check</title>
+<style>
+  html, body { margin: 0; background: transparent; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 80px; }
+</style>
+</head>
+<body>
+<div id="w"></div>
+<script>
+(function () {
+  // Runs Cloudflare Turnstile and hands the one-time token to the app (Android WebView or the web app around this iframe).
+  var key = new URLSearchParams(location.search).get('k') || '';
+  function send(m) {
+    m.source = 'rz-captcha';
+    var s = JSON.stringify(m);
+    if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(s);
+    else if (window.parent !== window) window.parent.postMessage(s, location.origin);
+  }
+  window.rzTurnstileLoad = function () {
+    try {
+      window.turnstile.render('#w', {
+        sitekey: key,
+        appearance: 'interaction-only',
+        callback: function (t) { send({ type: 'token', token: t }); },
+        'before-interactive-callback': function () { send({ type: 'interactive' }); },
+        'error-callback': function (c) { send({ type: 'error', code: String(c) }); },
+        'expired-callback': function () { send({ type: 'expired' }); }
+      });
+    } catch (e) {
+      send({ type: 'error', code: 'script' });
+    }
+  };
+  if (!key) { send({ type: 'error', code: 'script' }); return; }
+  var s = document.createElement('script');
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=rzTurnstileLoad&render=explicit';
+  s.async = true;
+  s.onerror = function () { send({ type: 'error', code: 'script' }); };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

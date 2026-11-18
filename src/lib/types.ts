@@ -73,6 +73,8 @@ export interface Api {
   comments(id: string): Promise<Comment[]>;
   create(r: NewRequest): Promise<string>;
   vote(id: string, v: Verdict): Promise<void>;
+  /** Free votes left for a guest (20 max); null once the email is verified. */
+  guestVotesLeft(): Promise<number | null>;
   comment(id: string, body: string): Promise<void>;
   setOutcome(id: string, o: Outcome): Promise<void>;
   report(type: 'request' | 'comment', id: string, reason?: string): Promise<void>;

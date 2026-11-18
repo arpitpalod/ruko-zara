@@ -4,7 +4,7 @@ import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { api, isDemo } from '../../lib/api';
-import { friendly } from '../../lib/errors';
+import { friendly, isGuestLimit } from '../../lib/errors';
 import { applyVote } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { useUser } from '../../lib/session';
@@ -27,12 +27,16 @@ export default function Feed() {
   const [err, setErr] = useState<string | null>(null);
   // Which arzi were already voted on when the list loaded — a fresh vote doesn't jump the card away.
   const [votedAtLoad, setVotedAtLoad] = useState<Set<string>>(new Set());
+  // Guests get 20 free votes; null once the email is verified.
+  const [left, setLeft] = useState<number | null>(null);
 
   const load = useCallback(
     async (which: Tab = tab) => {
       setLoading(true);
       try {
         setErr(null);
+        if (user.email) setLeft(null);
+        else api.guestVotesLeft().then(setLeft, () => setLeft(null));
         const rows = await api.feed(which);
         // Vote tab: not-yet-voted first, then the ones you voted on (your own arzi live in Meri Arzi).
         setItems(which === 'open' ? rows.filter((r) => r.user_id !== user.id) : rows);
@@ -43,7 +47,7 @@ export default function Feed() {
         setLoading(false);
       }
     },
-    [tab, user.id, t],
+    [tab, user.id, user.email, t],
   );
 
   useFocusEffect(
@@ -59,11 +63,18 @@ export default function Feed() {
   };
 
   const onVote = async (id: string, v: Verdict) => {
+    const isNew = !items.find((x) => x.id === id)?.my_vote;
+    if (isNew && left === 0) return router.push('/login');
     setItems((xs) => xs.map((x) => (x.id === id ? applyVote(x, v) : x)));
     try {
       await api.vote(id, v);
+      if (isNew) setLeft((n) => (n === null ? n : Math.max(0, n - 1)));
     } catch (e: any) {
       setErr(friendly(e, t));
+      if (isGuestLimit(e)) {
+        setLeft(0);
+        router.push('/login');
+      }
       load();
     }
   };
@@ -100,6 +111,11 @@ export default function Feed() {
             ))}
           </View>
           {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
+          {left !== null && left <= 5 && tab === 'open' ? (
+            <Pressable onPress={() => router.push('/login')} style={s.guest}>
+              <Text style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</Text>
+            </Pressable>
+          ) : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }
@@ -130,5 +146,7 @@ const s = StyleSheet.create({
   segT: { fontSize: 14, fontWeight: '800', color: C.ink },
   demo: { fontSize: 12, color: C.brand, backgroundColor: C.brandSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
   err: { color: C.no },
+  guest: { backgroundColor: C.brandSoft, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
+  guestT: { color: C.brand, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   empty: { textAlign: 'center', color: C.sub, marginTop: 24, marginBottom: 24, lineHeight: 22 },
 });
