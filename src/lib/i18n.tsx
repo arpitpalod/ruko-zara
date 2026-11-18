@@ -32,18 +32,19 @@ const en = {
   'feed.empty': 'No requests yet. Post the first one! ✍️',
 
   'card.you': ' (you)',
-  'card.cheaper': '💡 Cheaper option: {alt}',
-  'card.yes': 'Buy it 👍',
-  'card.no': 'Skip it 👎',
+  'card.cheaper': 'Cheaper alternative: {alt}',
+  'card.yes': 'Buy it',
+  'card.no': 'Skip it',
   'card.skipped': "🎉 Didn't buy — saved {amt}",
   'card.bought': '🛍️ Bought it',
-  'card.comments': '💬 {n} opinions',
+  'card.comments': '{n} opinions',
+  'card.comments_one': '1 opinion',
   'card.demo': 'demo',
   'admin.hiddenBadge': '🙈 Hidden (only admins see this)',
   'admin.hide': '🛡️ Hide for everyone',
   'admin.unhide': '🛡️ Unhide',
-  'web.android': '📱 Get the Android app (45 MB)',
-  'web.ios': '📲 iPhone tip: tap Share → Add to Home Screen to use it like an app',
+  'web.android': 'Get the Android app (45 MB) →',
+  'web.ios': 'iPhone tip: tap Share → Add to Home Screen to use it like an app',
 
   'time.now': 'now',
   'time.m': '{n}m',
@@ -81,13 +82,13 @@ const en = {
   'common.sending': 'Sending…',
 
   'mine.saved': 'Saved so far',
-  'mine.stats': '{handle} · {n} requests · held back {k} times',
+  'mine.stats': '{handle} · {n} posted · {k} not bought',
   'mine.empty': "You haven't posted a request yet.",
   'mine.decideQ': 'What did you finally do?',
   'mine.skip': "Didn't buy 🎉",
   'mine.bought': 'Bought it 🛍️',
   'mine.verified': '✅ Verified: {email}',
-  'mine.verify': 'Verify email (to vote and post)',
+  'mine.verify': 'Verify email: post, comment, vote without limits',
   'mine.language': 'Language',
   'mine.delete': 'Delete account',
   'mine.deleteConfirm': 'Sure? All your requests, votes and comments will be deleted forever.',
@@ -95,9 +96,9 @@ const en = {
   'mine.deleteNo': 'Cancel',
 
   'detail.notFound': 'This request was not found (it may have been removed).',
-  'detail.report': '🚩 Report',
+  'detail.report': 'Report',
   'detail.reported': 'Reported ✓',
-  'detail.block': '🚫 Block {handle}',
+  'detail.block': 'Block {handle}',
   'detail.comments': 'What people say ({n})',
   'detail.noComments': 'No opinions yet. Be the first.',
   'detail.reportShort': 'Report',
@@ -166,7 +167,15 @@ const en = {
   'admin.banShortConfirm': 'Tap again to ban',
   'admin.unbanShort': 'Unban',
   'error.cannotBanAdmin': "Admins can't be banned.",
-  'detail.more': '👀 Vote on more arzi →',
+  'detail.more': 'Vote on more requests →',
+  'card.votes': '{n} votes',
+  'card.votes_one': '1 vote',
+  'card.result': '{p}% say buy it',
+  'card.hidden': 'Vote to see what people said',
+  'card.firstVote': 'No votes yet. Be the first',
+  'feed.interests': 'Show first',
+  'feed.all': 'All',
+  'feed.otherInterests': 'Everything else',
 } as const;
 
 export type Key = keyof typeof en;
@@ -187,18 +196,19 @@ const hi: Dict = {
   'feed.empty': 'अभी कोई अर्ज़ी नहीं। पहली अर्ज़ी आप डालें! ✍️',
 
   'card.you': ' (आप)',
-  'card.cheaper': '💡 सस्ता विकल्प: {alt}',
-  'card.yes': 'ले लो 👍',
-  'card.no': 'रहने दो 👎',
+  'card.cheaper': 'सस्ता विकल्प: {alt}',
+  'card.yes': 'ले लो',
+  'card.no': 'रहने दो',
   'card.skipped': '🎉 नहीं ख़रीदा — {amt} बचे',
   'card.bought': '🛍️ ख़रीद लिया',
-  'card.comments': '💬 {n} राय',
+  'card.comments': '{n} राय',
+  'card.comments_one': '1 राय',
   'card.demo': 'डेमो',
   'admin.hiddenBadge': '🙈 छिपा हुआ (सिर्फ़ एडमिन को दिखता है)',
   'admin.hide': '🛡️ सबसे छिपाएँ',
   'admin.unhide': '🛡️ वापस दिखाएँ',
-  'web.android': '📱 Android ऐप डाउनलोड करें (45 MB)',
-  'web.ios': '📲 iPhone टिप: Share → Add to Home Screen दबाएँ, ऐप की तरह चलेगा',
+  'web.android': 'Android ऐप डाउनलोड करें (45 MB) →',
+  'web.ios': 'iPhone टिप: Share → Add to Home Screen दबाएँ, ऐप की तरह चलेगा',
 
   'time.now': 'अभी',
   'time.m': '{n} मि.',
@@ -242,7 +252,7 @@ const hi: Dict = {
   'mine.skip': 'नहीं ख़रीदा 🎉',
   'mine.bought': 'ख़रीद लिया 🛍️',
   'mine.verified': '✅ वेरिफ़ाइड: {email}',
-  'mine.verify': 'ईमेल वेरिफ़ाई करें (वोट और अर्ज़ी के लिए)',
+  'mine.verify': 'ईमेल वेरिफ़ाई करें: अर्ज़ी, कमेंट और बेहिसाब वोट',
   'mine.language': 'भाषा',
   'mine.delete': 'अकाउंट डिलीट करें',
   'mine.deleteConfirm': 'पक्का? आपकी सारी अर्ज़ियाँ, वोट और कमेंट हमेशा के लिए डिलीट हो जाएँगे।',
@@ -250,9 +260,9 @@ const hi: Dict = {
   'mine.deleteNo': 'रहने दें',
 
   'detail.notFound': 'यह अर्ज़ी नहीं मिली (शायद हटा दी गई)।',
-  'detail.report': '🚩 रिपोर्ट करें',
+  'detail.report': 'रिपोर्ट करें',
   'detail.reported': 'रिपोर्ट भेज दी ✓',
-  'detail.block': '🚫 {handle} को ब्लॉक करें',
+  'detail.block': '{handle} को ब्लॉक करें',
   'detail.comments': 'जनता की राय ({n})',
   'detail.noComments': 'अभी कोई राय नहीं। पहले आप बोलें।',
   'detail.reportShort': 'रिपोर्ट',
@@ -321,7 +331,15 @@ const hi: Dict = {
   'admin.banShortConfirm': 'बैन के लिए फिर टैप करें',
   'admin.unbanShort': 'बैन हटाएँ',
   'error.cannotBanAdmin': 'एडमिन को बैन नहीं किया जा सकता।',
-  'detail.more': '👀 और अर्ज़ियों पर वोट करें →',
+  'detail.more': 'और अर्ज़ियों पर वोट करें →',
+  'card.votes': '{n} वोट',
+  'card.votes_one': '1 वोट',
+  'card.result': '{p}% कहते हैं ले लो',
+  'card.hidden': 'वोट करें, फिर देखें लोगों ने क्या कहा',
+  'card.firstVote': 'अभी कोई वोट नहीं। पहला वोट आपका',
+  'feed.interests': 'पहले दिखाएँ',
+  'feed.all': 'सब',
+  'feed.otherInterests': 'बाक़ी सब',
 };
 
 const hinglish: Dict = {
@@ -339,18 +357,19 @@ const hinglish: Dict = {
   'feed.empty': 'Abhi koi arzi nahi. Pehli arzi tum daalo! ✍️',
 
   'card.you': ' (tum)',
-  'card.cheaper': '💡 Sasta option: {alt}',
-  'card.yes': 'Le le 👍',
-  'card.no': 'Rehne de 👎',
+  'card.cheaper': 'Sasta option: {alt}',
+  'card.yes': 'Le le',
+  'card.no': 'Rehne de',
   'card.skipped': '🎉 Nahi kharida — {amt} bache',
   'card.bought': '🛍️ Kharid liya',
-  'card.comments': '💬 {n} raay',
+  'card.comments': '{n} raay',
+  'card.comments_one': '1 raay',
   'card.demo': 'demo',
   'admin.hiddenBadge': '🙈 Hidden (sirf admin ko dikhta hai)',
   'admin.hide': '🛡️ Sabse chhupao',
   'admin.unhide': '🛡️ Wapas dikhao',
-  'web.android': '📱 Android app download karo (45 MB)',
-  'web.ios': '📲 iPhone tip: Share → Add to Home Screen dabao, app jaisa chalega',
+  'web.android': 'Android app download karo (45 MB) →',
+  'web.ios': 'iPhone tip: Share → Add to Home Screen dabao, app jaisa chalega',
 
   'time.now': 'abhi',
   'time.m': '{n}m',
@@ -394,7 +413,7 @@ const hinglish: Dict = {
   'mine.skip': 'Nahi kharida 🎉',
   'mine.bought': 'Kharid liya 🛍️',
   'mine.verified': '✅ Verified: {email}',
-  'mine.verify': 'Email verify karo (vote aur arzi ke liye)',
+  'mine.verify': 'Email verify karo: arzi, comment, unlimited vote',
   'mine.language': 'Bhasha',
   'mine.delete': 'Account delete karo',
   'mine.deleteConfirm': 'Pakka? Tumhari saari arzi, votes aur comments hamesha ke liye delete ho jayenge.',
@@ -402,9 +421,9 @@ const hinglish: Dict = {
   'mine.deleteNo': 'Rehne do',
 
   'detail.notFound': 'Yeh arzi nahi mili (shayad hata di gayi).',
-  'detail.report': '🚩 Report karo',
+  'detail.report': 'Report karo',
   'detail.reported': 'Report bhej diya ✓',
-  'detail.block': '🚫 Block {handle}',
+  'detail.block': 'Block {handle}',
   'detail.comments': 'Janta ki raay ({n})',
   'detail.noComments': 'Abhi koi raay nahi. Pehle tum bolo.',
   'detail.reportShort': 'Report',
@@ -473,7 +492,15 @@ const hinglish: Dict = {
   'admin.banShortConfirm': 'Ban ke liye dobara tap karo',
   'admin.unbanShort': 'Unban',
   'error.cannotBanAdmin': 'Admin ko ban nahi kar sakte.',
-  'detail.more': '👀 Aur arzi pe vote karo →',
+  'detail.more': 'Aur arzi pe vote karo →',
+  'card.votes': '{n} vote',
+  'card.votes_one': '1 vote',
+  'card.result': '{p}% bole le le',
+  'card.hidden': 'Vote karo, phir dekho logon ne kya bola',
+  'card.firstVote': 'Abhi koi vote nahi. Pehla vote tumhara',
+  'feed.interests': 'Pehle dikhao',
+  'feed.all': 'Sab',
+  'feed.otherInterests': 'Baaki sab',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };
@@ -484,7 +511,9 @@ export type T = (key: Key, vars?: Record<string, string | number>) => string;
 function translate(lang: Lang): T {
   const d = DICTS[lang];
   return (key, vars) => {
-    const s = d[key] ?? en[key];
+    // "1 opinion" vs "2 opinions": a key ending in _one is used when n is 1.
+    const one = vars?.n === 1 ? (`${key}_one` as Key) : null;
+    const s = (one && (d[one] ?? en[one as keyof typeof en])) || d[key] || en[key];
     return vars ? s.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? '')) : s;
   };
 }

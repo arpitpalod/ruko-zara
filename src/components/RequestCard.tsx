@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
+import { ago, catLabel, displayHandle, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
 import { useT } from '../lib/i18n';
 import { useUser } from '../lib/session';
@@ -16,8 +16,12 @@ interface Props {
   authorBanned?: boolean;
 }
 
+/**
+ * One arzi. Results stay hidden until you vote (seeing a lopsided count first nudges people to
+ * follow the crowd), except on your own arzi, after voting closes, and for admins.
+ */
 export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned }: Props) {
-  const { t } = useT();
+  const { t, lang } = useT();
   const viewer = useUser();
   // Example arzi carry demo vote counts; they're added for display and always tagged "demo".
   const demo = (real.demo_approve ?? 0) + (real.demo_reject ?? 0) > 0;
@@ -28,56 +32,57 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
   const mine = r.user_id === meId;
   const total = r.approve_count + r.reject_count;
   const yesPct = total ? Math.round((r.approve_count / total) * 100) : 0;
+  const showResults = !!r.my_vote || mine || !left || viewer.isAdmin;
+  const canVote = !mine && !!left && !!onVote;
+  const footer = [left ?? verdictText(r, t), r.comment_count > 0 ? t('card.comments', { n: r.comment_count }) : null]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
-    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [s.card, pressed && { opacity: 0.85 }]}>
-      {viewer.isAdmin && authorBanned ? <Text style={s.hiddenBadge}>{t('admin.bannedBadge')}</Text> : null}
-      {viewer.isAdmin && real.hidden ? <Text style={s.hiddenBadge}>{t('admin.hiddenBadge')}</Text> : null}
-      <View style={s.row}>
-        <Text style={s.handle}>
-          {r.handle}
-          {mine ? t('card.you') : ''}
-        </Text>
-        <Text style={s.meta}>
-          {catLabel(r.category, t)} · {ago(r.created_at, t)}
-        </Text>
-      </View>
+    <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [s.card, pressed && { opacity: 0.9 }]}>
+      {viewer.isAdmin && authorBanned ? <Text style={s.flag}>{t('admin.bannedBadge')}</Text> : null}
+      {viewer.isAdmin && real.hidden ? <Text style={s.flag}>{t('admin.hiddenBadge')}</Text> : null}
 
-      <View style={[s.row, { alignItems: 'flex-start', marginTop: 8 }]}>
+      <View style={s.top}>
         <Text style={s.item} numberOfLines={full ? undefined : 2}>
           {r.item}
         </Text>
         <Text style={s.price}>{inr(r.price_inr)}</Text>
       </View>
-
-      <Text style={s.reason} numberOfLines={full ? undefined : 3}>
-        “{r.reason}”
+      <Text style={s.meta} numberOfLines={1}>
+        {catLabel(r.category, t)} · {ago(r.created_at, t)} · {displayHandle(r.handle, lang)}
+        {mine ? t('card.you') : ''}
       </Text>
-      {r.alternative ? <Text style={s.alt}>{t('card.cheaper', { alt: r.alternative })}</Text> : null}
+
+      <Text style={s.reason} numberOfLines={full ? undefined : 2}>
+        {r.reason}
+      </Text>
+      {full && r.alternative ? <Text style={s.alt}>{t('card.cheaper', { alt: r.alternative })}</Text> : null}
       {r.link ? (
-        <Pressable onPress={() => openLink(r.link!)} style={s.linkChip} hitSlop={6}>
-          <Text style={s.linkT}>🔗 {domainOf(r.link)} ↗</Text>
+        <Pressable onPress={() => openLink(r.link!)} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
+          <Text style={s.link}>{domainOf(r.link)} ↗</Text>
         </Pressable>
       ) : null}
 
-      {/* vote bar */}
-      <View style={s.bar}>
-        {total === 0 ? (
-          <View style={{ flex: 1, backgroundColor: C.line }} />
-        ) : (
-          <>
+      {showResults && total > 0 ? (
+        <View style={s.results}>
+          <View style={s.bar}>
             <View style={{ flex: r.approve_count, backgroundColor: C.yes }} />
             <View style={{ flex: r.reject_count, backgroundColor: C.no }} />
-          </>
-        )}
-      </View>
-      <View style={s.row}>
-        <Text style={[s.count, { color: C.yes }]}>
-          👍 {r.approve_count} · {total ? yesPct : 0}%{demo ? <Text style={s.demoTag}> · {t('card.demo')}</Text> : null}
+          </View>
+          <View style={s.row}>
+            <Text style={s.resultT}>{t('card.result', { p: yesPct })}</Text>
+            <Text style={s.meta}>
+              {t('card.votes', { n: total })}
+              {demo ? ` · ${t('card.demo')}` : ''}
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <Text style={[s.meta, s.results]}>
+          {total === 0 ? t('card.firstVote') : `${t('card.votes', { n: total })} · ${t('card.hidden')}`}
         </Text>
-        <Text style={s.meta}>{left ? `⏳ ${left}` : verdictText(r, t)}</Text>
-        <Text style={[s.count, { color: C.no }]}>{r.reject_count} 👎</Text>
-      </View>
+      )}
 
       {r.outcome ? (
         <Text style={[s.badge, r.outcome === 'skipped' ? { backgroundColor: C.yesSoft, color: C.yes } : null]}>
@@ -85,23 +90,23 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
         </Text>
       ) : null}
 
-      {!mine && left && onVote ? (
+      {canVote ? (
         <View style={s.btns}>
-          <VoteBtn label={t('card.yes')} active={r.my_vote === 'approve'} color={C.yes} soft={C.yesSoft} onPress={() => onVote(r.id, 'approve')} />
-          <VoteBtn label={t('card.no')} active={r.my_vote === 'reject'} color={C.no} soft={C.noSoft} onPress={() => onVote(r.id, 'reject')} />
+          <VoteBtn label={t('card.yes')} active={r.my_vote === 'approve'} color={C.yes} onPress={() => onVote!(r.id, 'approve')} />
+          <VoteBtn label={t('card.no')} active={r.my_vote === 'reject'} color={C.no} onPress={() => onVote!(r.id, 'reject')} />
         </View>
       ) : null}
 
-      {!full && r.comment_count > 0 ? <Text style={[s.meta, { marginTop: 10 }]}>{t('card.comments', { n: r.comment_count })}</Text> : null}
+      {footer ? <Text style={[s.meta, { marginTop: 10 }]}>{footer}</Text> : null}
     </Pressable>
   );
 }
 
-function VoteBtn(p: { label: string; active: boolean; color: string; soft: string; onPress: () => void }) {
+function VoteBtn(p: { label: string; active: boolean; color: string; onPress: () => void }) {
   return (
     <Pressable
       onPress={p.onPress}
-      style={[s.btn, { borderColor: p.color, backgroundColor: p.active ? p.color : p.soft }]}
+      style={({ pressed }) => [s.btn, p.active && { backgroundColor: p.color, borderColor: p.color }, pressed && { opacity: 0.8 }]}
       accessibilityRole="button"
       accessibilityState={{ selected: p.active }}
     >
@@ -112,21 +117,20 @@ function VoteBtn(p: { label: string; active: boolean; color: string; soft: strin
 
 const s = StyleSheet.create({
   card: { backgroundColor: C.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.line },
+  top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  handle: { fontSize: 13, fontWeight: '600', color: C.sub },
-  meta: { fontSize: 12, color: C.sub },
-  item: { flex: 1, fontSize: 18, fontWeight: '700', color: C.ink },
-  price: { fontSize: 18, fontWeight: '800', color: C.brand },
-  reason: { marginTop: 8, fontSize: 15, lineHeight: 21, color: C.ink },
-  alt: { marginTop: 8, fontSize: 13, color: C.sub },
-  linkChip: { marginTop: 8, alignSelf: 'flex-start', backgroundColor: C.brandSoft, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  linkT: { fontSize: 13, fontWeight: '700', color: C.brand },
-  bar: { flexDirection: 'row', height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 14, marginBottom: 6 },
-  count: { fontSize: 13, fontWeight: '700' },
-  demoTag: { fontSize: 11, fontWeight: '400', color: C.sub },
-  hiddenBadge: { fontSize: 12, fontWeight: '700', color: C.no, backgroundColor: C.noSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden', marginBottom: 8 },
+  item: { flex: 1, fontSize: 17, lineHeight: 22, fontWeight: '700', color: C.ink },
+  price: { fontSize: 17, lineHeight: 22, fontWeight: '700', color: C.ink },
+  meta: { fontSize: 12.5, color: C.sub, marginTop: 3 },
+  reason: { marginTop: 10, fontSize: 15, lineHeight: 21, color: C.ink },
+  alt: { marginTop: 8, fontSize: 14, lineHeight: 20, color: C.sub },
+  link: { marginTop: 8, fontSize: 13.5, fontWeight: '600', color: C.brand },
+  results: { marginTop: 14 },
+  bar: { flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
+  resultT: { fontSize: 13.5, fontWeight: '700', color: C.ink },
+  flag: { fontSize: 12, fontWeight: '700', color: C.no, backgroundColor: C.noSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden', marginBottom: 8 },
   badge: { marginTop: 10, alignSelf: 'flex-start', fontSize: 13, fontWeight: '600', color: C.ink, backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
   btns: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  btn: { flex: 1, borderWidth: 1.5, borderRadius: 12, paddingVertical: 10, alignItems: 'center' },
+  btn: { flex: 1, borderWidth: 1, borderColor: C.line, borderRadius: 10, paddingVertical: 10, alignItems: 'center', backgroundColor: C.card },
   btnT: { fontSize: 15, fontWeight: '700' },
 });

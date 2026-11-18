@@ -21,7 +21,7 @@ export function InstallHint() {
 }
 
 const s = StyleSheet.create({
-  box: { backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9 },
-  tip: { fontSize: 13, color: C.ink },
-  link: { fontSize: 14, fontWeight: '800', color: C.brand },
+  box: { paddingVertical: 2 },
+  tip: { fontSize: 13, color: C.sub },
+  link: { fontSize: 13.5, fontWeight: '700', color: C.brand },
 });

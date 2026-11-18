@@ -1,16 +1,17 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { UpdateBanner } from '../../components/UpdateBanner';
 import { api, isDemo } from '../../lib/api';
 import { friendly, isGuestLimit } from '../../lib/errors';
-import { applyVote } from '../../lib/format';
+import { applyVote, catLabel } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
-import type { FeedItem, Verdict } from '../../lib/types';
+import { splitByInterest, useInterests } from '../../lib/interests';
+import { CATEGORIES, type FeedItem, type Verdict } from '../../lib/types';
 
 type Tab = 'open' | 'closed';
 
@@ -31,6 +32,7 @@ export default function Feed() {
   // Guests get 20 free votes; null once the email is verified.
   const [left, setLeft] = useState<number | null>(null);
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
+  const { picked, toggle, clear } = useInterests();
 
   const load = useCallback(
     async (which: Tab = tab) => {
@@ -82,15 +84,15 @@ export default function Feed() {
     }
   };
 
-  const todo = tab === 'open' ? items.filter((x) => !votedAtLoad.has(x.id)) : items;
+  // Not-yet-voted first (your picked interests on top), then what you already voted on.
+  const fresh = tab === 'open' ? items.filter((x) => !votedAtLoad.has(x.id)) : items;
+  const [forYou, rest] = splitByInterest(fresh, picked);
   const done = tab === 'open' ? items.filter((x) => votedAtLoad.has(x.id)) : [];
-  const sections =
-    tab === 'open'
-      ? [
-          { key: 'todo', data: todo },
-          { key: 'done', data: done },
-        ]
-      : [{ key: 'closed', data: items }];
+  const sections = [
+    { key: 'forYou', data: forYou },
+    { key: 'rest', data: rest },
+    ...(tab === 'open' ? [{ key: 'done', data: done }] : []),
+  ];
 
   return (
     <SectionList
@@ -114,6 +116,17 @@ export default function Feed() {
               </Pressable>
             ))}
           </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
+            <Text style={s.chipsLabel}>{t('feed.interests')}</Text>
+            <Pressable onPress={clear} style={[s.chip, picked.length === 0 && s.chipOn]}>
+              <Text style={[s.chipT, picked.length === 0 && s.chipTOn]}>{t('feed.all')}</Text>
+            </Pressable>
+            {CATEGORIES.map((c) => (
+              <Pressable key={c} onPress={() => toggle(c)} style={[s.chip, picked.includes(c) && s.chipOn]}>
+                <Text style={[s.chipT, picked.includes(c) && s.chipTOn]}>{catLabel(c, t)}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
           {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
           {left !== null && left <= 5 && tab === 'open' ? (
             <Pressable onPress={() => router.push('/login')} style={s.guest}>
@@ -125,8 +138,9 @@ export default function Feed() {
       }
       renderSectionHeader={({ section }) => {
         if (loading && items.length === 0) return null;
-        if (section.key === 'todo' && section.data.length === 0) return <Text style={s.empty}>{t('feed.emptyVote')}</Text>;
-        if (section.key === 'closed' && section.data.length === 0) return <Text style={s.empty}>{t('feed.emptyResults')}</Text>;
+        if (section.key === 'forYou' && forYou.length === 0 && rest.length === 0)
+          return <Text style={s.empty}>{tab === 'open' ? t('feed.emptyVote') : t('feed.emptyResults')}</Text>;
+        if (section.key === 'rest' && rest.length > 0) return <Text style={s.sectionH}>{t('feed.otherInterests')}</Text>;
         if (section.key === 'done' && section.data.length > 0)
           return <Text style={s.sectionH}>{t('feed.votedHeader', { n: section.data.length })}</Text>;
         return null;
@@ -148,12 +162,18 @@ export default function Feed() {
 
 const s = StyleSheet.create({
   list: { padding: 16 },
-  sectionH: { fontSize: 14, fontWeight: '800', color: C.sub, marginTop: 8, marginBottom: 10 },
-  tag: { fontSize: 15, color: C.sub },
-  seg: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: C.line, padding: 4, gap: 4 },
-  segBtn: { flex: 1, paddingVertical: 9, borderRadius: 9, alignItems: 'center' },
-  segOn: { backgroundColor: C.brand },
-  segT: { fontSize: 14, fontWeight: '800', color: C.ink },
+  sectionH: { fontSize: 13, fontWeight: '700', color: C.sub, marginTop: 8, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
+  tag: { fontSize: 14, color: C.sub },
+  seg: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: C.line, padding: 3, gap: 3 },
+  segBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  segOn: { backgroundColor: C.ink },
+  segT: { fontSize: 14, fontWeight: '700', color: C.ink },
+  chips: { gap: 6, alignItems: 'center', paddingRight: 8 },
+  chipsLabel: { fontSize: 12.5, color: C.sub, marginRight: 2 },
+  chip: { borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  chipOn: { backgroundColor: C.ink, borderColor: C.ink },
+  chipT: { fontSize: 13, fontWeight: '600', color: C.ink },
+  chipTOn: { color: '#fff' },
   demo: { fontSize: 12, color: C.brand, backgroundColor: C.brandSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
   err: { color: C.no },
   guest: { backgroundColor: C.brandSoft, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },

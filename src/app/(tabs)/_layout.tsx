@@ -1,12 +1,15 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import type { ComponentProps } from 'react';
+import type { ColorValue } from 'react-native';
 import { LanguageButton } from '../../components/LanguageButton';
 import { useT } from '../../lib/i18n';
 import { C } from '../../lib/theme';
 
-const icon = (emoji: string) =>
-  function TabIcon({ focused }: { focused: boolean }) {
-    return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{emoji}</Text>;
+type IconName = ComponentProps<typeof Ionicons>['name'];
+const icon = (on: IconName, off: IconName) =>
+  function TabIcon({ focused, color }: { focused: boolean; color: ColorValue }) {
+    return <Ionicons name={focused ? on : off} size={23} color={color as string} />;
   };
 
 export default function TabsLayout() {
@@ -25,9 +28,9 @@ export default function TabsLayout() {
         headerRight: () => <LanguageButton />,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: 'Ruko Zara ✋', tabBarIcon: icon('🏛️') }} />
-      <Tabs.Screen name="new" options={{ title: t('tab.new'), headerTitle: t('tab.new'), tabBarIcon: icon('✍️') }} />
-      <Tabs.Screen name="mine" options={{ title: t('tab.mine'), headerTitle: t('tab.mine'), tabBarIcon: icon('👛') }} />
+      <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: 'Ruko Zara', tabBarIcon: icon('home', 'home-outline') }} />
+      <Tabs.Screen name="new" options={{ title: t('tab.new'), headerTitle: t('tab.new'), tabBarIcon: icon('add-circle', 'add-circle-outline') }} />
+      <Tabs.Screen name="mine" options={{ title: t('tab.mine'), headerTitle: t('tab.mine'), tabBarIcon: icon('person', 'person-outline') }} />
     </Tabs>
   );
 }
