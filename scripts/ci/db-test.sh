@@ -32,7 +32,10 @@ echo "::group::Build the test copy"
 local_sql -q -c "
   alter default privileges for role postgres in schema public revoke all on tables from anon, authenticated, service_role;
   alter default privileges for role postgres in schema public revoke all on sequences from anon, authenticated, service_role;
-  alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, service_role;"
+  alter default privileges for role postgres in schema public revoke all on functions from anon, authenticated, service_role;
+  alter default privileges for role postgres revoke all on tables from anon, authenticated, service_role;
+  alter default privileges for role postgres revoke all on sequences from anon, authenticated, service_role;
+  alter default privileges for role postgres revoke all on functions from anon, authenticated, service_role;"
 local_sql -q -f /work/live_schema.sql
 local_sql -q -f /work/live_lookup.sql
 local_sql -q -f supabase/ci/after_copy.sql
