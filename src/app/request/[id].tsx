@@ -1,3 +1,4 @@
+import { Ban, CircleCheck, Eye, EyeOff, IconText } from '../../components/Icon';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -177,18 +178,20 @@ export default function RequestDetail() {
         ) : null}
         {user.isAdmin ? (
           <Pressable onPress={() => moderate('request', r.id, !r.hidden)} style={s.adminBtn}>
-            <Text style={s.adminT}>{r.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
+            <IconText icon={r.hidden ? Eye : EyeOff} color={C.no} style={s.adminT}>
+              {r.hidden ? t('admin.unhide') : t('admin.hide')}
+            </IconText>
           </Pressable>
         ) : null}
         {user.isAdmin && !own(r.user_id) ? (
           <Pressable onPress={() => toggleBan(r.user_id)} style={s.adminBtn}>
-            <Text style={s.adminT}>
+            <IconText icon={banned.has(r.user_id) ? CircleCheck : Ban} color={C.no} style={s.adminT}>
               {banned.has(r.user_id)
                 ? t('admin.unban', { handle: r.handle })
                 : confirmBan === r.user_id
                   ? t('admin.banConfirm', { handle: r.handle })
                   : t('admin.ban', { handle: r.handle })}
-            </Text>
+            </IconText>
           </Pressable>
         ) : null}
         {msg ? <Text style={{ color: C.no }}>{msg}</Text> : null}
@@ -204,13 +207,13 @@ export default function RequestDetail() {
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
-            {user.isAdmin && banned.has(c.user_id) ? <Text style={s.cHidden}>{t('admin.bannedBadge')}</Text> : null}
-            {user.isAdmin && c.hidden ? <Text style={s.cHidden}>{t('admin.hiddenBadge')}</Text> : null}
+            {user.isAdmin && banned.has(c.user_id) ? <IconText icon={Ban} size={12} color={C.no} style={s.cHidden}>{t('admin.bannedBadge')}</IconText> : null}
+            {user.isAdmin && c.hidden ? <IconText icon={EyeOff} size={12} color={C.no} style={s.cHidden}>{t('admin.hiddenBadge')}</IconText> : null}
             <Text style={s.cBody}>{c.body}</Text>
             {user.isAdmin ? (
               <View style={[s.actions, { justifyContent: 'flex-start' }]}>
                 <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
-                  <Text style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
+                  <IconText icon={c.hidden ? Eye : EyeOff} size={13} color={C.no} style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</IconText>
                 </Pressable>
                 {!own(c.user_id) ? (
                   <Pressable onPress={() => toggleBan(c.user_id)}>

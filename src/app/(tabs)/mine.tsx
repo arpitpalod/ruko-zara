@@ -1,3 +1,4 @@
+import { BadgeCheck, IconText, PartyPopper, ShoppingBag } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -86,7 +87,7 @@ export default function Mine() {
       ListFooterComponent={
         <View style={s.account}>
           {user.email ? (
-            <Text style={s.accT}>{t('mine.verified', { email: user.email })}</Text>
+            <IconText icon={BadgeCheck} color={C.yes} style={s.accT}>{t('mine.verified', { email: user.email })}</IconText>
           ) : (
             <Pressable style={s.loginBtn} onPress={() => router.push('/login')}>
               <Text style={s.loginT}>{t('mine.verify')}</Text>
@@ -136,10 +137,10 @@ export default function Mine() {
               <Text style={s.decideQ}>{t('mine.decideQ')}</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <Pressable style={[s.dBtn, { backgroundColor: C.yesSoft }]} onPress={() => decide(item.id, 'skipped')}>
-                  <Text style={[s.dBtnT, { color: C.yes }]}>{t('mine.skip')}</Text>
+                  <IconText icon={PartyPopper} size={14} color={C.yes} style={s.dBtnT}>{t('mine.skip')}</IconText>
                 </Pressable>
                 <Pressable style={[s.dBtn, { backgroundColor: C.brandSoft }]} onPress={() => decide(item.id, 'bought')}>
-                  <Text style={[s.dBtnT, { color: C.brand }]}>{t('mine.bought')}</Text>
+                  <IconText icon={ShoppingBag} size={14} color={C.brand} style={s.dBtnT}>{t('mine.bought')}</IconText>
                 </Pressable>
               </View>
             </View>

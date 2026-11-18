@@ -1,7 +1,12 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "paths": {
+      "lucide-react-native/icons/*": [
+        "./src/types/lucide-icon.d.ts"
+      ]
+    }
   },
   "exclude": [
     "supabase/functions"

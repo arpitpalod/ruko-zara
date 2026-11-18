@@ -1,3 +1,4 @@
+import { IconText, ShieldCheck } from './Icon';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CAPTCHA_ORIGIN, CAPTCHA_URL, captchaBroken, captchaInteractive, captchaOn, captchaSolved, isFatalCaptchaError, parseCaptchaMsg, subscribeCaptcha, subscribeWanted } from '../lib/captcha';
@@ -50,7 +51,7 @@ export function CaptchaHost() {
   return (
     <View style={visible ? s.overlay : s.dock} pointerEvents={visible ? 'auto' : 'box-none'}>
       <View style={s.card}>
-        <Text style={s.h}>{t('captcha.checking')}</Text>
+        <IconText icon={ShieldCheck} size={16} color={C.ink} style={s.h}>{t('captcha.checking')}</IconText>
         <iframe
           key={round}
           src={CAPTCHA_URL}

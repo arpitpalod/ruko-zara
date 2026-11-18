@@ -24,7 +24,7 @@ def test_language_picker_hinglish(page):
 def test_language_button_switches_on_the_go(page):
     open_app(page, "English")
     page.get_by_text("Vote", exact=True).wait_for()
-    page.get_by_text(re.compile(r"^🌐")).first.click()
+    page.get_by_label("Change language / भाषा बदलें").first.click()
     page.get_by_text("Hinglish", exact=True).click()
     page.get_by_text("Vote karo", exact=True).wait_for()
 
@@ -50,7 +50,7 @@ def test_post_arzi_asks_for_email_then_posts(page):
     page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("Test blender for smoothies")
     page.get_by_placeholder("e.g. 8999").fill("2499")
     page.get_by_placeholder("Need or want? What happened to the old one?").fill("Old one broke, I make smoothies daily")
-    page.get_by_text("Send request 🙏").click()
+    page.get_by_text("Send request", exact=True).click()
     # Not verified yet: the login screen opens, then the arzi posts by itself after verifying.
     page.get_by_placeholder("you@email.com").fill("tester@example.com")
     page.get_by_text("Send code", exact=True).click()
@@ -149,3 +149,17 @@ def test_page_shell_and_no_icon_font(page):
     assert not [f for f in fonts if "Ionicons" in f], fonts
     html = page.request.get(page.url.split("#")[0]).text()
     assert 'class="boot"' in html and "preconnect" in html
+
+
+def test_no_emojis_in_the_interface(page):
+    """Icons, not emojis: emojis look different on every phone. (Shared WhatsApp messages may keep theirs.)"""
+    emoji = re.compile("[\U0001F300-\U0001FAFF\u2600-\u27BF\u2705\u274C]")
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    for tab in ["Feed", "New request", "My requests"]:
+        page.get_by_text(tab, exact=True).first.click()
+        page.wait_for_timeout(400)
+        body = page.inner_text("body")
+        # user-written text (demo arzi and comments) may contain emojis; check the app's own words only
+        own = [l for l in body.split("\n") if emoji.search(l) and not re.search(r"[a-z]{4,} [a-z]{4,} [a-z]{4,}", l.lower())]
+        assert not own, f"emoji in the interface on {tab}: {own}"

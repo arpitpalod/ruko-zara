@@ -1,3 +1,4 @@
+import { IconText, ShieldCheck } from './Icon';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -30,7 +31,7 @@ export function CaptchaHost() {
   return (
     <View style={visible ? s.overlay : s.hidden} pointerEvents={visible ? 'auto' : 'none'}>
       <View style={visible ? s.card : undefined}>
-        {visible ? <Text style={s.h}>{t('captcha.checking')}</Text> : null}
+        {visible ? <IconText icon={ShieldCheck} size={16} color={C.ink} style={s.h}>{t('captcha.checking')}</IconText> : null}
         <WebView
           key={round}
           source={{ uri: CAPTCHA_URL }}

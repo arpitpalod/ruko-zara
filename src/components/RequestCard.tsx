@@ -1,3 +1,4 @@
+import { Ban, EyeOff, IconText, PartyPopper, ShoppingBag } from './Icon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
@@ -41,8 +42,8 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
 
   return (
     <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [s.card, pressed && { opacity: 0.9 }]}>
-      {viewer.isAdmin && authorBanned ? <Text style={s.flag}>{t('admin.bannedBadge')}</Text> : null}
-      {viewer.isAdmin && real.hidden ? <Text style={s.flag}>{t('admin.hiddenBadge')}</Text> : null}
+      {viewer.isAdmin && authorBanned ? <IconText icon={Ban} color={C.no} box={s.flag} style={s.flagT}>{t('admin.bannedBadge')}</IconText> : null}
+      {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} color={C.no} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
 
       <View style={s.top}>
         <Text style={s.item} numberOfLines={full ? undefined : 2}>
@@ -86,9 +87,14 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
       )}
 
       {r.outcome ? (
-        <Text style={[s.badge, r.outcome === 'skipped' ? { backgroundColor: C.yesSoft, color: C.yes } : null]}>
+        <IconText
+          icon={r.outcome === 'skipped' ? PartyPopper : ShoppingBag}
+          color={r.outcome === 'skipped' ? C.yes : C.ink}
+          box={[s.badge, r.outcome === 'skipped' ? { backgroundColor: C.yesSoft } : null]}
+          style={s.badgeT}
+        >
           {r.outcome === 'skipped' ? t('card.skipped', { amt: inr(r.price_inr) }) : t('card.bought')}
-        </Text>
+        </IconText>
       ) : null}
 
       {canVote ? (
@@ -129,8 +135,10 @@ const s = StyleSheet.create({
   results: { marginTop: 14 },
   bar: { flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
   resultT: { fontSize: 13.5, fontWeight: '700', color: C.ink },
-  flag: { fontSize: 12, fontWeight: '700', color: C.no, backgroundColor: C.noSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden', marginBottom: 8 },
-  badge: { marginTop: 10, alignSelf: 'flex-start', fontSize: 13, fontWeight: '600', color: C.ink, backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden' },
+  flag: { backgroundColor: C.noSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
+  flagT: { fontSize: 12, fontWeight: '700' },
+  badge: { marginTop: 10, alignSelf: 'flex-start', backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
+  badgeT: { fontSize: 13, fontWeight: '600' },
   btns: { flexDirection: 'row', gap: 10, marginTop: 12 },
   btn: { flex: 1, borderWidth: 1, borderColor: C.line, borderRadius: 10, paddingVertical: 10, alignItems: 'center', backgroundColor: C.card },
   btnT: { fontSize: 15, fontWeight: '700' },

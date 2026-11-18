@@ -1,3 +1,4 @@
+import { IconText, Link2 } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -128,7 +129,7 @@ export default function NewRequest() {
             keyboardType="url"
             maxLength={600}
           />
-          {link ? <Text style={s.hint}>🔗 {domainOf(link)}</Text> : null}
+          {link ? <IconText icon={Link2} size={13} color={C.sub} style={s.hint}>{domainOf(link)}</IconText> : null}
           {linkBad ? <Text style={[s.hint, { color: C.no }]}>{t('new.linkBad')}</Text> : null}
         </Field>
 

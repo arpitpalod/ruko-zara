@@ -1,3 +1,4 @@
+import { IconText, Vote } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
@@ -142,7 +143,7 @@ export default function Feed() {
           {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
           {left !== null && left <= 5 && tab === 'open' ? (
             <Pressable onPress={() => router.push('/login')} style={s.guest}>
-              <Text style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</Text>
+              <IconText icon={Vote} size={17} color={C.brand} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
           ) : null}
           {err ? <Text style={s.err}>{err}</Text> : null}

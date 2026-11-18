@@ -1,3 +1,4 @@
+import { Globe, IconText } from './Icon';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LANGS, useT } from '../lib/i18n';
@@ -18,7 +19,7 @@ export function LanguageButton() {
         accessibilityRole="button"
         accessibilityLabel="Change language / भाषा बदलें"
       >
-        <Text style={s.pillT}>🌐 {current.short}</Text>
+        <IconText icon={Globe} size={14} color={C.ink} style={s.pillT}>{current.short}</IconText>
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
