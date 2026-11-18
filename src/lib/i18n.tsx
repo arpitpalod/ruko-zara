@@ -158,6 +158,14 @@ const en = {
   'error.captcha': "Couldn't confirm you're a real person. Check your internet and try again.",
   'captcha.checking': "Quick check that you're a real person 🙏",
   'update.available': '🆕 A new version of the app is ready — tap to update',
+  'admin.ban': '⛔ Ban {handle} from Ruko Zara',
+  'admin.banConfirm': 'Tap again to ban {handle}. Their posts, comments and votes will silently stop reaching anyone.',
+  'admin.unban': '✅ Unban {handle}',
+  'admin.bannedBadge': '⛔ Banned — only admins and this person see this',
+  'admin.banShort': 'Ban',
+  'admin.banShortConfirm': 'Tap again to ban',
+  'admin.unbanShort': 'Unban',
+  'error.cannotBanAdmin': "Admins can't be banned.",
 } as const;
 
 export type Key = keyof typeof en;
@@ -304,6 +312,14 @@ const hi: Dict = {
   'error.captcha': 'पुष्टि नहीं हो पाई कि आप असली इंसान हैं। इंटरनेट जाँचें और फिर कोशिश करें।',
   'captcha.checking': 'बस एक छोटी जाँच कि आप असली इंसान हैं 🙏',
   'update.available': '🆕 ऐप का नया वर्ज़न आ गया है — अपडेट करने के लिए टैप करें',
+  'admin.ban': '⛔ {handle} को Ruko Zara से बैन करें',
+  'admin.banConfirm': '{handle} को बैन करने के लिए फिर टैप करें। उनकी अर्ज़ी, कमेंट और वोट चुपचाप किसी तक नहीं पहुँचेंगे।',
+  'admin.unban': '✅ {handle} का बैन हटाएँ',
+  'admin.bannedBadge': '⛔ बैन — यह सिर्फ़ एडमिन और यही व्यक्ति देख सकते हैं',
+  'admin.banShort': 'बैन',
+  'admin.banShortConfirm': 'बैन के लिए फिर टैप करें',
+  'admin.unbanShort': 'बैन हटाएँ',
+  'error.cannotBanAdmin': 'एडमिन को बैन नहीं किया जा सकता।',
 };
 
 const hinglish: Dict = {
@@ -447,6 +463,14 @@ const hinglish: Dict = {
   'error.captcha': 'Confirm nahi ho paya ki tum asli insaan ho. Internet check karke dobara try karo.',
   'captcha.checking': 'Bas ek chhota check ki tum asli insaan ho 🙏',
   'update.available': '🆕 App ka naya version aa gaya — update karne ke liye tap karo',
+  'admin.ban': '⛔ {handle} ko Ruko Zara se ban karo',
+  'admin.banConfirm': '{handle} ko ban karne ke liye dobara tap karo. Unki arzi, comment aur vote chupchaap kisi tak nahi pahunchenge.',
+  'admin.unban': '✅ {handle} ka ban hatao',
+  'admin.bannedBadge': '⛔ Banned — sirf admin aur yahi insaan dekh sakte hain',
+  'admin.banShort': 'Ban',
+  'admin.banShortConfirm': 'Ban ke liye dobara tap karo',
+  'admin.unbanShort': 'Unban',
+  'error.cannotBanAdmin': 'Admin ko ban nahi kar sakte.',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

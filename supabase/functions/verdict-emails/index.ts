@@ -40,7 +40,7 @@ Deno.serve(async () => {
 
   const { data: due, error } = await sb
     .from('requests')
-    .select('id, user_id, item, price_inr')
+    .select('id, user_id, item, price_inr, vote_yes, vote_no')
     .lte('closes_at', now.toISOString())
     .gte('closes_at', since.toISOString())
     .is('verdict_emailed_at', null)
@@ -62,9 +62,9 @@ Deno.serve(async () => {
     const email = u?.user?.email;
 
     if (email) {
-      const { data: votes } = await sb.from('votes').select('verdict').eq('request_id', r.id);
-      const yes = (votes ?? []).filter((v) => v.verdict === 'approve').length;
-      const no = (votes ?? []).length - yes;
+      // Same totals everyone sees in the app (banned people's votes are left out).
+      const yes = r.vote_yes ?? 0;
+      const no = r.vote_no ?? 0;
       const verdict =
         yes === no
           ? yes

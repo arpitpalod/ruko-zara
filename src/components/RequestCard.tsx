@@ -12,9 +12,11 @@ interface Props {
   onVote?: (id: string, v: Verdict) => void;
   onPress?: () => void;
   full?: boolean;
+  /** Admins only: the author is banned. */
+  authorBanned?: boolean;
 }
 
-export function RequestCard({ r: real, meId, onVote, onPress, full }: Props) {
+export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned }: Props) {
   const { t } = useT();
   const viewer = useUser();
   // Example arzi carry demo vote counts; they're added for display and always tagged "demo".
@@ -29,6 +31,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full }: Props) {
 
   return (
     <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [s.card, pressed && { opacity: 0.85 }]}>
+      {viewer.isAdmin && authorBanned ? <Text style={s.hiddenBadge}>{t('admin.bannedBadge')}</Text> : null}
       {viewer.isAdmin && real.hidden ? <Text style={s.hiddenBadge}>{t('admin.hiddenBadge')}</Text> : null}
       <View style={s.row}>
         <Text style={s.handle}>

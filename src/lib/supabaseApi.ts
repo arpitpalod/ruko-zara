@@ -69,6 +69,15 @@ export function createSupabaseApi(url: string, key: string): Api {
       return toUser(u);
     },
 
+    async adminSetBanned(userId, ban, reason) {
+      must(await sb.rpc('admin_set_banned', { target: userId, ban, reason: reason ?? null }));
+    },
+
+    async adminBannedIds() {
+      const r = await sb.rpc('admin_banned_ids');
+      return r.error || !Array.isArray(r.data) ? [] : (r.data as string[]);
+    },
+
     async adminSetHidden(type, id, hide) {
       must(await sb.rpc('admin_set_hidden', { target_type: type, target_id: id, hide }));
     },

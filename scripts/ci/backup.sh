@@ -8,7 +8,7 @@ find_live_host
 
 STAMP=$(date -u +%Y-%m-%dT%H%MZ)
 mkdir -p "$WORK/dump" backup
-live pg_dump --schema=public --no-owner --format=custom -f /work/dump/public.dump
+live pg_dump --schema=public --schema=private --no-owner --format=custom -f /work/dump/public.dump
 live pg_dump --data-only --table=auth.users --table=auth.identities --format=custom -f /work/dump/auth_users.dump
 live psql -X -tA -c "select 'arzi=' || (select count(*) from public.requests) || ' votes=' || (select count(*) from public.votes) || ' users=' || (select count(*) from auth.users)" > "$WORK/counts.txt"
 

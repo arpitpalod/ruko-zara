@@ -36,6 +36,7 @@ const rows: Row[] = [
     alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54), link: null },
 ];
 
+const banned = new Set<string>();
 const votes = new Map<string, Map<string, Verdict>>(); // requestId → (userId → verdict)
 const seedVotes = (id: string, yes: number, no: number) => {
   const m = new Map<string, Verdict>();
@@ -136,6 +137,13 @@ export const mockApi: Api = {
   },
   report: () => delay(undefined),
   adminSetHidden: () => delay(undefined),
+  async adminSetBanned(userId, ban) {
+    if (!ME.isAdmin) throw new Error('NOT_ADMIN');
+    if (ban) banned.add(userId);
+    else banned.delete(userId);
+    await delay(null);
+  },
+  adminBannedIds: () => delay(ME.isAdmin ? [...banned] : []),
   async block(userId) {
     blocked.add(userId);
     await delay(null);

@@ -85,6 +85,10 @@ export interface Api {
   deleteAccount(): Promise<User>;
   /** Admin only: hide or unhide an arzi or comment for everyone. */
   adminSetHidden(type: 'request' | 'comment', id: string, hide: boolean): Promise<void>;
+  /** Admin only: silent ban. The person sees nothing unusual, but nothing they do reaches anyone else. */
+  adminSetBanned(userId: string, ban: boolean, reason?: string): Promise<void>;
+  /** Admin only: ids of banned people (empty for everyone else). */
+  adminBannedIds(): Promise<string[]>;
 }
 
 export const CATEGORIES = ['Gadgets', 'Fashion', 'Khana', 'Beauty', 'Ghar', 'Travel', 'Fun', 'Other'] as const;

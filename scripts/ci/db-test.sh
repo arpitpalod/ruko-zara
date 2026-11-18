@@ -17,7 +17,7 @@ find_live_host
 echo "::endgroup::"
 
 echo "::group::Copy live structure"
-live pg_dump --schema-only --schema=public --no-owner -f /work/live_schema.sql
+live pg_dump --schema-only --schema=public --schema=private --no-owner -f /work/live_schema.sql
 live pg_dump --data-only --table=public.blocked_words --table=public.allowed_link_domains -f /work/live_lookup.sql
 live psql -X -tA -f supabase/ci/fingerprint.sql > "$WORK/fp_live.txt"
 # The local database already has a public schema.

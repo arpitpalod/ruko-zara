@@ -22,18 +22,26 @@ export default function RequestDetail() {
   const [loaded, setLoaded] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [reported, setReported] = useState<Set<string>>(new Set());
+  // Admin only: who is banned, and which ban is waiting for a second tap.
+  const [banned, setBanned] = useState<Set<string>>(new Set());
+  const [confirmBan, setConfirmBan] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [req, cs] = await Promise.all([api.get(id), api.comments(id)]);
+      const [req, cs, ids] = await Promise.all([
+        api.get(id),
+        api.comments(id),
+        user.isAdmin ? api.adminBannedIds() : Promise.resolve([] as string[]),
+      ]);
       setR(req);
       setComments(cs);
+      setBanned(new Set(ids));
     } catch (e: any) {
       setMsg(friendly(e, t));
     } finally {
       setLoaded(true);
     }
-  }, [id]);
+  }, [id, user.isAdmin]);
 
   useFocusEffect(
     useCallback(() => {
@@ -90,6 +98,23 @@ export default function RequestDetail() {
     }
   };
 
+  // Silent ban: two taps, so nobody gets banned by accident.
+  const toggleBan = async (userId: string) => {
+    const isBanned = banned.has(userId);
+    if (!isBanned && confirmBan !== userId) {
+      setConfirmBan(userId);
+      return;
+    }
+    setConfirmBan(null);
+    try {
+      setMsg(null);
+      await api.adminSetBanned(userId, !isBanned, isBanned ? undefined : 'Banned from the app by an admin');
+      load();
+    } catch (e: any) {
+      setMsg(friendly(e, t));
+    }
+  };
+
   const report = async (type: 'request' | 'comment', tid: string) => {
     try {
       await api.report(type, tid);
@@ -115,7 +140,7 @@ export default function RequestDetail() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
-        <RequestCard r={r} meId={user.id} onVote={onVote} full />
+        <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} />
         {r.user_id === user.id && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
         <Pressable
           style={s.wa}
@@ -137,14 +162,27 @@ export default function RequestDetail() {
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>
               <Text style={s.report}>{reported.has(r.id) ? t('detail.reported') : t('detail.report')}</Text>
             </Pressable>
-            <Pressable onPress={() => block(r.user_id, true)}>
-              <Text style={s.report}>{t('detail.block', { handle: r.handle })}</Text>
-            </Pressable>
+            {!user.isAdmin ? (
+              <Pressable onPress={() => block(r.user_id, true)}>
+                <Text style={s.report}>{t('detail.block', { handle: r.handle })}</Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
         {user.isAdmin ? (
           <Pressable onPress={() => moderate('request', r.id, !r.hidden)} style={s.adminBtn}>
             <Text style={s.adminT}>{r.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
+          </Pressable>
+        ) : null}
+        {user.isAdmin && r.user_id !== user.id ? (
+          <Pressable onPress={() => toggleBan(r.user_id)} style={s.adminBtn}>
+            <Text style={s.adminT}>
+              {banned.has(r.user_id)
+                ? t('admin.unban', { handle: r.handle })
+                : confirmBan === r.user_id
+                  ? t('admin.banConfirm', { handle: r.handle })
+                  : t('admin.ban', { handle: r.handle })}
+            </Text>
           </Pressable>
         ) : null}
         {msg ? <Text style={{ color: C.no }}>{msg}</Text> : null}
@@ -160,19 +198,33 @@ export default function RequestDetail() {
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
+            {user.isAdmin && banned.has(c.user_id) ? <Text style={s.cHidden}>{t('admin.bannedBadge')}</Text> : null}
             {user.isAdmin && c.hidden ? <Text style={s.cHidden}>{t('admin.hiddenBadge')}</Text> : null}
             <Text style={s.cBody}>{c.body}</Text>
             {user.isAdmin ? (
-              <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
-                <Text style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
-              </Pressable>
+              <View style={[s.actions, { justifyContent: 'flex-start' }]}>
+                <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
+                  <Text style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</Text>
+                </Pressable>
+                {c.user_id !== user.id ? (
+                  <Pressable onPress={() => toggleBan(c.user_id)}>
+                    <Text style={s.cAdmin}>
+                      {banned.has(c.user_id)
+                        ? t('admin.unbanShort')
+                        : confirmBan === c.user_id
+                          ? t('admin.banShortConfirm')
+                          : t('admin.banShort')}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
             ) : null}
             {c.user_id !== user.id ? (
               <View style={[s.actions, { justifyContent: 'flex-end' }]}>
                 <Pressable onPress={() => report('comment', c.id)} disabled={reported.has(c.id)}>
                   <Text style={s.cReport}>{reported.has(c.id) ? t('detail.reported') : t('detail.reportShort')}</Text>
                 </Pressable>
-                {c.user_id !== r.user_id ? (
+                {c.user_id !== r.user_id && !user.isAdmin ? (
                   <Pressable onPress={() => block(c.user_id, false)}>
                     <Text style={s.cReport}>{t('detail.blockShort')}</Text>
                   </Pressable>

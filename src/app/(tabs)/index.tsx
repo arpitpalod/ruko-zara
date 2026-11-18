@@ -30,6 +30,7 @@ export default function Feed() {
   const [votedAtLoad, setVotedAtLoad] = useState<Set<string>>(new Set());
   // Guests get 20 free votes; null once the email is verified.
   const [left, setLeft] = useState<number | null>(null);
+  const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
 
   const load = useCallback(
     async (which: Tab = tab) => {
@@ -38,6 +39,7 @@ export default function Feed() {
         setErr(null);
         if (user.email) setLeft(null);
         else api.guestVotesLeft().then(setLeft, () => setLeft(null));
+        if (user.isAdmin) api.adminBannedIds().then((ids) => setBanned(new Set(ids)), () => {});
         const rows = await api.feed(which);
         // Vote tab: not-yet-voted first, then the ones you voted on (your own arzi live in Meri Arzi).
         setItems(which === 'open' ? rows.filter((r) => r.user_id !== user.id) : rows);
@@ -48,7 +50,7 @@ export default function Feed() {
         setLoading(false);
       }
     },
-    [tab, user.id, user.email, t],
+    [tab, user.id, user.email, user.isAdmin, t],
   );
 
   useFocusEffect(
@@ -131,7 +133,13 @@ export default function Feed() {
       }}
       renderItem={({ item }) => (
         <View style={{ marginBottom: 12 }}>
-          <RequestCard r={item} meId={user.id} onVote={onVote} onPress={() => router.push(`/request/${item.id}`)} />
+          <RequestCard
+            r={item}
+            meId={user.id}
+            onVote={onVote}
+            onPress={() => router.push(`/request/${item.id}`)}
+            authorBanned={banned.has(item.user_id)}
+          />
         </View>
       )}
     />

@@ -7,6 +7,7 @@ export function friendly(e: unknown, t: T): string {
   if (m.includes('CONTACT_BLOCKED')) return t('error.contact');
   if (m.includes('Daily limit')) return t('error.dailyLimit');
   if (m.includes('GUEST_VOTE_LIMIT')) return t('error.guestLimit');
+  if (m.includes('CANNOT_BAN_ADMIN')) return t('error.cannotBanAdmin');
   if (/captcha/i.test(m)) return t('error.captcha');
   if (m.includes('LINK_NOT_ALLOWED') || m.includes('requests_link_check')) return t('error.link');
   if (/row-level security/i.test(m)) return t('error.loginNeeded');

@@ -23,10 +23,13 @@ for t in profiles requests votes comments reports blocks admins blocked_words al
   c=$(code -H "apikey: $KEY" "$API/rest/v1/$t?select=*&limit=1")
   [[ "$c" =~ ^(401|403|404)$ ]] && ok "Outsider can't read $t" || bad "OUTSIDER CAN READ $t (HTTP $c)"
 done
-for f in is_admin guest_votes_left delete_my_account admin_set_hidden; do
+for f in is_admin guest_votes_left delete_my_account admin_set_hidden admin_set_banned admin_banned_ids; do
   c=$(code -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{}' "$API/rest/v1/rpc/$f")
   [[ "$c" =~ ^(401|403|404)$ ]] && ok "Outsider can't call $f" || bad "OUTSIDER CAN CALL $f (HTTP $c)"
 done
+
+c=$(code -H "apikey: $KEY" "$API/rest/v1/banned_users?select=*")
+[[ "$c" =~ ^(401|403|404)$ ]] && ok "Ban list is not reachable" || bad "BAN LIST REACHABLE (HTTP $c)"
 
 # 3. Bots can't create accounts without passing the bot check
 body=$(curl -s --max-time 25 -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{}' "$API/auth/v1/signup")
