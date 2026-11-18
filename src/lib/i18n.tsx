@@ -166,6 +166,7 @@ const en = {
   'admin.banShortConfirm': 'Tap again to ban',
   'admin.unbanShort': 'Unban',
   'error.cannotBanAdmin': "Admins can't be banned.",
+  'detail.more': '👀 Vote on more arzi →',
 } as const;
 
 export type Key = keyof typeof en;
@@ -320,6 +321,7 @@ const hi: Dict = {
   'admin.banShortConfirm': 'बैन के लिए फिर टैप करें',
   'admin.unbanShort': 'बैन हटाएँ',
   'error.cannotBanAdmin': 'एडमिन को बैन नहीं किया जा सकता।',
+  'detail.more': '👀 और अर्ज़ियों पर वोट करें →',
 };
 
 const hinglish: Dict = {
@@ -471,6 +473,7 @@ const hinglish: Dict = {
   'admin.banShortConfirm': 'Ban ke liye dobara tap karo',
   'admin.unbanShort': 'Unban',
   'error.cannotBanAdmin': 'Admin ko ban nahi kar sakte.',
+  'detail.more': '👀 Aur arzi pe vote karo →',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

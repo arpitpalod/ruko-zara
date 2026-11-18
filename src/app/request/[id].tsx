@@ -157,6 +157,9 @@ export default function RequestDetail() {
         >
           <Text style={s.waT}>{t('share.button')}</Text>
         </Pressable>
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={s.more}>
+          <Text style={s.moreT}>{t('detail.more')}</Text>
+        </Pressable>
         {r.user_id !== user.id ? (
           <View style={s.actions}>
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>
@@ -248,6 +251,8 @@ export default function RequestDetail() {
 const s = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 24 },
   empty: { textAlign: 'center', color: C.sub, marginTop: 40 },
+  more: { borderWidth: 1.5, borderColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center', backgroundColor: C.card },
+  moreT: { color: C.brand, fontWeight: '800', fontSize: 15 },
   adminBtn: { borderWidth: 1.5, borderColor: C.no, borderRadius: 12, paddingVertical: 10, alignItems: 'center', backgroundColor: C.noSoft },
   adminT: { color: C.no, fontWeight: '800', fontSize: 14 },
   cHidden: { fontSize: 11, fontWeight: '700', color: C.no },

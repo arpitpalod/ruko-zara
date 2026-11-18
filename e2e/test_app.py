@@ -93,3 +93,25 @@ def test_static_pages_exist(page, server):
         res = page.request.get(BASE + path)
         assert res.status == 200, path
         assert must in res.text(), path
+
+
+def test_shared_link_lets_you_explore_more(page):
+    """Someone opening a WhatsApp link lands on one arzi but can get to the rest."""
+    open_app(page, "English")
+    page.get_by_text("Buy it 👍").first.wait_for()
+    page.goto(BASE + "/request/r1")  # fresh load, like tapping the link in WhatsApp
+    page.get_by_text("Share on WhatsApp").wait_for()
+    assert page.get_by_label(re.compile("back", re.I)).count() > 0, "no back button on a shared link"
+    page.get_by_text("👀 Vote on more arzi →").click()
+    page.get_by_text("Results", exact=True).wait_for()   # exactly one feed, visible
+    page.get_by_text("Buy it 👍").first.wait_for()
+    assert page.get_by_text("Share on WhatsApp").count() == 0 or not page.get_by_text("Share on WhatsApp").is_visible()
+
+
+def test_shared_link_header_back_goes_to_feed(page):
+    open_app(page, "English")
+    page.get_by_text("Buy it 👍").first.wait_for()
+    page.goto(BASE + "/request/r2")
+    page.get_by_text("Share on WhatsApp").wait_for()
+    page.get_by_label(re.compile("back", re.I)).first.click()
+    page.get_by_text("Results", exact=True).wait_for()
