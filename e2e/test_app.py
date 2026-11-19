@@ -288,3 +288,78 @@ def test_post_button_on_top_of_feed(page):
     page.get_by_text("What do you want to buy?").wait_for()
     assert page.locator('[data-testid="post-button"] >> visible=true').count() <= 1, "post button also on New request"
 
+
+
+def test_did_you_buy_it(page):
+    """Voting closed on your arzi: the feed asks once. "Didn't buy" adds the price to your savings (20 Nov)."""
+    open_app(page, "English")
+    card = page.get_by_test_id("decide-card")
+    card.wait_for()
+    text = card.inner_text()
+    assert "Voting closed on Bluetooth party speaker" in text and "64% said Skip it" in text, text
+    header = page.get_by_test_id("savings-header")
+    assert "₹16,995" in header.inner_text()
+    card.get_by_text("Didn't buy", exact=True).click()
+    card.wait_for(state="detached")
+    page.wait_for_function("() => document.querySelector('[data-testid=savings-header]').innerText.includes('₹20,494')")
+    page.reload()
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    assert page.get_by_test_id("decide-card").count() == 0, "asked again after answering"
+
+
+def test_still_deciding_asks_only_once(page):
+    open_app(page, "English")
+    page.get_by_test_id("decide-card").get_by_text("Still deciding", exact=True).click()
+    page.get_by_test_id("decide-card").wait_for(state="detached")
+    page.reload()
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    assert page.get_by_test_id("decide-card").count() == 0
+    page.get_by_text("My requests", exact=True).click()
+    page.get_by_text("What did you finally do?").first.wait_for()   # still answerable there
+
+
+def test_now_post_yours_after_5_votes(page):
+    page.goto(BASE + "/?new=1")  # a brand-new person who has never posted
+    page.get_by_text("English", exact=True).click()
+    for i in range(5):
+        assert page.get_by_test_id("post-nudge").count() == 0, f"nudge before vote {i + 1}"
+        page.get_by_text("Buy it", exact=True).nth(i).click()
+        page.get_by_text("You need it", exact=True).click()
+        page.wait_for_timeout(150)
+    nudge = page.get_by_test_id("post-nudge")
+    nudge.wait_for()
+    assert "You've helped 5 people decide." in nudge.inner_text()
+    nudge.get_by_text("Not now", exact=True).click()
+    nudge.wait_for(state="detached")
+
+
+def test_share_result_card(page):
+    """The poster's closed arzi: Share result makes a 1080x1920 image (downloaded where files can't be shared)."""
+    page.add_init_script("Object.defineProperty(navigator, 'canShare', { value: undefined })")
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.goto(BASE + "/request/r7")
+    # The image maker (72 KB) loads only when Share is tapped, never with the page.
+    assert page.evaluate("() => [...document.scripts].some((s) => s.src.includes('html2canvas'))") is False
+    page.get_by_test_id("share-result").click()
+    card = page.get_by_test_id("result-card")
+    card.wait_for()
+    text = card.inner_text()
+    assert "82%" in text and "said Skip it" in text and "Saved ₹16,995 by not buying" in text, text
+    with page.expect_download() as dl:
+        page.get_by_test_id("share-result-go").click()
+    path = dl.value.path()
+    with open(path, "rb") as f:
+        head = f.read(24)
+    assert head[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+    w, h = int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+    assert (w, h) == (1080, 1920), (w, h)
+    page.get_by_text("Image saved", exact=False).wait_for()
+
+
+def test_no_share_result_on_others_arzi(page):
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.goto(BASE + "/request/r1")
+    page.get_by_text("Share on WhatsApp").wait_for()
+    assert page.get_by_test_id("share-result").count() == 0

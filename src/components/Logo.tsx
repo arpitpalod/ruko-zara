@@ -35,7 +35,7 @@ export function BagMark({ size = 30 }: { size?: number }) {
 }
 
 /** Bag + name. The dev site adds a DEV tag so it's never mistaken for the live app. */
-export function Logo({ size = 22 }: { size?: number }) {
+export function Logo({ size = 22, color = C.ink, devTag = true }: { size?: number; color?: string; devTag?: boolean }) {
   const font = useContext(LogoFontReady);
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: size * 0.4 }} accessible accessibilityRole="header" accessibilityLabel="Ruko Zara">
@@ -43,7 +43,7 @@ export function Logo({ size = 22 }: { size?: number }) {
       <Text
         style={{
           fontSize: size * 1.15,
-          color: C.ink,
+          color,
           fontFamily: font ? WORDMARK : undefined,
           fontWeight: font ? 'normal' : '800',
           letterSpacing: -0.3,
@@ -53,7 +53,7 @@ export function Logo({ size = 22 }: { size?: number }) {
       >
         ruko zara
       </Text>
-      {isDevSite ? (
+      {isDevSite && devTag ? (
         <Text style={{ backgroundColor: C.ink, color: '#fff', fontSize: 11, fontWeight: '800', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>DEV</Text>
       ) : null}
     </View>

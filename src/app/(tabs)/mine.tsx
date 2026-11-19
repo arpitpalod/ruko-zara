@@ -1,5 +1,6 @@
 import { BadgeCheck, CirclePlus, EyeOff, IconText, PartyPopper, ShoppingBag } from '../../components/Icon';
 import { adminHiddenArzi } from '../../lib/adminHidden';
+import { refreshMine } from '../../lib/savings';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -48,6 +49,7 @@ export default function Mine() {
     setItems((xs) => xs.map((x) => (x.id === id ? { ...x, outcome: o } : x)));
     try {
       await api.setOutcome(id, o);
+      refreshMine().catch(() => {}); // the savings bar on the feed
     } catch (e: any) {
       setErr(friendly(e, t));
       load();

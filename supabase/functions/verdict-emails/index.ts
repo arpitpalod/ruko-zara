@@ -87,9 +87,12 @@ Deno.serve(async () => {
               <p style="font-size:22px;margin:14px 0 4px"><b>${verdict.hi}</b></p>
               <p style="font-size:16px;margin:0 0 12px;color:#78716C">The crowd says: <b>${verdict.en}</b></p>
               <p style="margin:0 0 18px">👍 ${yes} &nbsp;·&nbsp; 👎 ${no}</p>
+              <p style="font-size:17px;margin:0 0 6px"><b>आपने ख़रीदा? / Did you buy it?</b></p>
+              <p style="font-size:15px;line-height:1.6;margin:0 0 12px;color:#78716C">
+                Tell us in the app: if you didn't buy it, the price is added to your savings.</p>
               <p style="font-size:16px;line-height:1.6;margin:0">
-                👉 <a href="${link}" style="color:#E8590C;font-weight:700">देखें और बताएँ आपने क्या किया</a><br>
-                👉 <a href="${link}" style="color:#E8590C;font-weight:700">See it and tell us what you did</a></p>
+                👉 <a href="${WEB}/mine" style="color:#E8590C;font-weight:700">बताएँ / Tell us</a><br>
+                👉 <a href="${link}" style="color:#E8590C;font-weight:700">वोट देखें / See the votes</a></p>
               <p style="font-size:12px;color:#78716C;margin-top:24px">You got this because you posted on Ruko Zara.
                 <a href="${WEB}/privacy.html">Privacy</a></p>
             </div>`,

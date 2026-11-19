@@ -19,6 +19,8 @@ export { default as Link2 } from 'lucide-react-native/icons/link-2';
 export { default as PartyPopper } from 'lucide-react-native/icons/party-popper';
 export { default as ShieldCheck } from 'lucide-react-native/icons/shield-check';
 export { default as ShoppingBag } from 'lucide-react-native/icons/shopping-bag';
+export { default as Share2 } from 'lucide-react-native/icons/share-2';
+export { default as X } from 'lucide-react-native/icons/x';
 export { default as Vote } from 'lucide-react-native/icons/vote';
 
 type LucideIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;

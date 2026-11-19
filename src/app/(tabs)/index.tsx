@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
+import { DecideCard, PostNudge } from '../../components/FeedNudges';
 import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { UpdateBanner } from '../../components/UpdateBanner';
@@ -14,8 +15,10 @@ import { useT } from '../../lib/i18n';
 import { useUser } from '../../lib/session';
 import { C } from '../../lib/theme';
 import { splitByInterest, useInterests } from '../../lib/interests';
+import { dismissPostNudge, loadNudgeState, markAsked, noteNewVote, shouldShowPostNudge, type NudgeState } from '../../lib/nudges';
+import { refreshMine, useMine } from '../../lib/savings';
 import type { VoteReason } from '../../lib/reasons';
-import { CATEGORIES, type FeedItem, type Verdict } from '../../lib/types';
+import { CATEGORIES, type FeedItem, type Outcome, type Verdict } from '../../lib/types';
 
 type Tab = 'open' | 'closed';
 
@@ -38,6 +41,14 @@ export default function Feed() {
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
   const scrollY = useRef(new Animated.Value(0)).current; // shrinks the savings header
   const { picked, toggle, clear } = useInterests();
+  // One nudge at a time on the Vote tab: "Did you buy it?" first, then "Now post yours".
+  const mine = useMine();
+  const [nudge, setNudge] = useState<NudgeState | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      loadNudgeState().then(setNudge, () => {});
+    }, []),
+  );
 
   // The list refreshes quietly (no spinner) once it has something to show, e.g. when sign-in finishes.
   const shown = useRef(false);
@@ -90,7 +101,11 @@ export default function Feed() {
     setItems((xs) => xs.map((x) => (x.id === id ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x)));
     try {
       await api.vote(id, v, reason);
-      if (isNew) setLeft((n) => (n === null ? n : Math.max(0, n - 1)));
+      if (isNew) {
+        setLeft((n) => (n === null ? n : Math.max(0, n - 1)));
+        const votes = await noteNewVote();
+        setNudge((x) => (x ? { ...x, votes } : x));
+      }
       if (item?.preview) load();
     } catch (e: any) {
       setErr(friendly(e, t));
@@ -101,6 +116,22 @@ export default function Feed() {
       load();
     }
   };
+
+  const answerDecide = async (r: FeedItem, o: Outcome | null) => {
+    const asked = await markAsked(r.id);
+    setNudge((x) => (x ? { ...x, asked } : x));
+    if (!o) return;
+    try {
+      await api.setOutcome(r.id, o);
+      refreshMine().catch(() => {});
+    } catch (e: any) {
+      setErr(friendly(e, t));
+    }
+  };
+  const toDecide = nudge && user.id ? mine.toDecide.find((r) => !nudge.asked.includes(r.id)) : undefined;
+  const showPostNudge =
+    !!nudge && !!user.id && !toDecide &&
+    shouldShowPostNudge({ votes: nudge.votes, dismissedAt: nudge.dismissedAt, posted: mine.posted, lastPostedAt: mine.lastPostedAt });
 
   // Not-yet-voted first (your picked interests on top), then what you already voted on.
   const fresh = tab === 'open' ? items.filter((x) => !votedAtLoad.has(x.id)) : items;
@@ -157,6 +188,16 @@ export default function Feed() {
             <Pressable onPress={() => router.push('/login')} style={s.guest}>
               <IconText icon={Vote} size={17} color={C.brand} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
+          ) : null}
+          {tab === 'open' && toDecide ? <DecideCard r={toDecide} onAnswer={(o) => answerDecide(toDecide, o)} /> : null}
+          {tab === 'open' && showPostNudge && nudge ? (
+            <PostNudge
+              votes={nudge.votes}
+              onDismiss={() => {
+                dismissPostNudge(nudge.votes);
+                setNudge({ ...nudge, dismissedAt: nudge.votes });
+              }}
+            />
           ) : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>

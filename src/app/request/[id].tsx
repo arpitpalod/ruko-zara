@@ -1,8 +1,10 @@
-import { Ban, CircleCheck, Eye, EyeOff, IconText } from '../../components/Icon';
+import { Ban, CircleCheck, Eye, EyeOff, IconText, Share2 } from '../../components/Icon';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
+import { ShareResult } from '../../components/ShareResult';
+import { canShareResult } from '../../lib/verdict';
 import { friendly, isGuestLimit } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { ago, applyVote, inr, timeLeft } from '../../lib/format';
@@ -29,6 +31,7 @@ export default function RequestDetail() {
   const [banned, setBanned] = useState<Set<string>>(new Set());
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
   const [reasons, setReasons] = useState<ReasonCount[]>([]);
+  const [sharing, setSharing] = useState(false); // the result card's preview
 
   const load = useCallback(async () => {
     try {
@@ -151,6 +154,12 @@ export default function RequestDetail() {
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
         <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} reasons={reasons} />
         {own(r.user_id) && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
+        {own(r.user_id) && canShareResult(r) ? (
+          <Pressable style={s.result} onPress={() => setSharing(true)} accessibilityRole="button" testID="share-result">
+            <IconText icon={Share2} color="#fff" size={17} style={s.resultT}>{t('rc.button')}</IconText>
+          </Pressable>
+        ) : null}
+        {sharing ? <ShareResult r={r} reasons={reasons} onClose={() => setSharing(false)} /> : null}
         <Pressable
           style={s.wa}
           onPress={() =>
@@ -271,6 +280,8 @@ const s = StyleSheet.create({
   cAdmin: { fontSize: 12, fontWeight: '700', color: C.sub, alignSelf: 'flex-start' },
   nudge: { fontSize: 13, color: C.ink, textAlign: 'center' },
   wa: { backgroundColor: '#25D366', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  result: { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  resultT: { color: '#fff', fontWeight: '800', fontSize: 15 },
   waT: { color: '#fff', fontWeight: '800', fontSize: 15 },
   report: { fontSize: 13, color: C.sub },
   actions: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },

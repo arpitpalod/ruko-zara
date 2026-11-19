@@ -38,6 +38,10 @@ const rows: Row[] = [
   { id: 'r7', user_id: 'me', item: 'Sneakers (limited drop)', price_inr: 16995, category: 'Fashion',
     reason: 'Pichle 2 saal se ek hi joota pehen raha hoon. Par yeh wala thoda zyada mehenga hai.',
     alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54), link: null },
+  // Closed and not marked yet: the feed asks "Did you buy it?" about this one.
+  { id: 'r10', user_id: 'me', item: 'Bluetooth party speaker', price_inr: 3499, category: 'Gadgets',
+    reason: 'Ghar pe dosto ke saath music ke liye. Purana speaker kharab ho gaya.',
+    alternative: 'Purana speaker repair karwa lo', closes_at: at(-2), outcome: null, created_at: at(-26), link: null },
   // Only admins see these two (demo of the "Hidden and banned" page).
   { id: 'r8', user_id: 'u7', item: 'Something reported three times', price_inr: 999, category: 'Other',
     reason: 'Demo: an arzi hidden after reports.', alternative: null, closes_at: at(10), outcome: null, created_at: at(-3), link: null, hidden: true },
@@ -67,7 +71,7 @@ const seedVotes = (id: string, yes: number, no: number) => {
   votes.set(id, m);
 };
 seedVotes('r1', 9, 41); seedVotes('r2', 23, 19); seedVotes('r3', 6, 14); seedVotes('r4', 37, 5);
-seedVotes('r5', 3, 22); seedVotes('r6', 28, 4); seedVotes('r7', 7, 31);
+seedVotes('r5', 3, 22); seedVotes('r6', 28, 4); seedVotes('r7', 7, 31); seedVotes('r10', 12, 21);
 
 const comments: Comment[] = [
   { id: 'c1', request_id: 'r1', user_id: 'u2', handle: handles.u2, body: 'Office walon ki EMI tum bharoge? Battery badlo, 2 saal aur chalega.', created_at: at(-5) },

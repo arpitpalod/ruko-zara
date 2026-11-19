@@ -51,7 +51,9 @@ jobs:
           printf '{"build": %s, "commit": "%s"}\n' "$EXPO_PUBLIC_APP_BUILD" "${GITHUB_SHA::7}" > version.json
           cat version.json
 
+      # Only main publishes. Run by hand on another branch, this is a build check and nothing goes live.
       - name: Publish download link
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: android-latest
