@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { catLabel } from '../lib/format';
 import { useT } from '../lib/i18n';
 import { M, R, T } from '../lib/theme';
@@ -49,7 +49,12 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
   const [cat, setCat] = useState<string | null>(null);
-  const [step, setStep] = useState<'start' | 'category'>('start');
+  const [open, setOpen] = useState(false); // the category grid, opened under the buttons
+  const grid = useRef<ComponentRef<typeof View>>(null);
+  useEffect(() => {
+    // Bring the opened grid into view (web; the phone app's list scrolls by hand).
+    if (open && Platform.OS === 'web') (grid.current as unknown as HTMLElement | null)?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }, [open]);
   const ordered = [...picked.filter((c) => (CATEGORIES as readonly string[]).includes(c)), ...CATEGORIES.filter((c) => !picked.includes(c))];
   const ideas = ordered.filter((c) => IDEA_KEYS[c]).slice(0, 4);
   const go = (category: string) =>
@@ -83,8 +88,6 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
         </View>
       </View>
       <Text style={s.meta}>{t('nudge.helped', { n: votes })} {t('nudge.yourTurn')}</Text>
-      {step === 'start' ? (
-        <>
           <View style={s.ideas}>
             {ideas.map((c) => (
               <Chip
@@ -101,10 +104,10 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
           </View>
           <View style={s.pair}>
             <Pressable
-              onPress={() => (cat ? go(cat) : setStep('category'))}
+              onPress={() => (cat ? go(cat) : setOpen((o) => !o))}
               accessibilityRole="button"
               testID="nudge-ask"
-              style={({ pressed }) => [s.half, s.left, { backgroundColor: pressed ? M.onPrimaryContainer : M.primary }]}
+              style={({ pressed }) => [s.half, s.left, { backgroundColor: pressed || open ? M.onPrimaryContainer : M.primary }]}
             >
               <CirclePlus size={18} color={M.onPrimary} />
               <Text style={[s.halfT, { color: M.onPrimary }]}>{t('nudge.askMine')}</Text>
@@ -118,15 +121,14 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
               <Text style={[s.halfT, { color: M.onSurfaceVariant }]}>{t('nudge.notNow')}</Text>
             </Pressable>
           </View>
-        </>
-      ) : (
+      {open ? (
         <>
           <Text style={s.which}>{t('nudge.which')}</Text>
-          <View style={{ marginTop: 12 }}>
+          <View ref={grid} style={{ marginTop: 12 }}>
             <ChoiceGrid options={ordered.map((c) => ({ id: c, label: catLabel(c, t) }))} onPick={go} testPrefix="nudge-cat-" />
           </View>
         </>
-      )}
+      ) : null}
     </Card>
   );
 }
