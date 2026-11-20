@@ -6,7 +6,7 @@ import { useT } from '../lib/i18n';
 import { M, R, T } from '../lib/theme';
 import { CATEGORIES, type FeedItem, type Outcome } from '../lib/types';
 import { verdictOf } from '../lib/verdict';
-import { CircleCheck, CirclePlus, IconText, PartyPopper, ShoppingBag } from './Icon';
+import { ChevronDown, CircleCheck, CirclePlus, IconText, PartyPopper, ShoppingBag } from './Icon';
 import { ChoiceGrid } from './ChoiceGrid';
 import { Button, Card, Chip } from './ui';
 
@@ -107,16 +107,21 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
               onPress={() => (cat ? go(cat) : setOpen((o) => !o))}
               accessibilityRole="button"
               testID="nudge-ask"
-              style={({ pressed }) => [s.half, s.left, { backgroundColor: pressed || open ? M.onPrimaryContainer : M.primary }]}
+              style={({ pressed }) => [s.half, s.left, { backgroundColor: M.primary, opacity: pressed ? 0.85 : 1 }]}
             >
               <CirclePlus size={18} color={M.onPrimary} />
               <Text style={[s.halfT, { color: M.onPrimary }]}>{t('nudge.askMine')}</Text>
+              {cat ? null : (
+                <View style={{ transform: [{ rotate: open ? '180deg' : '0deg' }] }}>
+                  <ChevronDown size={18} color={M.onPrimary} />
+                </View>
+              )}
             </Pressable>
             <Pressable
               onPress={onDismiss}
               accessibilityRole="button"
               testID="nudge-later"
-              style={({ pressed }) => [s.half, s.right, { backgroundColor: pressed ? M.surfaceContainerHighest : M.surfaceContainerHigh }]}
+              style={({ pressed }) => [s.half, s.right, s.quiet, { backgroundColor: pressed ? M.surfaceContainerLow : M.surfaceContainerLowest }]}
             >
               <Text style={[s.halfT, { color: M.onSurfaceVariant }]}>{t('nudge.notNow')}</Text>
             </Pressable>
@@ -149,6 +154,7 @@ const s = StyleSheet.create({
   left: { borderTopLeftRadius: R.full, borderBottomLeftRadius: R.full, borderTopRightRadius: R.sm, borderBottomRightRadius: R.sm },
   right: { borderTopRightRadius: R.full, borderBottomRightRadius: R.full, borderTopLeftRadius: R.sm, borderBottomLeftRadius: R.sm },
   halfT: { ...T.labelLarge, fontSize: 15 },
+  quiet: { borderWidth: 1, borderColor: M.outlineVariant },
   head: { ...T.titleSmall, fontSize: 15, color: M.onSurface },
   verdict: { ...T.labelLarge, fontWeight: '700' },
   ask: { ...T.bodySmall, fontSize: 14, color: M.onSurfaceVariant, marginTop: 2 },

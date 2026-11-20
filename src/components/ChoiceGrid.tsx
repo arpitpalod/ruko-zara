@@ -4,7 +4,8 @@ import { Check } from './Icon';
 
 /**
  * Big filled buttons in two columns, the same shape as the vote reasons: for "tap to choose" moments
- * (categories). Warm neutral, orange tint when picked; never green/red, which mean Buy it / Skip it.
+ * (categories). White tiles with a hairline border; picked = light orange, orange border, tick.
+ * Never green/red, which mean Buy it / Skip it.
  */
 export function ChoiceGrid({
   options,
@@ -30,11 +31,12 @@ export function ChoiceGrid({
               accessibilityState={{ selected: on }}
               style={({ pressed }) => [
                 s.btn,
-                { backgroundColor: on ? M.primaryContainer : pressed ? M.surfaceContainerHighest : M.surfaceContainerHigh },
-                on && { borderColor: M.primary },
+                on
+                  ? { backgroundColor: M.primaryContainer, borderColor: M.primary }
+                  : { backgroundColor: pressed ? M.surfaceContainerLow : M.surfaceContainerLowest, borderColor: M.outlineVariant },
               ]}
             >
-              {on ? <Check size={16} color={M.onPrimaryContainer} /> : null}
+              {on ? <Check size={16} color={M.primary} strokeWidth={3} /> : null}
               <Text style={[s.label, { color: on ? M.onPrimaryContainer : M.onSurface }]}>{o.label}</Text>
             </Pressable>
           </View>
@@ -48,8 +50,8 @@ const s = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', margin: -4 },
   cell: { width: '50%', padding: 4 },
   btn: {
-    flex: 1, minHeight: 48, borderRadius: R.md, borderWidth: 1.5, borderColor: 'transparent',
+    flex: 1, minHeight: 48, borderRadius: R.md, borderWidth: 1.5,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 8,
   },
-  label: { ...T.labelLarge, fontWeight: '700', textAlign: 'center' },
+  label: { ...T.labelLarge, fontWeight: '600', textAlign: 'center' },
 });
