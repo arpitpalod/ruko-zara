@@ -37,7 +37,7 @@ appId: com.rukozara.app
     text: "Mechanical keyboard"
     index: 0
 - extendedWaitUntil:
-    visible: "Comments.*"
+    visible: "What people say.*"
     timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: en-05-arzi-page

@@ -1,9 +1,12 @@
 # Screenshots of the Android app on Google's emulator (a virtual Pixel), for checking how it looks
 # without an Android phone. Builds a DEMO app (no database keys, same demo data as the dev site), so
-# nothing touches live. Run by hand from Actions; the screenshots are attached to the run.
+# nothing touches live. Runs on a push to the `android-screens` branch, or by hand from Actions once this
+# file is on main. The screenshots are attached to the run.
 name: Android screenshots
 
 on:
+  push:
+    branches: [android-screens]
   workflow_dispatch:
 
 permissions:
