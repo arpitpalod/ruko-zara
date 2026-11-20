@@ -1,0 +1,105 @@
+# Builds the Play Store version of the Android app (a signed .aab) and puts it on the release page
+# "play-latest", from where Arpit uploads it in Play Console. Runs on a push to the `play` branch (bring
+# main into it to build a new version) or by hand once this file is on main.
+#
+# Signing: the upload key is made on the first run and kept on the `play-key` branch, protected by the
+# password in the secret ANDROID_UPLOAD_PASSWORD (set by Arpit; nobody else has seen it). Google re-signs
+# the app with its own key (Play App Signing), so a lost upload key can be reset through Play support.
+name: Play Store build
+
+on:
+  push:
+    branches: [play]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: play-bundle
+  cancel-in-progress: false
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL || 'https://ehptarxgjmtbrxerwxim.supabase.co' }}
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_zzkKt2NP7Ik8PDgaayC9jw_--3SFuTl' }}
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.EXPO_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAAGGbTOnIdnDDerME' }}
+      # EXPO_PUBLIC_APP_BUILD stays unset: no "download the new APK" banner, Play updates the app itself.
+      EXPO_NO_TELEMETRY: 1
+      UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_PASSWORD }}
+    steps:
+      - name: The upload password is set
+        run: |
+          if [ "${#UPLOAD_STORE_PASSWORD}" -lt 16 ]; then
+            echo "::error::Add the repository secret ANDROID_UPLOAD_PASSWORD (16+ characters) first."; exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Get the upload key (make it on the first run)
+        run: |
+          KEY_DIR="$RUNNER_TEMP/play-key"
+          if git ls-remote --exit-code --heads origin play-key >/dev/null; then
+            git clone -q --depth 1 -b play-key "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" "$KEY_DIR"
+          else
+            mkdir -p "$KEY_DIR" && cd "$KEY_DIR"
+            keytool -genkeypair -noprompt -storetype PKCS12 -keystore upload.p12 -alias upload \
+              -keyalg RSA -keysize 4096 -validity 10000 \
+              -storepass "$UPLOAD_STORE_PASSWORD" -keypass "$UPLOAD_STORE_PASSWORD" \
+              -dname "CN=Ruko Zara, O=Ruko Zara, C=IN"
+            keytool -exportcert -rfc -keystore upload.p12 -alias upload -storepass "$UPLOAD_STORE_PASSWORD" > upload-certificate.pem
+            printf 'Play upload key for com.rukozara.app. Locked with the secret ANDROID_UPLOAD_PASSWORD.\nupload-certificate.pem is public.\n' > README.txt
+            git init -q -b play-key && git add -A
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Play upload key"
+            git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" play-key
+          fi
+          keytool -list -keystore "$KEY_DIR/upload.p12" -storepass "$UPLOAD_STORE_PASSWORD" >/dev/null  # wrong password stops here
+          echo "UPLOAD_STORE_FILE=$KEY_DIR/upload.p12" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      # Every Play upload needs a higher version code.
+      - name: Version code
+        run: echo "ANDROID_VERSION_CODE=$((100 + ${{ github.run_number }}))" >> "$GITHUB_ENV"
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Sign release builds with the upload key
+        run: python3 scripts/ci/play-signing.py
+
+      - name: Build the app bundle
+        working-directory: android
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Check it's signed with the upload key, not the debug key
+        run: |
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify -verbose -certs "$AAB" | grep -q "CN=Ruko Zara" || { echo "::error::Bundle is not signed with the upload key"; exit 1; }
+          cp "$AAB" ruko-zara-play.aab
+          ls -la ruko-zara-play.aab
+
+      - name: Put it on the play-latest release page
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: play-latest
+          name: Ruko Zara — Play Store upload (version code ${{ env.ANDROID_VERSION_CODE }})
+          body: |
+            Upload ruko-zara-play.aab in Play Console (Testing → Closed testing → Create new release).
+            Version code ${{ env.ANDROID_VERSION_CODE }}, commit ${{ github.sha }}.
+          files: ruko-zara-play.aab
+          prerelease: true
+          make_latest: false
