@@ -133,9 +133,12 @@ def test_votes_pick_show_first(page):
         page.get_by_text("Buy it", exact=True).nth(i).click()
         page.get_by_text("Worth the price", exact=True).first.click()
         page.get_by_text(re.compile(r"^\d+% say buy it$")).nth(i).wait_for()
+        page.wait_for_timeout(500)  # the demo saves a vote after a short delay
     assert page.get_by_text(hint).count() == 0, "cards reordered mid-voting"
     page.get_by_text("Results", exact=True).click()
+    page.get_by_text(re.compile(r"No results yet|Crowd says|% say buy it")).first.wait_for()
     page.get_by_text("Vote", exact=True).click()
+    page.get_by_text(re.compile(r"^You voted \(3\)")).wait_for()
     page.get_by_text(hint).wait_for()
     page.get_by_text("All", exact=True).click()  # their own choice from now on
     page.get_by_text(hint).wait_for(state="detached")
