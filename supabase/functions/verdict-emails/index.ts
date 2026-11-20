@@ -56,8 +56,15 @@ Deno.serve(async () => {
   for (const r of due ?? []) {
     const { data: u, error: userErr } = await sb.auth.admin.getUserById(r.user_id);
     if (userErr) {
+      // An account Auth can't load at all (the hand-made example account) fails the same way on every
+      // run: count it like a missing email and stop retrying. Anything else is retried next run.
+      if (/database error loading user/i.test(userErr.message)) {
+        noEmail++;
+        await sb.from('requests').update({ verdict_emailed_at: now.toISOString() }).eq('id', r.id);
+        continue;
+      }
       errors.push(`user lookup: ${userErr.message}`);
-      continue; // not marked: retried on the next run
+      continue;
     }
     const email = u?.user?.email;
 
