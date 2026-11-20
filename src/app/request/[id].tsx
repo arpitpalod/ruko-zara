@@ -9,7 +9,7 @@ import { canShareResult } from '../../lib/verdict';
 import { friendly, isGuestLimit } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { ago, applyVote, inr, timeLeft } from '../../lib/format';
-import { leftArrival } from '../../lib/entry';
+import { arrivedOn, leftArrival } from '../../lib/entry';
 import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
@@ -164,6 +164,13 @@ export default function RequestDetail() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
+        {arrivedOn(r.id) ? (
+          // From a shared link: say what this app is before anything else.
+          <Text style={s.whatIs} testID="what-is">
+            <Text style={{ fontWeight: '700', color: M.onPrimaryContainer }}>Ruko Zara: </Text>
+            {t('detail.whatIs')}
+          </Text>
+        ) : null}
         <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} reasons={reasons} />
         {own(r.user_id) && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
         {own(r.user_id) && canShareResult(r) ? (
@@ -295,6 +302,7 @@ export default function RequestDetail() {
 const GREY = { bg: 'transparent', fg: M.onSurfaceVariant, border: M.outlineVariant };
 
 const s = StyleSheet.create({
+  whatIs: { ...T.body, color: M.onPrimaryContainer, backgroundColor: M.primaryContainer, borderRadius: R.md, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 12, overflow: 'hidden' },
   wrap: { padding: 16, gap: 12, paddingBottom: 24 },
   empty: { ...T.body, textAlign: 'center', color: M.onSurfaceVariant, marginTop: 40 },
   err: { ...T.body, color: M.no },

@@ -110,12 +110,16 @@ def test_shared_link_header_back_goes_to_feed(page):
     page.get_by_text("Share on WhatsApp").wait_for()
     page.get_by_test_id("all-requests").click()
     page.get_by_text("Results", exact=True).wait_for()
+    page.get_by_text("Goa trip with college friends").click()  # opened inside the app: no intro strip
+    page.get_by_text("Share on WhatsApp").wait_for()
+    assert page.get_by_test_id("what-is").count() == 0
 
 
 def test_shared_link_skips_language_screen(page):
     """A WhatsApp link opens the arzi straight away in the sharer's language; the feed then asks interests once."""
     page.goto(BASE + "/request/r2?src=wa&lang=hi")
     page.get_by_text("सारी अर्ज़ियाँ", exact=True).wait_for()
+    assert "जनता से पूछें" in page.get_by_test_id("what-is").inner_text()  # says what the app is
     assert page.get_by_text("Choose your language · अपनी भाषा चुनें").count() == 0
     page.get_by_test_id("all-requests").click()
     page.get_by_text("आप क्या-क्या ख़रीदते हैं?", exact=True).wait_for()
