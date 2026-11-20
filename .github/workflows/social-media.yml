@@ -1,4 +1,4 @@
-# Puts Instagram media (social/*.jpg, social/*.mp4 on the `social` branch) on the website at
+# Puts Instagram media (social/*.jpg, social/*.mp4 and relay.html on the `social` branch) on the website at
 # https://arpitpalod.github.io/ruko-zara/social/, where Instagram's API fetches them when a queued post
 # goes out. Files are only added, never removed, so posts already queued keep working.
 name: Social media files
@@ -29,6 +29,7 @@ jobs:
             case "$f" in
               *.jpg|*.jpeg) [ "$(stat -c%s "$f")" -le 8388608 ] || { echo "::error::$f is over 8 MB"; bad=1; } ;;
               *.mp4) [ "$(stat -c%s "$f")" -le 314572800 ] || { echo "::error::$f is over 300 MB"; bad=1; } ;;
+              social/relay.html) ;; # hands images to an Instagram tab Arpit opened (see the file)
               *) echo "::error::$f: only .jpg and .mp4 go here"; bad=1 ;;
             esac
           done
