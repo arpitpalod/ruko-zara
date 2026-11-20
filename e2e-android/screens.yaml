@@ -32,7 +32,12 @@ appId: com.rukozara.app
 - waitForAnimationToEnd
 - takeScreenshot: en-04-feed-scrolled
 
-# An arzi page
+# An arzi page (the list only holds what's near the screen, so scroll to it first)
+- scrollUntilVisible:
+    element:
+      text: "Mechanical keyboard"
+    direction: DOWN
+    timeout: 20000
 - tapOn:
     text: "Mechanical keyboard"
     index: 0
