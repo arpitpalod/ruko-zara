@@ -1,0 +1,80 @@
+# Screenshots of the Android app on Google's emulator (a virtual Pixel), for checking how it looks
+# without an Android phone. Builds a DEMO app (no database keys, same demo data as the dev site), so
+# nothing touches live. Run by hand from Actions; the screenshots are attached to the run.
+name: Android screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # Demo app: no database, no bot check.
+      EXPO_PUBLIC_SUPABASE_URL: ''
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: ''
+      EXPO_PUBLIC_TURNSTILE_SITE_KEY: ''
+      EXPO_NO_DOTENV: 1
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build demo APK (emulator only)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=x86_64
+
+      - name: The app has no database address
+        run: |
+          if unzip -p android/app/build/outputs/apk/release/app-release.apk 'assets/*' | grep -aqE "[a-z0-9]{20}\.supabase\.(co|in)"; then
+            echo "::error::The demo APK contains a database address"; exit 1
+          fi
+
+      - name: Install Maestro (taps through the app)
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      # GitHub's Linux machines can run the emulator at full speed once KVM is opened up.
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run on the emulator and take screenshots
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash scripts/ci/android-screens.sh
+
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-screens
+          path: android-shots/
+          retention-days: 14

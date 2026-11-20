@@ -1,0 +1,77 @@
+# Maestro walk-through of the demo Android app: one screenshot per screen, English then Hindi.
+# Screenshots land in the folder Maestro runs from (android-shots/ in CI).
+appId: com.rukozara.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "English"
+    timeout: 90000
+- takeScreenshot: en-00-language
+- tapOn: "English"
+- extendedWaitUntil:
+    visible: "Saved so far"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: en-01-feed
+
+# Reasons for each side
+- tapOn:
+    text: "Skip it"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: en-02-skip-reasons
+- tapOn:
+    text: "Buy it"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: en-03-buy-reasons
+
+# Collapsed savings bar after scrolling
+- scroll
+- waitForAnimationToEnd
+- takeScreenshot: en-04-feed-scrolled
+
+# An arzi page
+- tapOn:
+    text: "Mechanical keyboard"
+    index: 0
+- extendedWaitUntil:
+    visible: "Comments.*"
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: en-05-arzi-page
+- scroll
+- takeScreenshot: en-06-arzi-page-lower
+- back
+
+# Other tabs
+- tapOn: "New request"
+- waitForAnimationToEnd
+- takeScreenshot: en-07-new-request
+- tapOn: "My requests"
+- waitForAnimationToEnd
+- takeScreenshot: en-08-my-requests
+
+# Language menu
+- tapOn: "EN"
+- waitForAnimationToEnd
+- takeScreenshot: en-09-language-menu
+
+# Hindi, fresh start
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "हिन्दी"
+    timeout: 60000
+- tapOn: "हिन्दी"
+- extendedWaitUntil:
+    visible: "अब तक बचाए"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: hi-01-feed
+- tapOn:
+    text: "रहने दो"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: hi-02-skip-reasons
