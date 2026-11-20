@@ -5,7 +5,10 @@ import { WEB_BASE } from './legal';
  * Public web link to one request — opens in any browser, no install needed. `src` tags where the
  * link was shared (e.g. "wa"), so we can count which sharing brings people back.
  */
-export const requestUrl = (id: string, src?: string) => `${WEB_BASE}/request/${id}${src ? `?src=${src}` : ''}`;
+export const requestUrl = (id: string, src?: string, lang?: string) => {
+  const q = [src && `src=${src}`, lang && `lang=${lang}`].filter(Boolean).join('&');
+  return `${WEB_BASE}/request/${id}${q ? `?${q}` : ''}`;
+};
 
 const waWeb = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
 

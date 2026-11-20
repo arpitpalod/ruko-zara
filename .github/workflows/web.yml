@@ -62,14 +62,16 @@ jobs:
             sed -i -e 's|<head>|<head><meta name="robots" content="noindex,nofollow" />|' -e 's|<title>[^<]*</title>|<title>DEV · Ruko Zara</title>|' dist/index.html
             rm -f dist/captcha.html dist/privacy.html dist/terms.html   # the live copies are used
             sed -i '/rel="preconnect" href="https:\/\/[a-z]*\.supabase\.co"/d' dist/index.html
+            # Deep links on dev arrive as /ruko-zara/dev/?route=/request/<id>&… (see the live 404 page): restore the path before the app starts.
+            sed -i 's|<head>|<head><script>(function(){var q=new URLSearchParams(location.search),r=q.get("route");if(r\&\&r.charAt(0)==="/"\&\&r.indexOf("//")<0){q.delete("route");var s=q.toString();history.replaceState(null,"","/ruko-zara/dev"+r+(s?"?"+s:""))}})()</script>|' dist/index.html
             # Hard stop: the dev site must never reach the live database.
             if grep -rqE "[a-z0-9]{20}\.supabase\.(co|in)" dist; then
               echo "::error::The dev build contains a database address. Dev must run on demo data only."; exit 1
             fi
           else
             cp dist/index.html dist/404.html   # deep links like /request/<id> load the app instead of a 404
-            # A reload on a dev page lands here (GitHub Pages has one 404 page): send it back to the dev site.
-            sed -i 's|<head>|<head><script>if(location.pathname.indexOf("/ruko-zara/dev/")===0)location.replace("/ruko-zara/dev/")</script>|' dist/404.html
+            # A dev page opened directly lands here (GitHub Pages has one 404 page): hand its path to the dev site.
+            sed -i 's|<head>|<head><script>if(location.pathname.indexOf("/ruko-zara/dev/")===0)location.replace("/ruko-zara/dev/?route="+encodeURIComponent(location.pathname.slice(14))+(location.search?"\&"+location.search.slice(1):""))</script>|' dist/404.html
             # Keep the dev site and the Instagram media (/social) that live next to the live one.
             if git fetch -q --depth=1 origin gh-pages 2>/dev/null; then
               for keep in dev social; do

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
+import { langFromLink } from './langFromLink';
 import { M, R, T } from './theme';
 import { Logo } from '../components/Logo';
 
@@ -218,6 +219,11 @@ const en = {
   'feed.all': 'All',
   'feed.otherInterests': 'Everything else',
   'feed.interestsAuto': 'Picked from your votes. Tap to change.',
+  'intro.title': 'What do you shop for?',
+  'intro.sub': "We'll show these requests first. You can change this anytime on the feed.",
+  'intro.go': 'Show my feed',
+  'intro.skip': 'Skip',
+  'req.allRequests': 'All requests',
 } as const;
 
 export type Key = keyof typeof en;
@@ -423,6 +429,11 @@ const hi: Dict = {
   'feed.all': 'सब',
   'feed.otherInterests': 'बाक़ी सब',
   'feed.interestsAuto': 'आपके वोट से चुना गया। बदलने के लिए टैप करें।',
+  'intro.title': 'आप क्या-क्या ख़रीदते हैं?',
+  'intro.sub': 'ये अर्ज़ियाँ पहले दिखेंगी। फ़ीड पर कभी भी बदल सकते हैं।',
+  'intro.go': 'मेरी फ़ीड दिखाएँ',
+  'intro.skip': 'छोड़ें',
+  'req.allRequests': 'सारी अर्ज़ियाँ',
 };
 
 const hinglish: Dict = {
@@ -625,6 +636,11 @@ const hinglish: Dict = {
   'feed.all': 'Sab',
   'feed.otherInterests': 'Baaki sab',
   'feed.interestsAuto': 'Aapke votes se chuna. Badalne ke liye tap karo.',
+  'intro.title': 'Aap kya kya khareedte ho?',
+  'intro.sub': 'Ye arzi pehle dikhengi. Feed pe kabhi bhi badal sakte ho.',
+  'intro.go': 'Meri feed dikhao',
+  'intro.skip': 'Skip karo',
+  'req.allRequests': 'Saari arzi',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };
@@ -658,7 +674,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((v) => {
-        if (v === 'en' || v === 'hi' || v === 'hinglish') setLangState(v);
+        if (v === 'en' || v === 'hi' || v === 'hinglish') return setLangState(v);
+        // A shared arzi opens straight away, in the sharer's language; the header button changes it.
+        if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+        const l = langFromLink(window.location.pathname, window.location.search, navigator.language);
+        if (l) {
+          setLangState(l);
+          AsyncStorage.setItem(STORAGE_KEY, l).catch(() => {});
+        }
       })
       .catch(() => {})
       .finally(() => setLoaded(true));

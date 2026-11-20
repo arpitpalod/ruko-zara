@@ -65,4 +65,5 @@ def page(browser, server):
 def open_app(page, language="English"):
     page.goto(BASE + "/")
     page.get_by_text(language, exact=True).click()
+    page.get_by_test_id("intro-go").click()  # first visit: "What do you shop for?" (skipped here)
     return page

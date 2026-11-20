@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 const KEY = 'ruko-zara.interests';
 /** 'user' once the person picks or clears chips themselves; 'auto' while we pick for them from their votes. */
 const MODE = 'ruko-zara.interests.mode';
+/** '1' once the person has seen the "What do you shop for?" screen (picked or skipped). */
+const ASKED = 'ruko-zara.interests.asked';
 
 type Mode = 'user' | 'auto' | null;
 type Voted = { category: string; my_vote?: unknown };
@@ -25,6 +27,7 @@ export function learnInterests(items: Voted[]): string[] {
 export function useInterests() {
   const [picked, setPicked] = useState<string[]>([]);
   const [auto, setAuto] = useState(false);
+  const [asked, setAsked] = useState<boolean | undefined>(undefined); // undefined until read
   const mode = useRef<Mode | undefined>(undefined); // undefined until read from the device
   const waiting = useRef<Voted[] | null>(null);
 
@@ -46,18 +49,20 @@ export function useInterests() {
   );
 
   useEffect(() => {
-    AsyncStorage.multiGet([KEY, MODE])
-      .then(([[, v], [, m]]) => {
+    AsyncStorage.multiGet([KEY, MODE, ASKED])
+      .then(([[, v], [, m], [, a]]) => {
         const parsed = v ? JSON.parse(v) : [];
         const list = Array.isArray(parsed) ? parsed.filter((x) => typeof x === 'string') : [];
         setPicked(list);
         // Picks made before this change count as the person's own choice.
         mode.current = m === 'user' || m === 'auto' ? m : list.length ? 'user' : null;
         setAuto(mode.current === 'auto');
+        setAsked(a === '1' || mode.current === 'user');
         if (waiting.current) learnNow(waiting.current);
       })
       .catch(() => {
         mode.current = 'user'; // storage unreadable: leave the feed alone
+        setAsked(true);
       });
   }, [learnNow]);
 
@@ -75,7 +80,17 @@ export function useInterests() {
     [picked, save],
   );
 
-  return { picked, auto, toggle, clear: () => save([], 'user'), learn };
+  /** The first-visit screen: their picks become their own choice; skipping leaves it to their votes. */
+  const finishIntro = useCallback(
+    (picks: string[]) => {
+      setAsked(true);
+      AsyncStorage.setItem(ASKED, '1').catch(() => {});
+      if (picks.length) save(picks, 'user');
+    },
+    [save],
+  );
+
+  return { picked, auto, asked, toggle, clear: () => save([], 'user'), learn, finishIntro };
 }
 
 /** [matching, everything else]; with nothing picked, everything counts as matching. */

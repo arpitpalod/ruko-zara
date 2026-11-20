@@ -11,6 +11,7 @@ export { default as CirclePlus } from 'lucide-react-native/icons/circle-plus';
 export { default as House } from 'lucide-react-native/icons/house';
 export { default as User } from 'lucide-react-native/icons/user';
 export { default as BadgeCheck } from 'lucide-react-native/icons/badge-check';
+export { default as ArrowLeft } from 'lucide-react-native/icons/arrow-left';
 export { default as CircleCheck } from 'lucide-react-native/icons/circle-check';
 export { default as Eye } from 'lucide-react-native/icons/eye';
 export { default as EyeOff } from 'lucide-react-native/icons/eye-off';

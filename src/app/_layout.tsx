@@ -1,7 +1,9 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { CaptchaHost } from '../components/CaptchaHost';
+import { AllRequestsButton } from '../components/AllRequestsButton';
 import { LanguageButton } from '../components/LanguageButton';
+import { arrivedOn } from '../lib/entry';
 import { LogoFontReady, useLoadLogoFont } from '../components/Logo';
 import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
@@ -41,7 +43,14 @@ function Nav() {
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="request/[id]" options={{ title: t('title.request') }} />
+      <Stack.Screen
+        name="request/[id]"
+        options={({ route }) =>
+          arrivedOn(String((route.params as { id?: string } | undefined)?.id ?? ''))
+            ? { title: '', headerLeft: () => <AllRequestsButton /> } // came from a shared link: say where back goes
+            : { title: t('title.request') }
+        }
+      />
       <Stack.Screen name="login" options={{ title: t('title.login'), presentation: 'modal' }} />
       <Stack.Screen name="hidden" options={{ title: t('title.hidden') }} />
     </Stack>

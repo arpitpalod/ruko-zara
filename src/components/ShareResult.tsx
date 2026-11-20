@@ -12,7 +12,7 @@ import { ResultCard } from './ResultCard';
 
 /** A preview of the result card, with Share (share sheet, or a download where sharing files isn't possible). */
 export function ShareResult({ r, reasons, onClose }: { r: FeedItem; reasons: ReasonCount[]; onClose: () => void }) {
-  const { t } = useT();
+  const { t, lang } = useT();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ref = useRef<any>(null);
   const [busy, setBusy] = useState(false);
@@ -22,7 +22,7 @@ export function ShareResult({ r, reasons, onClose }: { r: FeedItem; reasons: Rea
     setBusy(true);
     setNote(null);
     try {
-      const done = await shareView(ref, { title: t('rc.title'), text: t('rc.text', { item: r.item, link: requestUrl(r.id, 'card') }) });
+      const done = await shareView(ref, { title: t('rc.title'), text: t('rc.text', { item: r.item, link: requestUrl(r.id, 'card', lang) }) });
       if (done === 'downloaded') setNote(t('rc.downloaded'));
     } catch {
       setNote(t('rc.failed'));

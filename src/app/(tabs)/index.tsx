@@ -15,7 +15,9 @@ import { applyVote, catLabel } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { useUser } from '../../lib/session';
 import { M, R, T } from '../../lib/theme';
+import { InterestsIntro } from '../../components/InterestsIntro';
 import { splitByInterest, useInterests } from '../../lib/interests';
+import { byScore, trendScore } from '../../lib/rank';
 import { dismissPostNudge, loadNudgeState, markAsked, noteNewVote, shouldShowPostNudge, type NudgeState } from '../../lib/nudges';
 import { refreshMine, useMine } from '../../lib/savings';
 import type { VoteReason } from '../../lib/reasons';
@@ -41,7 +43,8 @@ export default function Feed() {
   const [left, setLeft] = useState<number | null>(null);
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
   const scrollY = useRef(new Animated.Value(0)).current; // shrinks the savings header
-  const { picked, auto, toggle, clear, learn } = useInterests();
+  const { picked, auto, asked, toggle, clear, learn, finishIntro } = useInterests();
+  const [score, setScore] = useState<Map<string, number>>(new Map());
   // One nudge at a time on the Vote tab: "Did you buy it?" first, then "Now post yours".
   const mine = useMine();
   const [nudge, setNudge] = useState<NudgeState | null>(null);
@@ -73,6 +76,9 @@ export default function Feed() {
         shown.current = rows.length > 0;
         setVotedAtLoad(new Set(rows.filter((r) => r.my_vote).map((r) => r.id)));
         learn(rows); // until someone picks "Show first" themselves, their votes pick it
+        // Trending order, fixed at load so cards don't jump while someone votes.
+        const now = Date.now();
+        setScore(new Map(rows.map((r) => [r.id, trendScore(r, now)])));
       } catch (e: any) {
         setErr(friendly(e, t));
       } finally {
@@ -136,7 +142,7 @@ export default function Feed() {
     shouldShowPostNudge({ votes: nudge.votes, dismissedAt: nudge.dismissedAt, posted: mine.posted, lastPostedAt: mine.lastPostedAt });
 
   // Not-yet-voted first (your picked interests on top), then what you already voted on.
-  const fresh = tab === 'open' ? items.filter((x) => !votedAtLoad.has(x.id)) : items;
+  const fresh = tab === 'open' ? byScore(items.filter((x) => !votedAtLoad.has(x.id)), score) : items;
   const [forYou, rest] = splitByInterest(fresh, picked);
   const done = tab === 'open' ? items.filter((x) => votedAtLoad.has(x.id)) : [];
   const sections = [
@@ -144,6 +150,10 @@ export default function Feed() {
     { key: 'rest', data: rest },
     ...(tab === 'open' ? [{ key: 'done', data: done }] : []),
   ];
+
+  // First time on the feed: "What do you shop for?" (also after a shared link's "All requests").
+  if (asked === undefined) return <View style={{ flex: 1, backgroundColor: M.surface }} />;
+  if (!asked) return <InterestsIntro onDone={finishIntro} />;
 
   return (
     <View style={{ flex: 1 }}>

@@ -79,7 +79,7 @@ def test_whatsapp_share_sends_full_message(page):
     assert len(shared) == 1 and "url" not in shared[0], shared
     text = shared[0]["text"]
     assert "*" in text and "₹" in text and "/ruko-zara/request/" in text, text
-    assert "?src=wa" in text, text  # so we can count who comes back through WhatsApp
+    assert "?src=wa&lang=hinglish" in text, text  # so we can count who comes back through WhatsApp
 
 
 def test_static_pages_exist(page, server):
@@ -95,7 +95,7 @@ def test_shared_link_lets_you_explore_more(page):
     page.get_by_text("Buy it", exact=True).first.wait_for()
     page.goto(BASE + "/request/r1")  # fresh load, like tapping the link in WhatsApp
     page.get_by_text("Share on WhatsApp").wait_for()
-    assert page.get_by_label(re.compile("back", re.I)).count() > 0, "no back button on a shared link"
+    assert page.get_by_test_id("all-requests").count() > 0, "no way back to the feed on a shared link"
     page.get_by_text("Vote on more requests →").click()
     page.get_by_text("Results", exact=True).wait_for()   # exactly one feed, visible
     page.get_by_text("Buy it", exact=True).first.wait_for()
@@ -103,12 +103,39 @@ def test_shared_link_lets_you_explore_more(page):
 
 
 def test_shared_link_header_back_goes_to_feed(page):
+    """On an arzi opened from a shared link, back says where it goes (21 Nov)."""
     open_app(page, "English")
     page.get_by_text("Buy it", exact=True).first.wait_for()
     page.goto(BASE + "/request/r2")
     page.get_by_text("Share on WhatsApp").wait_for()
-    page.get_by_label(re.compile("back", re.I)).first.click()
+    page.get_by_test_id("all-requests").click()
     page.get_by_text("Results", exact=True).wait_for()
+
+
+def test_shared_link_skips_language_screen(page):
+    """A WhatsApp link opens the arzi straight away in the sharer's language; the feed then asks interests once."""
+    page.goto(BASE + "/request/r2?src=wa&lang=hi")
+    page.get_by_text("सारी अर्ज़ियाँ", exact=True).wait_for()
+    assert page.get_by_text("Choose your language · अपनी भाषा चुनें").count() == 0
+    page.get_by_test_id("all-requests").click()
+    page.get_by_text("आप क्या-क्या ख़रीदते हैं?", exact=True).wait_for()
+    page.get_by_test_id("intro-go").click()
+    page.get_by_text("पहले दिखाएँ", exact=True).wait_for()
+
+
+def test_first_visit_picks_order_the_feed(page):
+    """Language, then "What do you shop for?" in that language; picks come first, nothing is hidden."""
+    page.goto(BASE + "/")
+    page.get_by_text("English", exact=True).click()
+    page.get_by_text("What do you shop for?", exact=True).wait_for()
+    page.get_by_test_id("intro-Khana").click()
+    page.get_by_text("Show my feed", exact=True).click()
+    page.get_by_text("Everything else", exact=True).wait_for()
+    first_meta = page.get_by_text(re.compile(r"^(Gadgets|Fashion|Food|Beauty|Home|Travel|Fun|Health|Other) · ")).first.inner_text()
+    assert first_meta.startswith("Food"), first_meta
+    page.reload()  # asked once only
+    page.get_by_text("Everything else", exact=True).wait_for()
+    assert page.get_by_text("What do you shop for?").count() == 0
 
 
 def test_interest_picker_puts_picks_first(page):
@@ -261,6 +288,7 @@ def test_admin_hidden_posts_out_of_feed(page):
     """Admins: hidden and banned people's arzi stay out of the feed, on their own page (19 Nov)."""
     page.goto(BASE + "/?admin=1")
     page.get_by_text("English", exact=True).click()
+    page.get_by_test_id("intro-go").click()  # skip "What do you shop for?"
     page.get_by_text("Buy it", exact=True).first.wait_for()
     body = page.inner_text("body")
     assert "Something reported three times" not in body and "Spam from a banned account" not in body, "hidden arzi in the admin feed"
@@ -279,6 +307,7 @@ def test_savings_always_on_top(page):
     """One constant thing on top of Feed and New request: savings. Big at the top, slim once you scroll."""
     page.goto(BASE + "/?new=1")  # a brand-new person
     page.get_by_text("English", exact=True).click()
+    page.get_by_test_id("intro-go").click()  # skip "What do you shop for?"
     header = page.get_by_test_id("savings-header")
     header.wait_for()
     assert "₹0" in header.inner_text() and "Saved so far" in header.inner_text()
@@ -344,6 +373,7 @@ def test_still_deciding_asks_only_once(page):
 def test_now_post_yours_after_5_votes(page):
     page.goto(BASE + "/?new=1")  # a brand-new person who has never posted
     page.get_by_text("English", exact=True).click()
+    page.get_by_test_id("intro-go").click()  # skip "What do you shop for?"
     for i in range(5):
         assert page.get_by_test_id("post-nudge").count() == 0, f"nudge before vote {i + 1}"
         page.get_by_text("Buy it", exact=True).nth(i).click()

@@ -9,6 +9,7 @@ import { canShareResult } from '../../lib/verdict';
 import { friendly, isGuestLimit } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { ago, applyVote, inr, timeLeft } from '../../lib/format';
+import { leftArrival } from '../../lib/entry';
 import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
@@ -181,12 +182,16 @@ export default function RequestDetail() {
                 item: r.item,
                 price: inr(r.price_inr),
                 reason: r.reason.length > 110 ? r.reason.slice(0, 107).trimEnd() + '…' : r.reason,
-                link: requestUrl(r.id, 'wa'),
+                link: requestUrl(r.id, 'wa', lang),
               }),
             )
           }
         />
-        <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+        <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={() => {
+          leftArrival();
+          if (router.canGoBack()) router.back();
+          else router.replace('/');
+        }} />
         {own(r.user_id) && !r.preview ? (
           <CheckRow label={t('feature.ask')} checked={!!r.feature_ok} onChange={toggleFeature} testID="feature-own" />
         ) : null}
