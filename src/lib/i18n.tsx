@@ -78,6 +78,7 @@ const en = {
   'cat.Ghar': 'Home',
   'cat.Travel': 'Travel',
   'cat.Fun': 'Fun',
+  'cat.Health': 'Health',
   'cat.Other': 'Other',
 
   'new.lead': 'The crowd votes for as long as you choose (up to 7 days). Be honest.',
@@ -281,6 +282,7 @@ const hi: Dict = {
   'cat.Ghar': 'घर',
   'cat.Travel': 'यात्रा',
   'cat.Fun': 'मौज-मस्ती',
+  'cat.Health': 'सेहत',
   'cat.Other': 'अन्य',
 
   'new.lead': 'जनता आपके चुने समय तक (ज़्यादा से ज़्यादा 7 दिन) वोट करेगी। सच लिखें।',
@@ -481,6 +483,7 @@ const hinglish: Dict = {
   'cat.Ghar': 'Ghar',
   'cat.Travel': 'Travel',
   'cat.Fun': 'Fun',
+  'cat.Health': 'Health',
   'cat.Other': 'Other',
 
   'new.lead': 'Janta tumhare chune hue time tak vote karegi (max 7 din). Sach likhna — jhooth pakda jaata hai.',

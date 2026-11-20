@@ -113,4 +113,4 @@ export interface Api {
   adminBannedIds(): Promise<string[]>;
 }
 
-export const CATEGORIES = ['Gadgets', 'Fashion', 'Khana', 'Beauty', 'Ghar', 'Travel', 'Fun', 'Other'] as const;
+export const CATEGORIES = ['Gadgets', 'Fashion', 'Khana', 'Beauty', 'Ghar', 'Travel', 'Fun', 'Health', 'Other'] as const;

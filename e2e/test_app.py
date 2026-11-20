@@ -114,9 +114,10 @@ def test_shared_link_header_back_goes_to_feed(page):
 def test_interest_picker_puts_picks_first(page):
     open_app(page, "English")
     page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.get_by_text("Health", exact=True).first.wait_for()  # added 21 Nov
     page.get_by_text("Food", exact=True).first.click()
     page.get_by_text("Everything else", exact=True).wait_for()
-    first_meta = page.get_by_text(re.compile(r"^(Gadgets|Fashion|Food|Beauty|Home|Travel|Fun|Other) · ")).first.inner_text()
+    first_meta = page.get_by_text(re.compile(r"^(Gadgets|Fashion|Food|Beauty|Home|Travel|Fun|Health|Other) · ")).first.inner_text()
     assert first_meta.startswith("Food"), first_meta
     page.reload()  # remembered on this device
     page.get_by_text("Everything else", exact=True).wait_for()
