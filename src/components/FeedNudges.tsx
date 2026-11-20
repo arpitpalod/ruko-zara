@@ -7,6 +7,7 @@ import { M, R, T } from '../lib/theme';
 import { CATEGORIES, type FeedItem, type Outcome } from '../lib/types';
 import { verdictOf } from '../lib/verdict';
 import { CircleCheck, CirclePlus, IconText, PartyPopper, ShoppingBag } from './Icon';
+import { ChoiceGrid } from './ChoiceGrid';
 import { Button, Card, Chip } from './ui';
 
 /** "Voting closed on X: 72% said Skip it. Did you buy it?" Asked once per arzi; also answerable in My requests. */
@@ -121,10 +122,8 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
       ) : (
         <>
           <Text style={s.which}>{t('nudge.which')}</Text>
-          <View style={s.ideas}>
-            {ordered.map((c) => (
-              <Chip key={c} label={catLabel(c, t)} onPress={() => go(c)} testID={`nudge-cat-${c}`} />
-            ))}
+          <View style={{ marginTop: 12 }}>
+            <ChoiceGrid options={ordered.map((c) => ({ id: c, label: catLabel(c, t) }))} onPick={go} testPrefix="nudge-cat-" />
           </View>
         </>
       )}

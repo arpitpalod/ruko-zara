@@ -4,8 +4,8 @@ import { catLabel } from '../lib/format';
 import { useT } from '../lib/i18n';
 import { M, T } from '../lib/theme';
 import { CATEGORIES } from '../lib/types';
-import { Logo } from './Logo';
-import { Button, Chip } from './ui';
+import { ChoiceGrid } from './ChoiceGrid';
+import { Button } from './ui';
 
 const MAX = 3;
 
@@ -23,15 +23,10 @@ export function InterestsIntro({ onDone }: { onDone: (picks: string[]) => void }
   }, [picks, onDone]);
   return (
     <ScrollView style={{ backgroundColor: M.surface }} contentContainerStyle={s.wrap}>
-      <View style={{ alignItems: 'center', marginBottom: 8 }}>
-        <Logo size={26} />
-      </View>
       <Text style={s.title}>{t('intro.title')}</Text>
       <Text style={s.sub}>{t('intro.sub')}</Text>
-      <View style={s.chips}>
-        {CATEGORIES.map((c) => (
-          <Chip key={c} label={catLabel(c, t)} selected={picks.includes(c)} onPress={() => toggle(c)} testID={`intro-${c}`} />
-        ))}
+      <View style={{ marginVertical: 10 }}>
+        <ChoiceGrid options={CATEGORIES.map((c) => ({ id: c, label: catLabel(c, t) }))} selected={picks} onPick={toggle} testPrefix="intro-" />
       </View>
       <Button
         label={picks.length ? t('intro.go') : t('intro.skip')}
