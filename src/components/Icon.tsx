@@ -22,8 +22,14 @@ export { default as ShoppingBag } from 'lucide-react-native/icons/shopping-bag';
 export { default as Share2 } from 'lucide-react-native/icons/share-2';
 export { default as X } from 'lucide-react-native/icons/x';
 export { default as Vote } from 'lucide-react-native/icons/vote';
+export { default as Check } from 'lucide-react-native/icons/check';
+export { default as ShoppingCart } from 'lucide-react-native/icons/shopping-cart';
+export { default as CirclePause } from 'lucide-react-native/icons/circle-pause';
+export { default as MessageCircle } from 'lucide-react-native/icons/message-circle';
+export { default as ArrowUpRight } from 'lucide-react-native/icons/arrow-up-right';
+export { default as Send } from 'lucide-react-native/icons/send';
 
-type LucideIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+export type LucideIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
 
 /** An icon and text on one line; the icon takes the text's colour and size. */
 export function IconText({

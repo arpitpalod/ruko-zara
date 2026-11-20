@@ -2,6 +2,7 @@ import { IconText, Vote } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Animated, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Chip, Segmented } from '../../components/ui';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
 import { DecideCard, PostNudge } from '../../components/FeedNudges';
@@ -13,7 +14,7 @@ import { friendly, isGuestLimit } from '../../lib/errors';
 import { applyVote, catLabel } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { useUser } from '../../lib/session';
-import { C } from '../../lib/theme';
+import { M, R, T } from '../../lib/theme';
 import { splitByInterest, useInterests } from '../../lib/interests';
 import { dismissPostNudge, loadNudgeState, markAsked, noteNewVote, shouldShowPostNudge, type NudgeState } from '../../lib/nudges';
 import { refreshMine, useMine } from '../../lib/savings';
@@ -160,33 +161,28 @@ export default function Feed() {
         load();
       }}
       ListHeaderComponent={
-        <View style={{ gap: 10, marginBottom: 4 }}>
+        <View style={{ gap: 12, marginBottom: 4 }}>
           <UpdateBanner />
           <InstallHint />
-          <View style={s.seg}>
-            {(['open', 'closed'] as Tab[]).map((k) => (
-              <Pressable key={k} onPress={() => switchTab(k)} style={[s.segBtn, tab === k && s.segOn]}>
-                <Text style={[s.segT, tab === k && { color: '#fff' }]}>
-                  {k === 'open' ? t('feed.tabVote') : t('feed.tabResults')}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+          <Segmented
+            options={[
+              { value: 'open' as Tab, label: t('feed.tabVote') },
+              { value: 'closed' as Tab, label: t('feed.tabResults') },
+            ]}
+            value={tab}
+            onChange={switchTab}
+          />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
             <Text style={s.chipsLabel}>{t('feed.interests')}</Text>
-            <Pressable onPress={clear} style={[s.chip, picked.length === 0 && s.chipOn]}>
-              <Text style={[s.chipT, picked.length === 0 && s.chipTOn]}>{t('feed.all')}</Text>
-            </Pressable>
+            <Chip label={t('feed.all')} selected={picked.length === 0} onPress={clear} />
             {CATEGORIES.map((c) => (
-              <Pressable key={c} onPress={() => toggle(c)} style={[s.chip, picked.includes(c) && s.chipOn]}>
-                <Text style={[s.chipT, picked.includes(c) && s.chipTOn]}>{catLabel(c, t)}</Text>
-              </Pressable>
+              <Chip key={c} label={catLabel(c, t)} selected={picked.includes(c)} onPress={() => toggle(c)} />
             ))}
           </ScrollView>
           {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
           {left !== null && left <= 5 && tab === 'open' ? (
             <Pressable onPress={() => router.push('/login')} style={s.guest}>
-              <IconText icon={Vote} size={17} color={C.brand} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
+              <IconText icon={Vote} size={18} color={M.onPrimaryContainer} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
           ) : null}
           {tab === 'open' && toDecide ? <DecideCard r={toDecide} onAnswer={(o) => answerDecide(toDecide, o)} /> : null}
@@ -212,7 +208,7 @@ export default function Feed() {
         return null;
       }}
       renderItem={({ item }) => (
-        <View style={{ marginBottom: 12 }}>
+        <View style={{ marginBottom: 14 }}>
           <RequestCard
             r={item}
             meId={user.id}
@@ -228,21 +224,13 @@ export default function Feed() {
 }
 
 const s = StyleSheet.create({
-  list: { padding: 16 },
-  sectionH: { fontSize: 13, fontWeight: '700', color: C.sub, marginTop: 8, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  seg: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 10, borderWidth: 1, borderColor: C.line, padding: 3, gap: 3 },
-  segBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  segOn: { backgroundColor: C.ink },
-  segT: { fontSize: 14, fontWeight: '700', color: C.ink },
-  chips: { gap: 6, alignItems: 'center', paddingRight: 8 },
-  chipsLabel: { fontSize: 12.5, color: C.sub, marginRight: 2 },
-  chip: { borderWidth: 1, borderColor: C.line, backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  chipOn: { backgroundColor: C.ink, borderColor: C.ink },
-  chipT: { fontSize: 13, fontWeight: '600', color: C.ink },
-  chipTOn: { color: '#fff' },
-  demo: { fontSize: 12, color: C.brand, backgroundColor: C.brandSoft, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
-  err: { color: C.no },
-  guest: { backgroundColor: C.brandSoft, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  guestT: { color: C.brand, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  empty: { textAlign: 'center', color: C.sub, marginTop: 24, marginBottom: 24, lineHeight: 22 },
+  list: { padding: 16, paddingTop: 14 },
+  sectionH: { ...T.titleSmall, color: M.onSurfaceVariant, marginTop: 8, marginBottom: 10 },
+  chips: { gap: 8, alignItems: 'center', paddingRight: 8 },
+  chipsLabel: { ...T.labelMedium, color: M.onSurfaceVariant, marginRight: 2 },
+  demo: { ...T.labelMedium, color: M.onSurfaceVariant, backgroundColor: M.surfaceContainerHigh, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.sm, overflow: 'hidden' },
+  err: { ...T.body, color: M.no },
+  guest: { backgroundColor: M.primaryContainer, borderRadius: R.lg, paddingHorizontal: 16, paddingVertical: 12 },
+  guestT: { ...T.labelLarge, color: M.onPrimaryContainer },
+  empty: { ...T.body, textAlign: 'center', color: M.onSurfaceVariant, marginTop: 24, marginBottom: 24 },
 });

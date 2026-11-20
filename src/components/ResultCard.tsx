@@ -4,7 +4,7 @@ import { inr } from '../lib/format';
 import { useT, type Key } from '../lib/i18n';
 import { WEB_BASE } from '../lib/legal';
 import { sideOf, type ReasonCount } from '../lib/reasons';
-import { C } from '../lib/theme';
+import { M, R } from '../lib/theme';
 import type { FeedItem } from '../lib/types';
 import { verdictOf } from '../lib/verdict';
 import { Logo } from './Logo';
@@ -18,7 +18,7 @@ export const CARD_H = 560;
 export function ResultCard({ r, reasons, cardRef }: { r: FeedItem; reasons: ReasonCount[]; cardRef?: Ref<any> }) {
   const { t } = useT();
   const v = verdictOf(r);
-  const color = v.side === 'approve' ? C.yes : C.no;
+  const color = v.side === 'approve' ? M.yes : M.no;
   const top = [...reasons].filter((x) => x.n > 0).sort((a, b) => b.n - a.n).slice(0, 2);
   return (
     <View ref={cardRef} collapsable={false} style={s.card} testID="result-card">
@@ -34,10 +34,10 @@ export function ResultCard({ r, reasons, cardRef }: { r: FeedItem; reasons: Reas
         {top.length ? (
           <View style={s.reasons}>
             {top.map((x) => {
-              const c = sideOf(x.reason) === 'approve' ? C.yes : C.no;
+              const yes = sideOf(x.reason) === 'approve';
               return (
-                <View key={x.reason} style={[s.chip, { borderColor: c }]}>
-                  <Text style={[s.chipT, { color: c }]} numberOfLines={1}>
+                <View key={x.reason} style={[s.chip, { backgroundColor: yes ? M.yesContainer : M.noContainer }]}>
+                  <Text style={[s.chipT, { color: yes ? M.onYesContainer : M.onNoContainer }]} numberOfLines={1}>
                     {t(`reason.${x.reason}` as Key)} · {x.n}
                   </Text>
                 </View>
@@ -60,20 +60,20 @@ export function ResultCard({ r, reasons, cardRef }: { r: FeedItem; reasons: Reas
 }
 
 const s = StyleSheet.create({
-  card: { width: CARD_W, height: CARD_H, backgroundColor: C.brand, borderRadius: 0, padding: 22, justifyContent: 'space-between' },
-  panel: { backgroundColor: '#fff', borderRadius: 20, padding: 20, gap: 2 },
-  asked: { fontSize: 12, fontWeight: '700', color: C.sub },
-  item: { fontSize: 22, fontWeight: '800', color: C.ink, lineHeight: 27, marginTop: 2 },
-  price: { fontSize: 16, fontWeight: '600', color: C.sub, marginTop: 2 },
-  rule: { height: 1, backgroundColor: C.line, marginVertical: 12 },
-  pct: { fontSize: 60, fontWeight: '900', lineHeight: 64, letterSpacing: -1 },
-  said: { fontSize: 18, fontWeight: '800' },
-  votes: { fontSize: 13, color: C.sub, marginTop: 2 },
-  reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, maxWidth: '100%' },
-  chipT: { fontSize: 12, fontWeight: '700' },
-  saved: { backgroundColor: C.yesSoft, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 10, marginTop: 12 },
-  savedT: { color: C.yes, fontWeight: '800', fontSize: 13.5 },
-  tag: { color: '#fff', fontSize: 15, fontWeight: '800' },
-  link: { color: '#FFE3D2', fontSize: 12, marginTop: 2 },
+  card: { width: CARD_W, height: CARD_H, backgroundColor: M.brand, borderRadius: 0, padding: 22, justifyContent: 'space-between' },
+  panel: { backgroundColor: M.surfaceContainerLowest, borderRadius: R.xl, padding: 22, gap: 2 },
+  asked: { fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.3, color: M.onSurfaceVariant },
+  item: { fontSize: 22, fontWeight: '700', color: M.onSurface, lineHeight: 28, marginTop: 2 },
+  price: { fontSize: 16, fontWeight: '600', color: M.onSurfaceVariant, marginTop: 2 },
+  rule: { height: 1, backgroundColor: M.outlineVariant, marginVertical: 14 },
+  pct: { fontSize: 64, fontWeight: '800', lineHeight: 68, letterSpacing: -1.5 },
+  said: { fontSize: 18, lineHeight: 24, fontWeight: '700' },
+  votes: { fontSize: 13, color: M.onSurfaceVariant, marginTop: 2 },
+  reasons: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 14 },
+  chip: { borderRadius: R.sm, paddingHorizontal: 10, paddingVertical: 6, maxWidth: '100%' },
+  chipT: { fontSize: 12.5, fontWeight: '700' },
+  saved: { backgroundColor: M.yesContainer, borderRadius: R.md, paddingVertical: 10, paddingHorizontal: 12, marginTop: 14 },
+  savedT: { color: M.onYesContainer, fontWeight: '700', fontSize: 14 },
+  tag: { color: '#FFFFFF', fontSize: 16, lineHeight: 22, fontWeight: '700' },
+  link: { color: '#FFE3D2', fontSize: 12.5, marginTop: 2 },
 });

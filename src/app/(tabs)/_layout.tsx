@@ -1,29 +1,33 @@
 import { Tabs } from 'expo-router';
 import type { ColorValue } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LanguageButton } from '../../components/LanguageButton';
 import { Logo } from '../../components/Logo';
 import { TabIcon, type TabIconName } from '../../components/TabIcon';
 import { useT } from '../../lib/i18n';
-import { C } from '../../lib/theme';
+import { M, T } from '../../lib/theme';
 
 const icon = (name: TabIconName) =>
   function Icon({ focused, color }: { focused: boolean; color: ColorValue }) {
     return <TabIcon name={name} focused={focused} color={color} />;
   };
 
+/** Material navigation bar: 3 destinations, the selected one in a pill. */
 export default function TabsLayout() {
   const { t } = useT();
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: C.brand,
-        tabBarInactiveTintColor: C.sub,
-        headerStyle: { backgroundColor: C.bg },
-        headerTintColor: C.ink,
+        tabBarActiveTintColor: M.onSurface,
+        tabBarInactiveTintColor: M.onSurfaceVariant,
+        headerStyle: { backgroundColor: M.surface },
+        headerTintColor: M.onSurface,
         headerShadowVisible: false,
-        headerTitleStyle: { fontWeight: '800' },
-        tabBarStyle: { backgroundColor: '#fff', borderTopColor: C.line },
-        sceneStyle: { backgroundColor: C.bg },
+        headerTitleStyle: T.titleLarge,
+        tabBarStyle: { backgroundColor: M.surfaceContainer, borderTopWidth: 0, height: 72 + insets.bottom, paddingTop: 8 },
+        tabBarLabelStyle: { ...T.labelMedium, marginTop: 4 },
+        sceneStyle: { backgroundColor: M.surface },
         headerRight: () => <LanguageButton />,
       }}
     >

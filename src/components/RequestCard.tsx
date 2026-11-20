@@ -1,12 +1,13 @@
-import { BadgeCheck, Ban, EyeOff, IconText, PartyPopper, ShoppingBag } from './Icon';
-import { useState, type ReactNode } from 'react';
+import { ArrowUpRight, BadgeCheck, Ban, Check, CirclePause, EyeOff, IconText, PartyPopper, ShoppingBag, ShoppingCart, type LucideIcon } from './Icon';
+import { Card, Chip } from './ui';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
 import { useT, type Key } from '../lib/i18n';
 import { REASONS, sideOf, type ReasonCount, type VoteReason } from '../lib/reasons';
 import { useUser } from '../lib/session';
-import { C } from '../lib/theme';
+import { M, R, T } from '../lib/theme';
 import type { FeedItem, Verdict } from '../lib/types';
 
 interface Props {
@@ -52,9 +53,9 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
     .join(' · ');
 
   return (
-    <CardBox onPress={onPress}>
-      {viewer.isAdmin && authorBanned ? <IconText icon={Ban} color={C.sub} box={s.flag} style={s.flagT}>{t('admin.bannedBadge')}</IconText> : null}
-      {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} color={C.sub} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
+    <Card onPress={onPress}>
+      {viewer.isAdmin && authorBanned ? <IconText icon={Ban} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.bannedBadge')}</IconText> : null}
+      {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
 
       <View style={s.top}>
         <Text style={s.item} numberOfLines={full ? undefined : 2}>
@@ -72,16 +73,17 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
       </Text>
       {full && r.alternative ? <Text style={s.alt}>{t('card.cheaper', { alt: r.alternative })}</Text> : null}
       {r.link ? (
-        <Pressable onPress={() => openLink(r.link!)} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
-          <Text style={s.link}>{domainOf(r.link)} ↗</Text>
+        <Pressable onPress={() => openLink(r.link!)} hitSlop={8} style={s.linkBox} accessibilityRole="link">
+          <Text style={s.link}>{domainOf(r.link)}</Text>
+          <ArrowUpRight size={15} color={M.primary} strokeWidth={2.25} />
         </Pressable>
       ) : null}
 
       {showResults && total > 0 ? (
         <View style={s.results}>
           <View style={s.bar}>
-            <View style={{ flex: r.approve_count, backgroundColor: C.yes }} />
-            <View style={{ flex: r.reject_count, backgroundColor: C.no }} />
+            {r.approve_count > 0 ? <View style={{ flex: r.approve_count, backgroundColor: M.yes, borderRadius: R.full }} /> : null}
+            {r.reject_count > 0 ? <View style={{ flex: r.reject_count, backgroundColor: M.no, borderRadius: R.full }} /> : null}
           </View>
           <View style={s.row}>
             <Text style={s.resultT}>{t('card.result', { p: yesPct })}</Text>
@@ -92,7 +94,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
           </View>
           {full && reasons?.length ? <ReasonTally reasons={reasons} votes={real.approve_count + real.reject_count} /> : null}
           {SHOW_VERIFIED_VOTES && vTotal > 0 && vTotal < total ? (
-            <IconText icon={BadgeCheck} size={13} color={C.sub} style={s.verifiedT} box={{ marginTop: 6 }}>
+            <IconText icon={BadgeCheck} size={13} color={M.onSurfaceVariant} style={s.verifiedT} box={{ marginTop: 6 }}>
               {t('card.verified', { p: Math.round((100 * (r.verified_approve ?? 0)) / vTotal), n: vTotal })}
             </IconText>
           ) : null}
@@ -106,8 +108,9 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
       {r.outcome ? (
         <IconText
           icon={r.outcome === 'skipped' ? PartyPopper : ShoppingBag}
-          color={r.outcome === 'skipped' ? C.yes : C.ink}
-          box={[s.badge, r.outcome === 'skipped' ? { backgroundColor: C.yesSoft } : null]}
+          color={r.outcome === 'skipped' ? M.onYesContainer : M.onSurfaceVariant}
+          size={16}
+          box={[s.badge, r.outcome === 'skipped' ? { backgroundColor: M.yesContainer } : null]}
           style={s.badgeT}
         >
           {r.outcome === 'skipped' ? t('card.skipped', { amt: inr(r.price_inr) }) : t('card.bought')}
@@ -118,18 +121,20 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
         <View style={s.btns}>
           <VoteBtn
             label={t('card.yes')}
+            icon={ShoppingCart}
+            side="left"
             active={r.my_vote === 'approve'}
             open={picking === 'approve'}
-            soft={C.yesSoft}
-            color={C.yes}
+            c={{ bg: M.yesContainer, fg: M.onYesContainer, solid: M.yes }}
             onPress={() => setPicking((p) => (p === 'approve' ? null : 'approve'))}
           />
           <VoteBtn
             label={t('card.no')}
+            icon={CirclePause}
+            side="right"
             active={r.my_vote === 'reject'}
             open={picking === 'reject'}
-            soft={C.noSoft}
-            color={C.no}
+            c={{ bg: M.noContainer, fg: M.onNoContainer, solid: M.no }}
             onPress={() => setPicking((p) => (p === 'reject' ? null : 'reject'))}
           />
         </View>
@@ -139,20 +144,18 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
           <Text style={s.whyT}>{t('reason.prompt')}</Text>
           <View style={s.chips}>
             {REASONS[picking].map((code) => {
-              const color = picking === 'approve' ? C.yes : C.no;
+              const side = picking === 'approve' ? { fg: M.onYesContainer, border: M.yes, pressedBg: M.yes, pressedFg: M.onYes } : { fg: M.onNoContainer, border: M.no, pressedBg: M.no, pressedFg: M.onNo };
               return (
-                <Pressable
+                <Chip
                   key={code}
+                  label={t(`reason.${code}` as Key)}
+                  colors={side}
                   onPress={() => {
                     setPicking(null);
                     onVote!(r.id, picking, code);
                   }}
-                  style={({ pressed }) => [s.chip, { borderColor: color }, pressed && { backgroundColor: color }]}
-                  accessibilityRole="button"
                   testID={`reason-${code}`}
-                >
-                  {({ pressed }) => <Text style={[s.chipT, { color: pressed ? '#fff' : color }]}>{t(`reason.${code}` as Key)}</Text>}
-                </Pressable>
+                />
               );
             })}
           </View>
@@ -160,37 +163,44 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
       ) : null}
 
       {footer ? <Text style={[s.meta, { marginTop: 10 }]}>{footer}</Text> : null}
-    </CardBox>
+    </Card>
   );
 }
 
-/** Tappable in lists; a plain box on the arzi page. A disabled wrapper would mark the vote buttons
- * inside it as disabled for screen readers. */
-function CardBox({ onPress, children }: { onPress?: () => void; children: ReactNode }) {
-  if (!onPress) return <View style={s.card}>{children}</View>;
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => [s.card, pressed && { opacity: 0.9 }]}>
-      {children}
-    </Pressable>
-  );
-}
-
-function VoteBtn(p: { label: string; active: boolean; open: boolean; soft: string; color: string; onPress: () => void }) {
-  // Filled: your vote. Tinted: reasons open for this side, vote not cast yet.
-  const filled = p.active && !p.open;
+/**
+ * Buy it / Skip it: a connected pair (Material 3 Expressive button group). The tapped side rounds
+ * out fully; your vote turns solid with a check mark.
+ */
+function VoteBtn(p: {
+  label: string;
+  icon: LucideIcon;
+  side: 'left' | 'right';
+  active: boolean;
+  open: boolean;
+  c: { bg: string; fg: string; solid: string };
+  onPress: () => void;
+}) {
+  // Solid: your vote. Outlined in the side's colour: reasons open for this side, vote not cast yet.
+  const solid = p.active && !p.open;
+  const fg = solid ? '#FFFFFF' : p.c.fg;
+  const round = p.active || p.open;
+  const inner = round ? R.full : R.sm;
+  const I = solid ? Check : p.icon;
   return (
     <Pressable
       onPress={p.onPress}
       style={({ pressed }) => [
         s.btn,
-        filled && { backgroundColor: p.color, borderColor: p.color },
-        p.open && { backgroundColor: p.soft, borderColor: p.color },
-        pressed && { opacity: 0.8 },
+        { backgroundColor: solid ? p.c.solid : p.c.bg },
+        p.side === 'left' ? { borderTopRightRadius: inner, borderBottomRightRadius: inner } : { borderTopLeftRadius: inner, borderBottomLeftRadius: inner },
+        p.open && { borderWidth: 2, borderColor: p.c.solid },
+        pressed && { opacity: 0.85 },
       ]}
       accessibilityRole="button"
       accessibilityState={{ selected: p.active, expanded: p.open }}
     >
-      <Text style={[s.btnT, { color: filled ? '#fff' : p.color }]}>{p.label}</Text>
+      <I size={18} color={fg} strokeWidth={2.4} />
+      <Text style={[s.btnT, { color: fg }]}>{p.label}</Text>
     </Pressable>
   );
 }
@@ -209,14 +219,14 @@ function ReasonTally({ reasons, votes }: { reasons: ReasonCount[]; votes: number
         {given < votes ? <Text style={s.tallyCover}>{t('reason.coverage', { n: given, total: votes })}</Text> : null}
       </View>
       {rows.map((x) => {
-        const color = sideOf(x.reason) === 'approve' ? C.yes : C.no;
+        const color = sideOf(x.reason) === 'approve' ? M.yes : M.no;
         return (
           <View key={x.reason} style={s.tallyRow}>
             <Text style={s.tallyT} numberOfLines={1}>
               {t(`reason.${x.reason}` as Key)}
             </Text>
             <View style={s.tallyTrack}>
-              <View style={{ width: `${Math.round((100 * x.n) / max)}%`, height: '100%', backgroundColor: color, borderRadius: 3 }} />
+              <View style={{ width: `${Math.round((100 * x.n) / max)}%`, height: '100%', backgroundColor: color, borderRadius: R.full }} />
             </View>
             <Text style={s.tallyN}>{x.n}</Text>
           </View>
@@ -227,36 +237,35 @@ function ReasonTally({ reasons, votes }: { reasons: ReasonCount[]; votes: number
 }
 
 const s = StyleSheet.create({
-  card: { backgroundColor: C.card, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: C.line },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  item: { flex: 1, fontSize: 17, lineHeight: 22, fontWeight: '700', color: C.ink },
-  price: { fontSize: 17, lineHeight: 22, fontWeight: '700', color: C.ink },
-  meta: { fontSize: 12.5, color: C.sub, marginTop: 3 },
-  reason: { marginTop: 10, fontSize: 15, lineHeight: 21, color: C.ink },
-  alt: { marginTop: 8, fontSize: 14, lineHeight: 20, color: C.sub },
-  link: { marginTop: 8, fontSize: 13.5, fontWeight: '600', color: C.brand },
+  item: { ...T.titleMedium, flex: 1, color: M.onSurface },
+  price: { ...T.titleMedium, fontWeight: '700', color: M.onSurface },
+  meta: { ...T.bodySmall, color: M.onSurfaceVariant, marginTop: 2 },
+  reason: { ...T.body, marginTop: 10, color: M.onSurface },
+  alt: { ...T.bodySmall, fontSize: 14, lineHeight: 20, marginTop: 8, color: M.onSurfaceVariant },
+  linkBox: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start', marginTop: 8 },
+  link: { ...T.labelLarge, color: M.primary },
   results: { marginTop: 14 },
-  bar: { flexDirection: 'row', height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
-  verifiedT: { fontSize: 12.5, fontWeight: '600' },
-  resultT: { fontSize: 13.5, fontWeight: '700', color: C.ink },
-  flag: { backgroundColor: C.line, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, marginBottom: 8 },
-  flagT: { fontSize: 12, fontWeight: '700' },
-  badge: { marginTop: 10, alignSelf: 'flex-start', backgroundColor: C.brandSoft, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999 },
-  badgeT: { fontSize: 13, fontWeight: '600' },
-  btns: { flexDirection: 'row', gap: 10, marginTop: 12 },
-  btn: { flex: 1, borderWidth: 1, borderColor: C.line, borderRadius: 10, paddingVertical: 10, alignItems: 'center', backgroundColor: C.card },
-  btnT: { fontSize: 15, fontWeight: '700' },
-  why: { marginTop: 12 },
-  whyT: { fontSize: 13, fontWeight: '600', color: C.sub, marginBottom: 8 },
+  // Material 3 Expressive progress: two rounded segments with a gap between them.
+  bar: { flexDirection: 'row', gap: 4, height: 8, marginBottom: 8 },
+  verifiedT: { ...T.labelMedium },
+  resultT: { ...T.labelLarge, color: M.onSurface },
+  flag: { backgroundColor: M.surfaceContainerHigh, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: R.sm, marginBottom: 8 },
+  flagT: { ...T.labelMedium, color: M.onSurfaceVariant },
+  badge: { marginTop: 12, alignSelf: 'flex-start', backgroundColor: M.surfaceContainerHigh, paddingHorizontal: 12, minHeight: 32, borderRadius: R.sm },
+  badgeT: { ...T.labelLarge },
+  btns: { flexDirection: 'row', gap: 3, marginTop: 14 },
+  btn: { flex: 1, flexDirection: 'row', gap: 8, minHeight: 48, borderRadius: R.full, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  btnT: { fontSize: 15, lineHeight: 20, fontWeight: '700' },
+  why: { marginTop: 14 },
+  whyT: { ...T.titleSmall, color: M.onSurfaceVariant, marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: C.card },
-  chipT: { fontSize: 14, fontWeight: '600' },
-  tally: { marginTop: 14, gap: 8 },
-  tallyH: { fontSize: 13, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  tallyCover: { fontSize: 12.5, color: C.sub },
+  tally: { marginTop: 16, gap: 10 },
+  tallyH: { ...T.titleSmall, color: M.onSurface, marginBottom: 2 },
+  tallyCover: { ...T.bodySmall, color: M.onSurfaceVariant },
   tallyRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  tallyT: { width: 150, fontSize: 13.5, color: C.ink },
-  tallyTrack: { flex: 1, height: 6, borderRadius: 3, backgroundColor: C.line, overflow: 'hidden' },
-  tallyN: { minWidth: 24, textAlign: 'right', fontSize: 13, fontWeight: '700', color: C.sub },
+  tallyT: { ...T.bodySmall, fontSize: 14, width: 150, color: M.onSurface },
+  tallyTrack: { flex: 1, height: 8, borderRadius: R.full, backgroundColor: M.surfaceContainerHigh, overflow: 'hidden' },
+  tallyN: { ...T.labelLarge, minWidth: 24, textAlign: 'right', color: M.onSurfaceVariant },
 });

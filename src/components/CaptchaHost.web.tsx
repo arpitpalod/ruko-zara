@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { CAPTCHA_ORIGIN, CAPTCHA_URL, captchaBroken, captchaInteractive, captchaOn, captchaSolved, isFatalCaptchaError, parseCaptchaMsg, subscribeCaptcha, subscribeWanted } from '../lib/captcha';
 import { useT } from '../lib/i18n';
-import { C } from '../lib/theme';
+import { E, M, R, T } from '../lib/theme';
 
 /**
  * Web: runs the bot check in a small card at the bottom of the screen while signing in; the app
@@ -51,7 +51,7 @@ export function CaptchaHost() {
   return (
     <View style={visible ? s.overlay : s.dock} pointerEvents={visible ? 'auto' : 'box-none'}>
       <View style={s.card}>
-        <IconText icon={ShieldCheck} size={16} color={C.ink} style={s.h}>{t('captcha.checking')}</IconText>
+        <IconText icon={ShieldCheck} size={16} color={M.onSurface} style={s.h}>{t('captcha.checking')}</IconText>
         <iframe
           key={round}
           src={CAPTCHA_URL}
@@ -66,7 +66,7 @@ export function CaptchaHost() {
 
 const s = StyleSheet.create({
   dock: { position: 'absolute', left: 0, right: 0, bottom: 72, alignItems: 'center', zIndex: 1000 },
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  card: { backgroundColor: C.card, borderRadius: 16, padding: 12, gap: 8, alignItems: 'center', borderWidth: 1, borderColor: C.line, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12 },
-  h: { fontSize: 15, fontWeight: '800', color: C.ink },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.32)', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
+  card: { backgroundColor: M.surfaceContainerHigh, borderRadius: R.xl, padding: 16, gap: 8, alignItems: 'center', ...E[3] },
+  h: { ...T.titleSmall, fontSize: 15, color: M.onSurface },
 });

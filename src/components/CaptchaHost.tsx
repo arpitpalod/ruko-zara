@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { CAPTCHA_URL, captchaBroken, captchaInteractive, captchaOn, captchaSolved, isFatalCaptchaError, parseCaptchaMsg, subscribeCaptcha, subscribeWanted } from '../lib/captcha';
 import { useT } from '../lib/i18n';
-import { C } from '../lib/theme';
+import { E, M, R, T } from '../lib/theme';
 
 /** Android/iOS: runs the bot check in a hidden WebView; shows it only if Cloudflare asks for a tap. */
 export function CaptchaHost() {
@@ -31,7 +31,7 @@ export function CaptchaHost() {
   return (
     <View style={visible ? s.overlay : s.hidden} pointerEvents={visible ? 'auto' : 'none'}>
       <View style={visible ? s.card : undefined}>
-        {visible ? <IconText icon={ShieldCheck} size={16} color={C.ink} style={s.h}>{t('captcha.checking')}</IconText> : null}
+        {visible ? <IconText icon={ShieldCheck} size={16} color={M.onSurface} style={s.h}>{t('captcha.checking')}</IconText> : null}
         <WebView
           key={round}
           source={{ uri: CAPTCHA_URL }}
@@ -60,8 +60,8 @@ export function CaptchaHost() {
 const s = StyleSheet.create({
   // Kept rendered (not display:none) so the widget can run, but off to the side and see-through.
   hidden: { position: 'absolute', left: -1000, top: 0, width: 320, height: 90, opacity: 0 },
-  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.35)', alignItems: 'center', justifyContent: 'center' },
-  card: { backgroundColor: C.card, borderRadius: 16, padding: 16, gap: 10, alignItems: 'center' },
-  h: { fontSize: 15, fontWeight: '800', color: C.ink },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.32)', alignItems: 'center', justifyContent: 'center' },
+  card: { backgroundColor: M.surfaceContainerHigh, borderRadius: R.xl, padding: 20, gap: 10, alignItems: 'center' },
+  h: { ...T.titleSmall, fontSize: 15, color: M.onSurface },
   web: { width: 310, height: 80, backgroundColor: 'transparent' },
 });

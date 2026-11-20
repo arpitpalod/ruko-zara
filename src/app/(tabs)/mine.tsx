@@ -1,4 +1,5 @@
-import { BadgeCheck, CirclePlus, EyeOff, IconText, PartyPopper, ShoppingBag } from '../../components/Icon';
+import { BadgeCheck, CirclePlus, EyeOff, IconText, MessageCircle, PartyPopper, ShoppingBag } from '../../components/Icon';
+import { Button, Segmented } from '../../components/ui';
 import { adminHiddenArzi } from '../../lib/adminHidden';
 import { refreshMine } from '../../lib/savings';
 import { router, useFocusEffect } from 'expo-router';
@@ -13,7 +14,7 @@ import { LANGS, useT } from '../../lib/i18n';
 import { LEGAL, WEB_BASE, openLink } from '../../lib/legal';
 import { shareOnWhatsApp } from '../../lib/share';
 import { useSession } from '../../lib/session';
-import { C } from '../../lib/theme';
+import { M, R, T } from '../../lib/theme';
 import type { FeedItem, Outcome } from '../../lib/types';
 
 /** Meri Arzi — your requests, outcomes and money saved. */
@@ -83,41 +84,34 @@ export default function Mine() {
           {user.handle ? <Text style={s.heroSub}>{t('mine.stats', { handle: user.handle, n: items.length, k: skipped })}</Text> : null}
           {saved === 0 ? <Text style={s.heroSub}>{t('save.how')}</Text> : null}
           <View style={s.heroBtns}>
-            <Pressable style={s.post} onPress={() => router.push('/new')} accessibilityRole="button" testID="mine-post">
-              <IconText icon={CirclePlus} size={16} color="#fff" style={s.bragT}>{t('save.post')}</IconText>
-            </Pressable>
+            <Button label={t('save.post')} icon={CirclePlus} onPress={() => router.push('/new')} testID="mine-post" />
             {saved > 0 ? (
-              <Pressable style={s.brag} onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}>
-                <Text style={s.bragT}>{t('mine.shareSavings')}</Text>
-              </Pressable>
+              <Button
+                label={t('mine.shareSavings')}
+                icon={MessageCircle}
+                colors={{ bg: M.whatsapp, fg: '#FFFFFF' }}
+                onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}
+              />
             ) : null}
           </View>
-          {err ? <Text style={{ color: C.no, marginTop: 6 }}>{err}</Text> : null}
+          {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }
       ListFooterComponent={
         <View style={s.account}>
           {user.isAdmin ? (
             <Pressable onPress={() => router.push('/hidden')} accessibilityRole="button">
-              <IconText icon={EyeOff} color={C.sub} style={s.accT}>{t('admin.hiddenLink', { n: hiddenCount ?? '…' })}</IconText>
+              <IconText icon={EyeOff} color={M.onSurfaceVariant} style={s.accT}>{t('admin.hiddenLink', { n: hiddenCount ?? '…' })}</IconText>
             </Pressable>
           ) : null}
           {user.email ? (
-            <IconText icon={BadgeCheck} color={C.yes} style={s.accT}>{t('mine.verified', { email: user.email })}</IconText>
+            <IconText icon={BadgeCheck} color={M.yes} style={s.accT}>{t('mine.verified', { email: user.email })}</IconText>
           ) : (
-            <Pressable style={s.loginBtn} onPress={() => router.push('/login')}>
-              <Text style={s.loginT}>{t('mine.verify')}</Text>
-            </Pressable>
+            <Button label={t('mine.verify')} size="lg" block onPress={() => router.push('/login')} />
           )}
           <View style={{ gap: 8 }}>
             <Text style={s.accT}>{t('mine.language')} · भाषा</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              {LANGS.map((l) => (
-                <Pressable key={l.id} onPress={() => setLang(l.id)} style={[s.langChip, lang === l.id && s.langOn]}>
-                  <Text style={[s.langT, lang === l.id && { color: '#fff' }]}>{l.label}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <Segmented options={LANGS.map((l) => ({ value: l.id, label: l.label }))} value={lang} onChange={setLang} />
           </View>
           <InstallHint />
           <View style={{ flexDirection: 'row', gap: 16, flexWrap: 'wrap' }}>
@@ -134,7 +128,7 @@ export default function Mine() {
               <Text style={s.accT}>{t('mine.deleteConfirm')}</Text>
               <View style={{ flexDirection: 'row', gap: 16 }}>
                 <Pressable onPress={deleteAccount}>
-                  <Text style={[s.del, { fontWeight: '800' }]}>{t('mine.deleteYes')}</Text>
+                  <Text style={[s.del, { fontWeight: '700' }]}>{t('mine.deleteYes')}</Text>
                 </Pressable>
                 <Pressable onPress={() => setConfirmDelete(false)}>
                   <Text style={s.accT}>{t('mine.deleteNo')}</Text>
@@ -152,12 +146,8 @@ export default function Mine() {
             <View style={s.decide}>
               <Text style={s.decideQ}>{t('mine.decideQ')}</Text>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <Pressable style={[s.dBtn, { backgroundColor: C.yesSoft }]} onPress={() => decide(item.id, 'skipped')}>
-                  <IconText icon={PartyPopper} size={14} color={C.yes} style={s.dBtnT}>{t('mine.skip')}</IconText>
-                </Pressable>
-                <Pressable style={[s.dBtn, { backgroundColor: C.brandSoft }]} onPress={() => decide(item.id, 'bought')}>
-                  <IconText icon={ShoppingBag} size={14} color={C.brand} style={s.dBtnT}>{t('mine.bought')}</IconText>
-                </Pressable>
+                <Button label={t('mine.skip')} icon={PartyPopper} size="sm" colors={{ bg: M.yesContainer, fg: M.onYesContainer }} onPress={() => decide(item.id, 'skipped')} />
+                <Button label={t('mine.bought')} icon={ShoppingBag} size="sm" colors={{ bg: M.surfaceContainerLowest, fg: M.onSurface, border: M.outlineVariant }} onPress={() => decide(item.id, 'bought')} />
               </View>
             </View>
           ) : null}
@@ -169,26 +159,17 @@ export default function Mine() {
 
 const s = StyleSheet.create({
   list: { padding: 16, gap: 14 },
-  hero: { backgroundColor: C.ink, borderRadius: 20, padding: 20, marginBottom: 4 },
-  heroLabel: { color: '#D6D3D1', fontSize: 13, fontWeight: '600' },
-  heroAmt: { color: '#fff', fontSize: 36, fontWeight: '900', marginTop: 2 },
-  heroSub: { color: '#A8A29E', fontSize: 13, marginTop: 4 },
-  heroBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  post: { backgroundColor: C.brand, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  brag: { alignSelf: 'flex-start', backgroundColor: '#25D366', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  bragT: { color: '#fff', fontWeight: '800', fontSize: 14 },
-  empty: { textAlign: 'center', color: C.sub, marginTop: 30 },
+  hero: { backgroundColor: M.primaryContainer, borderRadius: R.xl, padding: 24, marginBottom: 4 },
+  heroLabel: { ...T.labelLarge, color: M.onPrimaryContainer, opacity: 0.85 },
+  heroAmt: { ...T.display, fontSize: 40, lineHeight: 48, color: M.onPrimaryContainer, marginTop: 2 },
+  heroSub: { ...T.bodySmall, color: M.onPrimaryContainer, opacity: 0.8, marginTop: 4 },
+  heroBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
+  err: { ...T.body, color: M.no, marginTop: 6 },
+  empty: { ...T.body, textAlign: 'center', color: M.onSurfaceVariant, marginTop: 30 },
   decide: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, flexWrap: 'wrap', gap: 8 },
-  decideQ: { fontSize: 13, color: C.sub, fontWeight: '600' },
-  dBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  dBtnT: { fontSize: 13, fontWeight: '700' },
-  account: { marginTop: 12, gap: 14, paddingHorizontal: 4, paddingBottom: 24 },
-  accT: { fontSize: 13, color: C.sub },
-  langChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' },
-  langOn: { backgroundColor: C.brand, borderColor: C.brand },
-  langT: { fontSize: 13, fontWeight: '700', color: C.ink },
-  legalLink: { fontSize: 13, color: C.brand, fontWeight: '600' },
-  loginBtn: { backgroundColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  loginT: { color: '#fff', fontWeight: '800' },
-  del: { fontSize: 13, color: C.no },
+  decideQ: { ...T.titleSmall, fontSize: 13, color: M.onSurfaceVariant },
+  account: { marginTop: 16, gap: 16, paddingHorizontal: 4, paddingBottom: 24 },
+  accT: { ...T.bodySmall, color: M.onSurfaceVariant },
+  legalLink: { ...T.labelLarge, fontSize: 13, color: M.primary },
+  del: { ...T.labelLarge, fontSize: 13, fontWeight: '500', color: M.no },
 });

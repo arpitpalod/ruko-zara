@@ -2,7 +2,7 @@ import { Globe, IconText } from './Icon';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LANGS, useT } from '../lib/i18n';
-import { C } from '../lib/theme';
+import { E, M, R, T } from '../lib/theme';
 
 /** Header button: shows the current language and lets the user switch from any screen. */
 export function LanguageButton() {
@@ -19,7 +19,7 @@ export function LanguageButton() {
         accessibilityRole="button"
         accessibilityLabel="Change language / भाषा बदलें"
       >
-        <IconText icon={Globe} size={14} color={C.ink} style={s.pillT}>{current.short}</IconText>
+        <IconText icon={Globe} size={16} color={M.onSurfaceVariant} style={s.pillT}>{current.short}</IconText>
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -33,9 +33,12 @@ export function LanguageButton() {
                   setLang(l.id);
                   setOpen(false);
                 }}
-                style={[s.option, l.id === lang && s.optionOn]}
+                style={({ pressed }) => [s.option, pressed && { backgroundColor: M.surfaceContainerHighest }]}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: l.id === lang }}
               >
-                <Text style={[s.optionT, l.id === lang && { color: '#fff' }]}>{l.label}</Text>
+                <View style={[s.radio, l.id === lang && s.radioOn]}>{l.id === lang ? <View style={s.dot} /> : null}</View>
+                <Text style={s.optionT}>{l.label}</Text>
               </Pressable>
             ))}
           </View>
@@ -46,12 +49,16 @@ export function LanguageButton() {
 }
 
 const s = StyleSheet.create({
-  pill: { marginRight: 12, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' },
-  pillT: { fontSize: 13, fontWeight: '700', color: C.ink },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'center', padding: 32 },
-  sheet: { backgroundColor: C.bg, borderRadius: 18, padding: 18, gap: 10 },
-  title: { fontSize: 16, fontWeight: '800', color: C.ink, textAlign: 'center', marginBottom: 4 },
-  option: { borderWidth: 1.5, borderColor: C.brand, borderRadius: 12, paddingVertical: 13, alignItems: 'center', backgroundColor: '#fff' },
-  optionOn: { backgroundColor: C.brand },
-  optionT: { fontSize: 17, fontWeight: '800', color: C.brand },
+  // Material assist chip
+  pill: { marginRight: 12, paddingHorizontal: 10, minHeight: 32, justifyContent: 'center', borderRadius: R.sm, borderWidth: 1, borderColor: M.outlineVariant },
+  pillT: { ...T.labelLarge, color: M.onSurfaceVariant },
+  // Material dialog with a radio list
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.32)', justifyContent: 'center', padding: 32 },
+  sheet: { backgroundColor: M.surfaceContainerHigh, borderRadius: R.xl, paddingVertical: 20, paddingHorizontal: 12, gap: 2, ...E[3] },
+  title: { ...T.headline, color: M.onSurface, paddingHorizontal: 12, marginBottom: 10 },
+  option: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 52, paddingHorizontal: 12, borderRadius: R.full },
+  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: M.onSurfaceVariant, alignItems: 'center', justifyContent: 'center' },
+  radioOn: { borderColor: M.primary },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: M.primary },
+  optionT: { ...T.bodyLarge, color: M.onSurface },
 });

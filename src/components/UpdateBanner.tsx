@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useT } from '../lib/i18n';
 import { ANDROID_APK, openLink } from '../lib/legal';
-import { C } from '../lib/theme';
+import { M, R, T } from '../lib/theme';
 import { updateAvailable } from '../lib/version';
 
 /** Android: "New version ready — tap to update" when a newer APK has been published. */
@@ -27,6 +27,6 @@ export function UpdateBanner() {
 }
 
 const s = StyleSheet.create({
-  box: { backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 },
-  t: { color: '#fff', fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  box: { backgroundColor: M.primary, borderRadius: R.lg, paddingHorizontal: 16, paddingVertical: 12 },
+  t: { ...T.labelLarge, color: M.onPrimary },
 });

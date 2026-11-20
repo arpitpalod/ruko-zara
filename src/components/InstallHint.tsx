@@ -1,7 +1,7 @@
 import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 import { useT } from '../lib/i18n';
 import { ANDROID_APK, openLink } from '../lib/legal';
-import { C } from '../lib/theme';
+import { M, T } from '../lib/theme';
 
 /** Web only: Android visitors get the app download link; iPhone visitors get the Add-to-Home-Screen tip. */
 export function InstallHint() {
@@ -22,6 +22,6 @@ export function InstallHint() {
 
 const s = StyleSheet.create({
   box: { paddingVertical: 2 },
-  tip: { fontSize: 13, color: C.sub },
-  link: { fontSize: 13.5, fontWeight: '700', color: C.brand },
+  tip: { ...T.bodySmall, color: M.onSurfaceVariant },
+  link: { ...T.labelLarge, color: M.primary },
 });

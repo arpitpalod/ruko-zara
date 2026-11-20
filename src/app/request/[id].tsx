@@ -1,7 +1,8 @@
-import { Ban, CircleCheck, Eye, EyeOff, IconText, Share2 } from '../../components/Icon';
+import { Ban, CircleCheck, Eye, EyeOff, IconText, MessageCircle, Send, Share2 } from '../../components/Icon';
+import { Button, Card, Field } from '../../components/ui';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { ShareResult } from '../../components/ShareResult';
 import { canShareResult } from '../../lib/verdict';
@@ -11,7 +12,7 @@ import { ago, applyVote, inr, timeLeft } from '../../lib/format';
 import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
-import { C } from '../../lib/theme';
+import { M, R, T } from '../../lib/theme';
 import type { ReasonCount, VoteReason } from '../../lib/reasons';
 import type { Comment, FeedItem, Verdict } from '../../lib/types';
 
@@ -155,13 +156,15 @@ export default function RequestDetail() {
         <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} reasons={reasons} />
         {own(r.user_id) && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
         {own(r.user_id) && canShareResult(r) ? (
-          <Pressable style={s.result} onPress={() => setSharing(true)} accessibilityRole="button" testID="share-result">
-            <IconText icon={Share2} color="#fff" size={17} style={s.resultT}>{t('rc.button')}</IconText>
-          </Pressable>
+          <Button label={t('rc.button')} icon={Share2} size="lg" block variant="tonal" colors={{ bg: M.primaryContainer, fg: M.onPrimaryContainer }} onPress={() => setSharing(true)} testID="share-result" />
         ) : null}
         {sharing ? <ShareResult r={r} reasons={reasons} onClose={() => setSharing(false)} /> : null}
-        <Pressable
-          style={s.wa}
+        <Button
+          label={t('share.button')}
+          icon={MessageCircle}
+          size="lg"
+          block
+          colors={{ bg: M.whatsapp, fg: '#FFFFFF' }}
           onPress={() =>
             shareOnWhatsApp(
               t(own(r.user_id) ? 'share.mine' : 'share.other', {
@@ -172,12 +175,8 @@ export default function RequestDetail() {
               }),
             )
           }
-        >
-          <Text style={s.waT}>{t('share.button')}</Text>
-        </Pressable>
-        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={s.more}>
-          <Text style={s.moreT}>{t('detail.more')}</Text>
-        </Pressable>
+        />
+        <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         {!own(r.user_id) ? (
           <View style={s.actions}>
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>
@@ -191,29 +190,35 @@ export default function RequestDetail() {
           </View>
         ) : null}
         {user.isAdmin ? (
-          <Pressable onPress={() => moderate('request', r.id, !r.hidden)} style={s.adminBtn}>
-            <IconText icon={r.hidden ? Eye : EyeOff} color={C.sub} style={s.adminT}>
-              {r.hidden ? t('admin.unhide') : t('admin.hide')}
-            </IconText>
-          </Pressable>
+          <Button
+            label={r.hidden ? t('admin.unhide') : t('admin.hide')}
+            icon={r.hidden ? Eye : EyeOff}
+            block
+            colors={GREY}
+            onPress={() => moderate('request', r.id, !r.hidden)}
+          />
         ) : null}
         {user.isAdmin && !own(r.user_id) ? (
-          <Pressable onPress={() => toggleBan(r.user_id)} style={s.adminBtn}>
-            <IconText icon={banned.has(r.user_id) ? CircleCheck : Ban} color={C.sub} style={s.adminT}>
-              {banned.has(r.user_id)
+          <Button
+            label={
+              banned.has(r.user_id)
                 ? t('admin.unban', { handle: r.handle })
                 : confirmBan === r.user_id
                   ? t('admin.banConfirm', { handle: r.handle })
-                  : t('admin.ban', { handle: r.handle })}
-            </IconText>
-          </Pressable>
+                  : t('admin.ban', { handle: r.handle })
+            }
+            icon={banned.has(r.user_id) ? CircleCheck : Ban}
+            block
+            colors={GREY}
+            onPress={() => toggleBan(r.user_id)}
+          />
         ) : null}
-        {msg ? <Text style={{ color: C.no }}>{msg}</Text> : null}
+        {msg ? <Text style={s.err}>{msg}</Text> : null}
 
         <Text style={s.h}>{t('detail.comments', { n: comments.length })}</Text>
         {comments.length === 0 ? <Text style={s.muted}>{t('detail.noComments')}</Text> : null}
         {comments.map((c) => (
-          <View key={c.id} style={s.comment}>
+          <Card key={c.id} variant="outlined" style={s.comment}>
             <View style={s.cRow}>
               <Text style={s.cHandle}>
                 {c.handle}
@@ -221,13 +226,13 @@ export default function RequestDetail() {
               </Text>
               <Text style={s.muted}>{ago(c.created_at, t)}</Text>
             </View>
-            {user.isAdmin && banned.has(c.user_id) ? <IconText icon={Ban} size={12} color={C.sub} style={s.cHidden}>{t('admin.bannedBadge')}</IconText> : null}
-            {user.isAdmin && c.hidden ? <IconText icon={EyeOff} size={12} color={C.sub} style={s.cHidden}>{t('admin.hiddenBadge')}</IconText> : null}
+            {user.isAdmin && banned.has(c.user_id) ? <IconText icon={Ban} size={12} color={M.onSurfaceVariant} style={s.cHidden}>{t('admin.bannedBadge')}</IconText> : null}
+            {user.isAdmin && c.hidden ? <IconText icon={EyeOff} size={12} color={M.onSurfaceVariant} style={s.cHidden}>{t('admin.hiddenBadge')}</IconText> : null}
             <Text style={s.cBody}>{c.body}</Text>
             {user.isAdmin ? (
               <View style={[s.actions, { justifyContent: 'flex-start' }]}>
                 <Pressable onPress={() => moderate('comment', c.id, !c.hidden)}>
-                  <IconText icon={c.hidden ? Eye : EyeOff} size={13} color={C.sub} style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</IconText>
+                  <IconText icon={c.hidden ? Eye : EyeOff} size={13} color={M.onSurfaceVariant} style={s.cAdmin}>{c.hidden ? t('admin.unhide') : t('admin.hide')}</IconText>
                 </Pressable>
                 {!own(c.user_id) ? (
                   <Pressable onPress={() => toggleBan(c.user_id)}>
@@ -254,46 +259,39 @@ export default function RequestDetail() {
                 ) : null}
               </View>
             ) : null}
-          </View>
+          </Card>
         ))}
       </ScrollView>
 
       <View style={s.composer}>
-        <TextInput style={s.input} value={body} onChangeText={setBody} placeholder={t('detail.placeholder')} placeholderTextColor={C.sub} maxLength={300} onSubmitEditing={send} returnKeyType="send" />
-        <Pressable onPress={send} style={[s.send, !body.trim() && { opacity: 0.4 }]} disabled={!body.trim()}>
-          <Text style={s.sendT}>{t('detail.send')}</Text>
-        </Pressable>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <Field style={s.input} value={body} onChangeText={setBody} placeholder={t('detail.placeholder')} maxLength={300} onSubmitEditing={send} returnKeyType="send" />
+        </View>
+        <Button label={t('detail.send')} icon={Send} onPress={send} disabled={!body.trim()} style={{ alignSelf: 'center' }} />
       </View>
     </KeyboardAvoidingView>
   );
 }
 
+// Admin tools in calm grey: they show on every arzi, and red all day wears you down (Arpit, 19 Nov).
+const GREY = { bg: 'transparent', fg: M.onSurfaceVariant, border: M.outlineVariant };
+
 const s = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 24 },
-  empty: { textAlign: 'center', color: C.sub, marginTop: 40 },
-  more: { borderWidth: 1.5, borderColor: C.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center', backgroundColor: C.card },
-  moreT: { color: C.brand, fontWeight: '800', fontSize: 15 },
-  // Admin tools in calm grey: they show on every arzi, and red all day wears you down (Arpit, 19 Nov).
-  adminBtn: { borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingVertical: 10, alignItems: 'center', backgroundColor: C.card },
-  adminT: { color: C.sub, fontWeight: '700', fontSize: 14 },
-  cHidden: { fontSize: 11, fontWeight: '700', color: C.sub },
-  cAdmin: { fontSize: 12, fontWeight: '700', color: C.sub, alignSelf: 'flex-start' },
-  nudge: { fontSize: 13, color: C.ink, textAlign: 'center' },
-  wa: { backgroundColor: '#25D366', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  result: { backgroundColor: C.ink, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  resultT: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  waT: { color: '#fff', fontWeight: '800', fontSize: 15 },
-  report: { fontSize: 13, color: C.sub },
+  empty: { ...T.body, textAlign: 'center', color: M.onSurfaceVariant, marginTop: 40 },
+  err: { ...T.body, color: M.no },
+  cHidden: { ...T.labelMedium, color: M.onSurfaceVariant },
+  cAdmin: { ...T.labelMedium, color: M.onSurfaceVariant, alignSelf: 'flex-start' },
+  nudge: { ...T.bodySmall, color: M.onSurfaceVariant, textAlign: 'center' },
+  report: { ...T.labelLarge, fontWeight: '500', color: M.onSurfaceVariant, paddingVertical: 4 },
   actions: { flexDirection: 'row', justifyContent: 'space-between', gap: 16 },
-  h: { fontSize: 17, fontWeight: '800', color: C.ink, marginTop: 8 },
-  muted: { fontSize: 12, color: C.sub },
-  comment: { backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: C.line, gap: 4 },
+  h: { ...T.titleLarge, color: M.onSurface, marginTop: 12 },
+  muted: { ...T.bodySmall, fontSize: 12, color: M.onSurfaceVariant },
+  comment: { padding: 14, gap: 4, borderRadius: R.md },
   cRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  cHandle: { fontSize: 13, fontWeight: '700', color: C.ink },
-  cBody: { fontSize: 15, lineHeight: 21, color: C.ink },
-  cReport: { fontSize: 11, color: C.sub },
-  composer: { flexDirection: 'row', gap: 8, padding: 12, borderTopWidth: 1, borderTopColor: C.line, backgroundColor: '#fff' },
-  input: { flex: 1, backgroundColor: C.bg, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: C.ink },
-  send: { backgroundColor: C.brand, borderRadius: 12, paddingHorizontal: 16, justifyContent: 'center' },
-  sendT: { color: '#fff', fontWeight: '800' },
+  cHandle: { ...T.titleSmall, fontSize: 13, color: M.onSurface },
+  cBody: { ...T.body, color: M.onSurface },
+  cReport: { ...T.labelMedium, fontWeight: '500', color: M.onSurfaceVariant },
+  composer: { flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: M.surfaceContainer },
+  input: { width: '100%', minHeight: 48, paddingVertical: 11, borderRadius: R.full, paddingHorizontal: 18, backgroundColor: M.surfaceContainerLowest, borderColor: M.outlineVariant },
 });

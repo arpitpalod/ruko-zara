@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useT } from '../lib/i18n';
 import type { ReasonCount } from '../lib/reasons';
 import { requestUrl } from '../lib/share';
 import { shareView } from '../lib/shareImage';
-import { C } from '../lib/theme';
+import { M, R, T } from '../lib/theme';
 import type { FeedItem } from '../lib/types';
-import { IconText, Share2 } from './Icon';
+import { Share2 } from './Icon';
+import { Button } from './ui';
 import { ResultCard } from './ResultCard';
 
 /** A preview of the result card, with Share (share sheet, or a download where sharing files isn't possible). */
@@ -39,12 +40,8 @@ export function ShareResult({ r, reasons, onClose }: { r: FeedItem; reasons: Rea
             <ResultCard cardRef={ref} r={r} reasons={reasons} />
           </View>
           {note ? <Text style={s.note}>{note}</Text> : null}
-          <Pressable onPress={share} disabled={busy} style={({ pressed }) => [s.share, (pressed || busy) && { opacity: 0.8 }]} accessibilityRole="button" testID="share-result-go">
-            <IconText icon={Share2} color="#fff" size={17} style={s.shareT}>{busy ? '…' : t('rc.share')}</IconText>
-          </Pressable>
-          <Pressable onPress={onClose} style={s.close} accessibilityRole="button">
-            <Text style={s.closeT}>{t('rc.close')}</Text>
-          </Pressable>
+          <Button label={busy ? '…' : t('rc.share')} icon={Share2} size="lg" onPress={share} disabled={busy} style={s.share} testID="share-result-go" />
+          <Button label={t('rc.close')} variant="text" colors={{ bg: 'transparent', fg: '#FFFFFF' }} onPress={onClose} style={{ alignSelf: 'center' }} />
         </ScrollView>
       </View>
     </Modal>
@@ -52,13 +49,10 @@ export function ShareResult({ r, reasons, onClose }: { r: FeedItem; reasons: Rea
 }
 
 const s = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(28,25,23,0.72)' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(24,17,14,0.82)' },
   sheet: { alignItems: 'center', paddingVertical: 28, paddingHorizontal: 16, gap: 12, flexGrow: 1, justifyContent: 'center' },
-  title: { color: '#fff', fontSize: 17, fontWeight: '800' },
-  frame: { borderRadius: 18, overflow: 'hidden' },
-  note: { color: '#fff', fontSize: 13.5, textAlign: 'center', maxWidth: 315 },
-  share: { backgroundColor: C.brand, borderRadius: 12, paddingVertical: 12, width: 315, alignItems: 'center' },
-  shareT: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  close: { paddingVertical: 8, paddingHorizontal: 16 },
-  closeT: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  title: { ...T.titleLarge, color: '#FFFFFF' },
+  frame: { borderRadius: R.xl, overflow: 'hidden' },
+  note: { ...T.body, color: '#FFFFFF', textAlign: 'center', maxWidth: 315 },
+  share: { width: 315, alignSelf: 'center' },
 });

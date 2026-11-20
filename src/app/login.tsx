@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, Field } from '../components/ui';
 import { friendly } from '../lib/errors';
 import { api, isDemo } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { LEGAL, openLink } from '../lib/legal';
 import { useSession } from '../lib/session';
-import { C } from '../lib/theme';
+import { M, R, T } from '../lib/theme';
 import type { CodeMode } from '../lib/types';
 
 /** Email login with a one-time code. An anonymous user keeps their requests and votes. */
@@ -58,12 +59,10 @@ export default function Login() {
 
         {!mode ? (
           <>
-            <TextInput
-              style={s.input}
+            <Field
               value={email}
               onChangeText={setEmail}
               placeholder={t('login.emailPh')}
-              placeholderTextColor={C.sub}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -91,12 +90,11 @@ export default function Login() {
             {mode === 'login' ? (
               <Text style={s.note}>{t('login.existing')}</Text>
             ) : null}
-            <TextInput
-              style={[s.input, s.code]}
+            <Field
+              style={s.code}
               value={code}
               onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 10))}
               placeholder={t('login.codePh')}
-              placeholderTextColor={C.sub}
               keyboardType="number-pad"
               autoComplete="one-time-code"
               textContentType="oneTimeCode"
@@ -104,41 +102,30 @@ export default function Login() {
             />
             <Btn label={busy ? t('login.checking') : t('login.verify')} onPress={verify} disabled={code.length < 6 || busy} />
             <View style={s.row}>
-              <Pressable onPress={() => setMode(null)}>
-                <Text style={s.link}>{t('login.changeEmail')}</Text>
-              </Pressable>
-              <Pressable onPress={send} disabled={busy}>
-                <Text style={s.link}>{t('login.resend')}</Text>
-              </Pressable>
+              <Button label={t('login.changeEmail')} variant="text" onPress={() => setMode(null)} />
+              <Button label={t('login.resend')} variant="text" onPress={send} disabled={busy} />
             </View>
           </>
         )}
 
-        {err ? <Text style={{ color: C.no }}>{err}</Text> : null}
+        {err ? <Text style={s.err}>{err}</Text> : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 function Btn({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
-  return (
-    <Pressable onPress={onPress} disabled={disabled} style={[s.btn, disabled && { opacity: 0.4 }]}>
-      <Text style={s.btnT}>{label}</Text>
-    </Pressable>
-  );
+  return <Button label={label} onPress={onPress} disabled={disabled} size="lg" block style={{ minHeight: 56 }} />;
 }
 
 const s = StyleSheet.create({
   wrap: { padding: 20, gap: 16 },
-  h: { fontSize: 22, fontWeight: '800', color: C.ink },
-  p: { fontSize: 15, lineHeight: 21, color: C.sub },
-  note: { fontSize: 13, lineHeight: 19, color: C.ink, backgroundColor: C.brandSoft, padding: 10, borderRadius: 10, overflow: 'hidden' },
-  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, fontSize: 17, color: C.ink },
-  code: { fontSize: 24, letterSpacing: 6, textAlign: 'center', fontWeight: '700' },
-  btn: { backgroundColor: C.brand, borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
-  btnT: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  h: { ...T.headline, color: M.onSurface },
+  p: { ...T.body, color: M.onSurfaceVariant },
+  note: { ...T.bodySmall, fontSize: 14, lineHeight: 20, color: M.onPrimaryContainer, backgroundColor: M.primaryContainer, padding: 12, borderRadius: R.md, overflow: 'hidden' },
+  code: { fontSize: 24, lineHeight: 30, letterSpacing: 6, textAlign: 'center', fontWeight: '700' },
   row: { flexDirection: 'row', justifyContent: 'space-between' },
-  link: { color: C.brand, fontWeight: '700', fontSize: 14 },
-  legal: { fontSize: 12, lineHeight: 18, color: C.sub, textAlign: 'center' },
-  legalLink: { color: C.brand, fontWeight: '700', textDecorationLine: 'underline' },
+  err: { ...T.body, color: M.no },
+  legal: { ...T.bodySmall, fontSize: 12, color: M.onSurfaceVariant, textAlign: 'center' },
+  legalLink: { color: M.primary, fontWeight: '700', textDecorationLine: 'underline' },
 });

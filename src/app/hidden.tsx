@@ -6,7 +6,7 @@ import { adminHiddenArzi } from '../lib/adminHidden';
 import { friendly } from '../lib/errors';
 import { useT } from '../lib/i18n';
 import { useUser } from '../lib/session';
-import { C } from '../lib/theme';
+import { M, T } from '../lib/theme';
 import type { FeedItem } from '../lib/types';
 
 /** Admins only: hidden arzi and banned people's arzi, out of the feed but one tap away to review or undo. */
@@ -54,7 +54,7 @@ export default function Hidden() {
       }
       ListEmptyComponent={loading ? undefined : <Text style={s.note}>{t('admin.hiddenEmpty')}</Text>}
       renderItem={({ item }) => (
-        <View style={{ marginBottom: 12 }}>
+        <View style={{ marginBottom: 14 }}>
           <RequestCard r={item} meId={user.id} onPress={() => router.push(`/request/${item.id}`)} authorBanned={banned.has(item.user_id)} />
         </View>
       )}
@@ -64,5 +64,5 @@ export default function Hidden() {
 
 const s = StyleSheet.create({
   list: { padding: 16 },
-  note: { fontSize: 13.5, color: C.sub, lineHeight: 19 },
+  note: { ...T.bodySmall, fontSize: 14, lineHeight: 20, color: M.onSurfaceVariant },
 });

@@ -5,7 +5,7 @@ import { LanguageButton } from '../components/LanguageButton';
 import { LogoFontReady, useLoadLogoFont } from '../components/Logo';
 import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
-import { C } from '../lib/theme';
+import { M, T } from '../lib/theme';
 
 // Opening a shared link (/request/<id>) puts the feed underneath, so there's always a back button to it.
 export const unstable_settings = {
@@ -32,10 +32,11 @@ function Nav() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: C.bg },
-        headerTintColor: C.ink,
+        headerStyle: { backgroundColor: M.surface },
+        headerTintColor: M.onSurface,
+        headerTitleStyle: T.titleLarge,
         headerShadowVisible: false,
-        contentStyle: { backgroundColor: C.bg },
+        contentStyle: { backgroundColor: M.surface },
         headerRight: () => <LanguageButton />,
       }}
     >

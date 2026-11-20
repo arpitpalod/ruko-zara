@@ -1,14 +1,15 @@
 import { IconText, Link2 } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, Chip, Field as Input } from '../../components/ui';
 import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
 import { catLabel, domainOf, extractLink, inr } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
-import { C } from '../../lib/theme';
+import { M, T } from '../../lib/theme';
 import { CATEGORIES, DURATIONS } from '../../lib/types';
 
 /** Nayi Arzi — the purchase request form. Writing the "why" is half the cure. */
@@ -80,67 +81,63 @@ export default function NewRequest() {
         <Text style={s.lead}>{t('new.lead')}</Text>
 
         <Field label={t('new.item')}>
-          <TextInput style={s.input} value={item} onChangeText={setItem} placeholder={t('new.itemPh')} placeholderTextColor={C.sub} maxLength={80} />
+          <Input value={item} onChangeText={setItem} placeholder={t('new.itemPh')} maxLength={80} />
         </Field>
 
         <Field label={t('new.price')}>
-          <TextInput style={s.input} value={price} onChangeText={(t) => setPrice(t.replace(/\D/g, '').slice(0, 8))} placeholder="e.g. 8999" placeholderTextColor={C.sub} keyboardType="number-pad" />
+          <Input value={price} onChangeText={(t) => setPrice(t.replace(/\D/g, '').slice(0, 8))} placeholder="e.g. 8999" keyboardType="number-pad" />
           {priceNum > 0 ? <Text style={s.hint}>{inr(priceNum)}</Text> : null}
         </Field>
 
         <Field label={t('new.category')}>
           <View style={s.chips}>
             {CATEGORIES.map((c) => (
-              <Pressable key={c} onPress={() => setCategory(c)} style={[s.chip, category === c && s.chipOn]}>
-                <Text style={[s.chipT, category === c && { color: '#fff' }]}>{catLabel(c, t)}</Text>
-              </Pressable>
+              <Chip key={c} label={catLabel(c, t)} selected={category === c} onPress={() => setCategory(c)} />
             ))}
           </View>
         </Field>
 
         <Field label={t('new.reason')}>
-          <TextInput style={[s.input, s.multi]} value={reason} onChangeText={setReason} placeholder={t('new.reasonPh')} placeholderTextColor={C.sub} multiline maxLength={500} />
+          <Input style={s.multi} value={reason} onChangeText={setReason} placeholder={t('new.reasonPh')} multiline maxLength={500} />
           <Text style={s.hint}>{reason.trim().length < 10 ? t('new.reasonMin', { n: reason.trim().length }) : `${reason.length}/500`}</Text>
         </Field>
 
         <Field label={t('new.alt')}>
-          <TextInput style={s.input} value={alternative} onChangeText={setAlternative} placeholder={t('new.altPh')} placeholderTextColor={C.sub} maxLength={200} />
+          <Input value={alternative} onChangeText={setAlternative} placeholder={t('new.altPh')} maxLength={200} />
         </Field>
 
         <Field label={t('new.duration')}>
           <View style={s.chips}>
             {DURATIONS.map((h) => (
-              <Pressable key={h} onPress={() => setHours(h)} style={[s.chip, hours === h && s.chipOn]}>
-                <Text style={[s.chipT, hours === h && { color: '#fff' }]}>
-                  {h < 24 ? t('dur.hours', { n: h }) : h === 24 ? t('dur.day1') : t('dur.days', { n: h / 24 })}
-                </Text>
-              </Pressable>
+              <Chip
+                key={h}
+                label={h < 24 ? t('dur.hours', { n: h }) : h === 24 ? t('dur.day1') : t('dur.days', { n: h / 24 })}
+                selected={hours === h}
+                onPress={() => setHours(h)}
+              />
             ))}
           </View>
           <Text style={s.hint}>{t('new.durationNote')}</Text>
         </Field>
 
         <Field label={t('new.link')}>
-          <TextInput
-            style={s.input}
+          <Input
             value={linkText}
             onChangeText={setLinkText}
             placeholder={t('new.linkPh')}
-            placeholderTextColor={C.sub}
+           
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
             maxLength={600}
           />
-          {link ? <IconText icon={Link2} size={13} color={C.sub} style={s.hint}>{domainOf(link)}</IconText> : null}
-          {linkBad ? <Text style={[s.hint, { color: C.no }]}>{t('new.linkBad')}</Text> : null}
+          {link ? <IconText icon={Link2} size={13} color={M.onSurfaceVariant} style={s.hint}>{domainOf(link)}</IconText> : null}
+          {linkBad ? <Text style={[s.hint, { color: M.no }]}>{t('new.linkBad')}</Text> : null}
         </Field>
 
-        {err ? <Text style={{ color: C.no }}>{err}</Text> : null}
+        {err ? <Text style={s.err}>{err}</Text> : null}
 
-        <Pressable onPress={submit} disabled={!valid || busy} style={[s.submit, (!valid || busy) && { opacity: 0.4 }]}>
-          <Text style={s.submitT}>{busy ? t('common.sending') : t('new.submit')}</Text>
-        </Pressable>
+        <Button label={busy ? t('common.sending') : t('new.submit')} size="lg" block onPress={submit} disabled={!valid || busy} style={{ marginTop: 4, minHeight: 56 }} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -148,7 +145,7 @@ export default function NewRequest() {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <View style={{ gap: 6 }}>
+    <View style={{ gap: 8 }}>
       <Text style={s.label}>{label}</Text>
       {children}
     </View>
@@ -156,16 +153,11 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 const s = StyleSheet.create({
-  wrap: { padding: 16, gap: 18, paddingBottom: 40 },
-  lead: { fontSize: 14, color: C.sub, lineHeight: 20 },
-  label: { fontSize: 14, fontWeight: '700', color: C.ink },
-  input: { backgroundColor: '#fff', borderWidth: 1, borderColor: C.line, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: C.ink },
-  multi: { minHeight: 100, textAlignVertical: 'top' },
-  hint: { fontSize: 12, color: C.sub },
+  wrap: { padding: 16, gap: 22, paddingBottom: 40 },
+  lead: { ...T.bodySmall, fontSize: 14, lineHeight: 20, color: M.onSurfaceVariant },
+  label: { ...T.titleSmall, color: M.onSurface },
+  multi: { minHeight: 112, textAlignVertical: 'top' },
+  hint: { ...T.bodySmall, fontSize: 12, color: M.onSurfaceVariant, paddingHorizontal: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1, borderColor: C.line, backgroundColor: '#fff' },
-  chipOn: { backgroundColor: C.brand, borderColor: C.brand },
-  chipT: { fontSize: 13, fontWeight: '600', color: C.ink },
-  submit: { backgroundColor: C.brand, borderRadius: 14, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  submitT: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  err: { ...T.body, color: M.no },
 });

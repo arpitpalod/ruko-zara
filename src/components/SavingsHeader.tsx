@@ -3,11 +3,12 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { inr } from '../lib/format';
 import { useT } from '../lib/i18n';
 import { useSavings } from '../lib/savings';
-import { C } from '../lib/theme';
-import { CirclePlus, IconText } from './Icon';
+import { M, T } from '../lib/theme';
+import { CirclePlus } from './Icon';
+import { Button } from './ui';
 
-const TALL = 92;
-const SHORT = 40;
+const TALL = 100;
+const SHORT = 52;
 
 /**
  * The one constant thing on top (Feed and New request): how much you've saved by asking first.
@@ -36,15 +37,13 @@ export function SavingsHeader({ scrollY, postButton }: { scrollY: Animated.Value
         </Animated.View>
         {postButton ? (
           <View style={s.postWrap} pointerEvents="box-none">
-            <Pressable
+            <Button
+              label={t('save.postTop')}
+              icon={CirclePlus}
               onPress={() => router.push('/new')}
               hitSlop={8}
-              style={({ pressed }) => [s.post, pressed && { opacity: 0.85 }]}
-              accessibilityRole="button"
               testID="post-button"
-            >
-              <IconText icon={CirclePlus} size={15} color="#fff" style={s.postT}>{t('save.postTop')}</IconText>
-            </Pressable>
+            />
           </View>
         ) : null}
       </Animated.View>
@@ -56,16 +55,15 @@ export function SavingsHeader({ scrollY, postButton }: { scrollY: Animated.Value
 export const trackScroll = (scrollY: Animated.Value) =>
   Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false });
 
+// Material's "primary container": the warm orange tint marks the one number that matters.
 const s = StyleSheet.create({
-  bar: { backgroundColor: C.ink, overflow: 'hidden' },
-  layer: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, paddingHorizontal: 16 },
+  bar: { backgroundColor: M.primaryContainer, overflow: 'hidden', borderBottomLeftRadius: 20, borderBottomRightRadius: 20 },
+  layer: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, paddingHorizontal: 20 },
   tall: { justifyContent: 'center' },
   short: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  label: { color: '#D6D3D1', fontSize: 12.5, fontWeight: '600' },
-  amt: { color: '#fff', fontSize: 30, lineHeight: 36, fontWeight: '900' },
-  amtSmall: { color: '#fff', fontSize: 16, fontWeight: '900' },
-  tag: { color: '#A8A29E', fontSize: 12.5 },
-  postWrap: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center' },
-  post: { backgroundColor: C.brand, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  postT: { color: '#fff', fontWeight: '800', fontSize: 13.5 },
+  label: { ...T.labelLarge, color: M.onPrimaryContainer, opacity: 0.85 },
+  amt: { ...T.display, color: M.onPrimaryContainer },
+  amtSmall: { ...T.titleMedium, fontWeight: '800', color: M.onPrimaryContainer },
+  tag: { ...T.bodySmall, color: M.onPrimaryContainer, opacity: 0.8 },
+  postWrap: { position: 'absolute', right: 16, top: 0, bottom: 0, justifyContent: 'center' },
 });

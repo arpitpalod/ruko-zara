@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { C } from './theme';
+import { M, R, T } from './theme';
 import { Logo } from '../components/Logo';
 
 /**
@@ -662,20 +662,29 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
 function LanguagePicker({ onPick }: { onPick: (l: Lang) => void }) {
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', padding: 28, gap: 14 }}>
-      <View style={{ alignItems: 'center' }}>
+    <View style={{ flex: 1, backgroundColor: M.surface, justifyContent: 'center', padding: 28, gap: 12 }}>
+      <View style={{ alignItems: 'center', marginBottom: 8 }}>
         <Logo size={30} />
       </View>
-      <Text style={{ fontSize: 16, color: C.sub, textAlign: 'center', marginBottom: 12 }}>
+      <Text style={{ ...T.bodyLarge, color: M.onSurfaceVariant, textAlign: 'center', marginBottom: 16 }}>
         Choose your language · अपनी भाषा चुनें
       </Text>
       {LANGS.map((l) => (
         <Pressable
           key={l.id}
           onPress={() => onPick(l.id)}
-          style={{ backgroundColor: '#fff', borderWidth: 1.5, borderColor: C.brand, borderRadius: 14, paddingVertical: 16, alignItems: 'center' }}
+          style={({ pressed }) => ({
+            backgroundColor: pressed ? M.primaryContainer : M.surfaceContainerLowest,
+            borderWidth: 1,
+            borderColor: M.outline,
+            borderRadius: R.full,
+            minHeight: 56,
+            justifyContent: 'center',
+            alignItems: 'center',
+          })}
+          accessibilityRole="button"
         >
-          <Text style={{ fontSize: 19, fontWeight: '800', color: C.brand }}>{l.label}</Text>
+          <Text style={{ fontSize: 18, lineHeight: 24, fontWeight: '700', color: M.primary }}>{l.label}</Text>
         </Pressable>
       ))}
     </View>
