@@ -1,8 +1,11 @@
 import { Linking, Platform } from 'react-native';
 import { WEB_BASE } from './legal';
 
-/** Public web link to one request — opens in any browser, no install needed. */
-export const requestUrl = (id: string) => `${WEB_BASE}/request/${id}`;
+/**
+ * Public web link to one request — opens in any browser, no install needed. `src` tags where the
+ * link was shared (e.g. "wa"), so we can count which sharing brings people back.
+ */
+export const requestUrl = (id: string, src?: string) => `${WEB_BASE}/request/${id}${src ? `?src=${src}` : ''}`;
 
 const waWeb = (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}`;
 

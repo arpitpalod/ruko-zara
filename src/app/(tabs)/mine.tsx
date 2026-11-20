@@ -90,7 +90,7 @@ export default function Mine() {
                 label={t('mine.shareSavings')}
                 icon={MessageCircle}
                 colors={{ bg: M.whatsapp, fg: '#FFFFFF' }}
-                onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: WEB_BASE }))}
+                onPress={() => shareOnWhatsApp(t('share.savings', { amt: inr(saved), link: `${WEB_BASE}/?src=wa` }))}
               />
             ) : null}
           </View>

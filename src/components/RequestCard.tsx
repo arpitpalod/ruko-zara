@@ -56,6 +56,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
     <Card onPress={onPress}>
       {viewer.isAdmin && authorBanned ? <IconText icon={Ban} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.bannedBadge')}</IconText> : null}
       {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
+      {viewer.isAdmin && real.feature_ok ? <IconText icon={Check} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.featureOk')}</IconText> : null}
 
       <View style={s.top}>
         <Text style={s.item} numberOfLines={full ? undefined : 2}>

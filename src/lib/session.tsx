@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api } from './api';
+import { rememberSource, sendSourceOnce } from './source';
 import type { User } from './types';
 
 const Ctx = createContext<{ user: User; setUser: (u: User) => void } | null>(null);
@@ -33,8 +34,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(SIGNING_IN);
 
   useEffect(() => {
-    const off = api.onSignedIn(setUser);
-    api.init().then(setUser, () => {}); // if it fails, the first vote or post tries again
+    const remembered = rememberSource(); // ?src=… on the link they opened
+    const signedIn = (u: User) => {
+      setUser(u);
+      remembered.then(() => sendSourceOnce((src) => api.setSource(src)));
+    };
+    const off = api.onSignedIn(signedIn);
+    api.init().then(signedIn, () => {}); // if it fails, the first vote or post tries again
     return off;
   }, []);
 

@@ -216,6 +216,41 @@ export function Segmented<V extends string>({
   );
 }
 
+/** Material checkbox with its label; the whole row is the tap target. */
+export function CheckRow({
+  label,
+  checked,
+  onChange,
+  testID,
+  style,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  testID?: string;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Pressable
+      onPress={() => onChange(!checked)}
+      role="checkbox"
+      aria-checked={checked}
+      testID={testID}
+      style={[s.check, style]}
+    >
+      {({ pressed }) => (
+        <>
+          <View style={s.boxHit}>
+            <StateLayer color={M.primary} on={pressed} />
+            <View style={[s.box, checked && s.boxOn]}>{checked ? <Check size={14} color={M.onPrimary} strokeWidth={3} /> : null}</View>
+          </View>
+          <Text style={s.checkT}>{label}</Text>
+        </>
+      )}
+    </Pressable>
+  );
+}
+
 /** Material outlined text field: the border thickens and turns orange while typing. */
 export function Field({ style, onFocus, onBlur, ...props }: TextInputProps) {
   const [focus, setFocus] = useState(false);
@@ -267,6 +302,11 @@ const s = StyleSheet.create({
   seg: { flexDirection: 'row', borderWidth: 1, borderColor: M.outline, borderRadius: R.full, overflow: 'hidden', minHeight: 40 },
   segBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 12, overflow: 'hidden' },
   segDivider: { borderLeftWidth: 1, borderLeftColor: M.outline },
+  check: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
+  boxHit: { width: 40, height: 40, borderRadius: R.full, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  box: { width: 20, height: 20, borderRadius: 3, borderWidth: 2, borderColor: M.onSurfaceVariant, alignItems: 'center', justifyContent: 'center' },
+  boxOn: { backgroundColor: M.primary, borderColor: M.primary },
+  checkT: { ...T.body, flex: 1, color: M.onSurface },
   field: {
     ...T.bodyLarge,
     color: M.onSurface,

@@ -91,6 +91,8 @@ const en = {
   'new.alt': 'Considered a cheaper option? (optional)',
   'new.altPh': 'e.g. Second-hand, repair the old one',
   'new.submit': 'Send request',
+  'feature.ask': "OK to feature this on Ruko Zara's social pages (your name stays hidden)",
+  'admin.featureOk': 'OK to feature',
   'common.sending': 'Sending…',
 
   'mine.saved': 'Saved so far',
@@ -292,6 +294,8 @@ const hi: Dict = {
   'new.alt': 'कोई सस्ता विकल्प सोचा? (वैकल्पिक)',
   'new.altPh': 'जैसे: सेकंड-हैंड, पुराना ठीक करवाना',
   'new.submit': 'अर्ज़ी भेजें',
+  'feature.ask': 'Ruko Zara के सोशल पेज पर दिखा सकते हैं (आपका नाम छिपा रहेगा)',
+  'admin.featureOk': 'दिखा सकते हैं',
   'common.sending': 'भेज रहे हैं…',
 
   'mine.saved': 'अब तक बचाए',
@@ -490,6 +494,8 @@ const hinglish: Dict = {
   'new.alt': 'Koi sasta option socha? (optional)',
   'new.altPh': 'e.g. Second-hand, purana repair karwana',
   'new.submit': 'Arzi bhejo',
+  'feature.ask': 'Ruko Zara ke social pages pe dikha sakte ho (tumhara naam chhupa rahega)',
+  'admin.featureOk': 'Dikha sakte hain',
   'common.sending': 'Bhej rahe hain…',
 
   'mine.saved': 'Ab tak bachaye',

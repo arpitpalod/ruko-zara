@@ -220,6 +220,17 @@ export function createSupabaseApi(url: string, key: string): Api {
       must(await sb.from('requests').update({ outcome: o }).eq('id', id));
     },
 
+    async setFeatureOk(id, ok) {
+      await ensure();
+      must(await sb.from('requests').update({ feature_ok: ok }).eq('id', id));
+    },
+
+    async setSource(src) {
+      if (!(await hasSession())) return;
+      const r = await sb.rpc('set_source', { src });
+      if (r.error) throw new Error(r.error.message); // kept on the phone and tried again next launch
+    },
+
     async report(type, id, reason) {
       await ensure();
       const r = await sb.from('reports').insert({ target_type: type, target_id: id, user_id: uid, reason });

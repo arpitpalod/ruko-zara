@@ -188,6 +188,12 @@ export const mockApi: Api = {
     if (r) r.outcome = o;
     await delay(null);
   },
+  async setFeatureOk(id, ok) {
+    const r = rows.find((x) => x.id === id && x.user_id === ME.id);
+    if (r) r.feature_ok = ok;
+    await delay(null);
+  },
+  setSource: () => delay(undefined),
   report: () => delay(undefined),
   adminSetHidden(type, id, hide) {
     if (!ME.isAdmin) throw new Error('NOT_ADMIN');

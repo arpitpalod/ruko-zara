@@ -79,6 +79,7 @@ def test_whatsapp_share_sends_full_message(page):
     assert len(shared) == 1 and "url" not in shared[0], shared
     text = shared[0]["text"]
     assert "*" in text and "₹" in text and "/ruko-zara/request/" in text, text
+    assert "?src=wa" in text, text  # so we can count who comes back through WhatsApp
 
 
 def test_static_pages_exist(page, server):
@@ -363,3 +364,33 @@ def test_no_share_result_on_others_arzi(page):
     page.goto(BASE + "/request/r1")
     page.get_by_text("Share on WhatsApp").wait_for()
     assert page.get_by_test_id("share-result").count() == 0
+
+
+def test_ok_to_feature_is_off_unless_ticked(page):
+    """Posting asks for the OK to feature the arzi on our social pages: off by default, changeable later."""
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    box = page.get_by_test_id("feature-ok")
+    assert box.get_attribute("aria-checked") == "false"
+    box.click()
+    assert box.get_attribute("aria-checked") == "true"
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("Feature test headphones")
+    page.get_by_placeholder("e.g. 8999").fill("3499")
+    page.get_by_placeholder("Need or want? What happened to the old one?").fill("Mine broke last week, need for calls")
+    page.get_by_text("Send request", exact=True).click()
+    page.get_by_placeholder("you@email.com").fill("tester@example.com")
+    page.get_by_text("Send code", exact=True).click()
+    page.get_by_placeholder("Code").fill("123456")
+    page.get_by_text("Verify", exact=True).click()
+    page.get_by_text("Feature test headphones").first.wait_for()
+    own = page.get_by_test_id("feature-own")
+    assert own.get_attribute("aria-checked") == "true"
+    own.click()  # the poster can take the OK back
+    assert own.get_attribute("aria-checked") == "false"
+
+
+def test_ok_to_feature_only_on_your_own_arzi(page):
+    open_app(page, "English")
+    page.goto(BASE + "/request/r1")
+    page.get_by_text("Share on WhatsApp", exact=True).wait_for()
+    assert page.get_by_test_id("feature-own").count() == 0

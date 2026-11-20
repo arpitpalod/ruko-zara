@@ -45,6 +45,8 @@ export interface FeedItem {
   /** Votes from accounts with a verified email (guests are cheap to fake; these aren't). */
   verified_approve?: number;
   verified_reject?: number;
+  /** The poster's OK to feature this arzi on Ruko Zara's social pages (name hidden). */
+  feature_ok?: boolean;
 }
 
 export interface Comment {
@@ -66,6 +68,8 @@ export interface NewRequest {
   link: string | null;
   /** How long voting stays open: 1 hour to 7 days (168 h). Fixed once posted. */
   duration_hours: number;
+  /** OK to feature it on Ruko Zara's social pages (name hidden). Off unless ticked. */
+  feature_ok: boolean;
 }
 
 /** Choices shown on the posting form. */
@@ -91,6 +95,10 @@ export interface Api {
   guestVotesLeft(): Promise<number | null>;
   comment(id: string, body: string): Promise<void>;
   setOutcome(id: string, o: Outcome): Promise<void>;
+  /** The poster gives or takes back their OK to feature the arzi on our social pages. */
+  setFeatureOk(id: string, ok: boolean): Promise<void>;
+  /** Records where this person first came from (a short code such as "ig"); kept only the first time. */
+  setSource(src: string): Promise<void>;
   report(type: 'request' | 'comment', id: string, reason?: string): Promise<void>;
   block(userId: string): Promise<void>;
   sendEmailCode(email: string): Promise<CodeMode>;

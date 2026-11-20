@@ -1,5 +1,5 @@
 import { Ban, CircleCheck, Eye, EyeOff, IconText, MessageCircle, Send, Share2 } from '../../components/Icon';
-import { Button, Card, Field } from '../../components/ui';
+import { Button, Card, CheckRow, Field } from '../../components/ui';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -147,6 +147,16 @@ export default function RequestDetail() {
     }
   };
 
+  // The poster gives or takes back their OK to feature this arzi on our social pages.
+  const toggleFeature = (ok: boolean) => {
+    if (!r) return;
+    setR({ ...r, feature_ok: ok });
+    api.setFeatureOk(r.id, ok).catch((e) => {
+      setR((x) => (x ? { ...x, feature_ok: !ok } : x));
+      setMsg(friendly(e, t));
+    });
+  };
+
   if (!loaded) return null;
   if (!r) return <Text style={s.empty}>{t('detail.notFound')}</Text>;
 
@@ -171,12 +181,15 @@ export default function RequestDetail() {
                 item: r.item,
                 price: inr(r.price_inr),
                 reason: r.reason.length > 110 ? r.reason.slice(0, 107).trimEnd() + '…' : r.reason,
-                link: requestUrl(r.id),
+                link: requestUrl(r.id, 'wa'),
               }),
             )
           }
         />
         <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+        {own(r.user_id) && !r.preview ? (
+          <CheckRow label={t('feature.ask')} checked={!!r.feature_ok} onChange={toggleFeature} testID="feature-own" />
+        ) : null}
         {!own(r.user_id) ? (
           <View style={s.actions}>
             <Pressable onPress={() => report('request', r.id)} disabled={reported.has(r.id)}>

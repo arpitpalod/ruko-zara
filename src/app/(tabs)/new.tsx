@@ -2,7 +2,7 @@ import { IconText, Link2 } from '../../components/Icon';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button, Chip, Field as Input } from '../../components/ui';
+import { Button, CheckRow, Chip, Field as Input } from '../../components/ui';
 import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { friendly } from '../../lib/errors';
 import { api } from '../../lib/api';
@@ -24,6 +24,7 @@ export default function NewRequest() {
   const [alternative, setAlternative] = useState('');
   const [linkText, setLinkText] = useState('');
   const [hours, setHours] = useState<number>(24);
+  const [featureOk, setFeatureOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -64,8 +65,9 @@ export default function NewRequest() {
         alternative: alternative.trim() || null,
         link,
         duration_hours: hours,
+        feature_ok: featureOk,
       });
-      setItem(''); setPrice(''); setReason(''); setAlternative(''); setLinkText(''); setHours(24);
+      setItem(''); setPrice(''); setReason(''); setAlternative(''); setLinkText(''); setHours(24); setFeatureOk(false);
       router.push(`/request/${id}`);
     } catch (e: any) {
       setErr(friendly(e, t));
@@ -135,6 +137,7 @@ export default function NewRequest() {
           {linkBad ? <Text style={[s.hint, { color: M.no }]}>{t('new.linkBad')}</Text> : null}
         </Field>
 
+        <CheckRow label={t('feature.ask')} checked={featureOk} onChange={setFeatureOk} testID="feature-ok" />
         {err ? <Text style={s.err}>{err}</Text> : null}
 
         <Button label={busy ? t('common.sending') : t('new.submit')} size="lg" block onPress={submit} disabled={!valid || busy} style={{ marginTop: 4, minHeight: 56 }} />
