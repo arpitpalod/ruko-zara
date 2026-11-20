@@ -38,6 +38,12 @@ const rows: Row[] = [
   { id: 'r7', user_id: 'me', item: 'Sneakers (limited drop)', price_inr: 16995, category: 'Fashion',
     reason: 'Pichle 2 saal se ek hi joota pehen raha hoon. Par yeh wala thoda zyada mehenga hai.',
     alternative: 'Regular running shoes ₹4,000', closes_at: at(-30), outcome: 'skipped', created_at: at(-54), link: null },
+  { id: 'r11', user_id: 'u3', item: 'Cult.fit Pro pass (10 months left)', price_inr: 10000, category: 'Health',
+    reason: 'Dost ki job doosre sheher mein lag gayi. ₹15,000 wala pass ₹10,000 mein de raha hai, centre ghar ke paas hai.',
+    alternative: 'Pehle 1 mahine ka pass', closes_at: at(30), outcome: null, created_at: at(-2), link: null },
+  { id: 'r12', user_id: 'u5', item: 'Coffee machine (espresso + frother)', price_inr: 10000, category: 'Khana',
+    reason: 'Café pe roz ₹220 ka cup jaata hai. Machine 3 mahine mein paisa wasool kar degi.',
+    alternative: 'French press ₹1,000', closes_at: at(40), outcome: null, created_at: at(-1), link: null },
   // Closed and not marked yet: the feed asks "Did you buy it?" about this one.
   { id: 'r10', user_id: 'me', item: 'Bluetooth party speaker', price_inr: 3499, category: 'Gadgets',
     reason: 'Ghar pe dosto ke saath music ke liye. Purana speaker kharab ho gaya.',

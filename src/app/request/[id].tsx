@@ -1,9 +1,10 @@
 import { Ban, CircleCheck, Eye, EyeOff, IconText, MessageCircle, Send, Share2 } from '../../components/Icon';
 import { Button, Card, CheckRow, Field } from '../../components/ui';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
+import { NextCard } from '../../components/FeedNudges';
 import { ShareResult } from '../../components/ShareResult';
 import { WhatIsCard } from '../../components/WhatIsCard';
 import { canShareResult } from '../../lib/verdict';
@@ -65,7 +66,19 @@ export default function RequestDetail() {
     }, [load]),
   );
 
+  // After a vote here, bring "What next?" into view (the results above it can be long).
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const viewH = useRef(0);
+  const votedAt = useRef(0);
+  const cardBottom = useRef(0);
+  const nextH = useRef(0);
+  // Only for a moment after voting, while the results and reasons fill in; never fights the person's own scrolling.
+  const showNext = () => {
+    if (Date.now() - votedAt.current > 2500 || !nextH.current) return;
+    scroller.current?.scrollTo({ y: Math.max(0, cardBottom.current + 12 + nextH.current + 16 - viewH.current), animated: true });
+  };
   const onVote = async (rid: string, v: Verdict, reason: VoteReason) => {
+    votedAt.current = Date.now();
     setR((x) => (x ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x));
     try {
       await api.vote(rid, v, reason);
@@ -161,12 +174,41 @@ export default function RequestDetail() {
 
   if (!loaded) return null;
   if (!r) return <Text style={s.empty}>{t('detail.notFound')}</Text>;
+  // Just voted on someone else's arzi: ask what next, right under the result.
+  const votedHere = !!r.my_vote && !own(r.user_id);
+  const toFeed = () => {
+    leftArrival();
+    if (router.canGoBack()) router.back();
+    else router.replace('/');
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
-      <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scroller}
+        onLayout={(e) => (viewH.current = e.nativeEvent.layout.height)}
+        contentContainerStyle={s.wrap}
+        keyboardShouldPersistTaps="handled"
+      >
         {arrivedOn(r.id) ? <WhatIsCard /> : null}
-        <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} reasons={reasons} />
+        <View
+          onLayout={(e) => {
+            cardBottom.current = e.nativeEvent.layout.y + e.nativeEvent.layout.height;
+            showNext();
+          }}
+        >
+          <RequestCard r={r} meId={user.id} onVote={onVote} full authorBanned={banned.has(r.user_id)} reasons={reasons} />
+        </View>
+        {votedHere ? (
+          <View
+            onLayout={(e) => {
+              nextH.current = e.nativeEvent.layout.height;
+              showNext();
+            }}
+          >
+            <NextCard onMore={toFeed} />
+          </View>
+        ) : null}
         {own(r.user_id) && timeLeft(r.closes_at, t) ? <Text style={s.nudge}>{t('share.nudge')}</Text> : null}
         {own(r.user_id) && canShareResult(r) ? (
           <Button label={t('rc.button')} icon={Share2} size="lg" block variant="tonal" colors={{ bg: M.primaryContainer, fg: M.onPrimaryContainer }} onPress={() => setSharing(true)} testID="share-result" />
@@ -189,11 +231,7 @@ export default function RequestDetail() {
             )
           }
         />
-        <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={() => {
-          leftArrival();
-          if (router.canGoBack()) router.back();
-          else router.replace('/');
-        }} />
+        {votedHere ? null : <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={toFeed} />}
         {own(r.user_id) && !r.preview ? (
           <CheckRow label={t('feature.ask')} checked={!!r.feature_ok} onChange={toggleFeature} testID="feature-own" />
         ) : null}

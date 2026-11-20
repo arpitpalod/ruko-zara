@@ -256,6 +256,8 @@ def test_reasons_tally_after_voting(page):
     page.get_by_text("Wait for a sale", exact=True).click()
     tally = page.get_by_test_id("reason-tally")
     tally.wait_for()
+    page.get_by_test_id("next-card").wait_for()  # after voting: more requests, or post your own
+    assert page.get_by_text("Vote on more requests →").count() == 0
     text = tally.inner_text()
     assert "Why people voted" in text and "Wait for a sale" in text and "Don't need it" in text, text
     # Votes from before reasons existed have none: the tally says how many votes it covers.
@@ -374,18 +376,20 @@ def test_still_deciding_asks_only_once(page):
     page.get_by_text("What did you finally do?").first.wait_for()   # still answerable there
 
 
-def test_now_post_yours_after_5_votes(page):
+def test_now_post_yours_after_7_votes(page):
+    """From the 7th vote, 'What are you about to buy?' sits right under the card you just voted on (21 Nov)."""
     page.goto(BASE + "/?new=1")  # a brand-new person who has never posted
     page.get_by_text("English", exact=True).click()
     page.get_by_test_id("intro-go").click()  # skip "What do you shop for?"
-    for i in range(5):
+    for i in range(7):
         assert page.get_by_test_id("post-nudge").count() == 0, f"nudge before vote {i + 1}"
         page.get_by_text("Buy it", exact=True).nth(i).click()
         page.get_by_text("You need it", exact=True).click()
         page.wait_for_timeout(150)
     nudge = page.get_by_test_id("post-nudge")
     nudge.wait_for()
-    assert "You've helped 5 people decide." in nudge.inner_text()
+    assert "You've helped 7 people decide." in nudge.inner_text()
+    assert nudge.bounding_box()["y"] > page.get_by_text("Buy it", exact=True).nth(6).bounding_box()["y"], "not under the voted card"
     nudge.get_by_text("Not now", exact=True).click()
     nudge.wait_for(state="detached")
 

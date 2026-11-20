@@ -9,9 +9,9 @@ const DAY = 864e5;
 const now = Date.UTC(2026, 10, 20);
 
 describe('"Now post yours"', () => {
-  it('waits for the 5th vote', () => {
-    expect(shouldShowPostNudge({ votes: 4, dismissedAt: null, posted: 0, lastPostedAt: null, now })).toBe(false);
-    expect(shouldShowPostNudge({ votes: 5, dismissedAt: null, posted: 0, lastPostedAt: null, now })).toBe(true);
+  it('waits for the 7th vote', () => {
+    expect(shouldShowPostNudge({ votes: 6, dismissedAt: null, posted: 0, lastPostedAt: null, now })).toBe(false);
+    expect(shouldShowPostNudge({ votes: 7, dismissedAt: null, posted: 0, lastPostedAt: null, now })).toBe(true);
   });
   it('"Not now" hides it for 20 more votes', () => {
     expect(shouldShowPostNudge({ votes: 24, dismissedAt: 5, posted: 0, lastPostedAt: null, now })).toBe(false);

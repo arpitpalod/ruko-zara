@@ -45,6 +45,7 @@ export default function Feed() {
   const scrollY = useRef(new Animated.Value(0)).current; // shrinks the savings header
   const { picked, auto, asked, toggle, clear, learn, finishIntro } = useInterests();
   const [score, setScore] = useState<Map<string, number>>(new Map());
+  const [lastVoted, setLastVoted] = useState<string | null>(null);
   // One nudge at a time on the Vote tab: "Did you buy it?" first, then "Now post yours".
   const mine = useMine();
   const [nudge, setNudge] = useState<NudgeState | null>(null);
@@ -113,6 +114,7 @@ export default function Feed() {
         setLeft((n) => (n === null ? n : Math.max(0, n - 1)));
         const votes = await noteNewVote();
         setNudge((x) => (x ? { ...x, votes } : x));
+        setLastVoted(id); // the "post yours" card sits right under the card you just voted on
       }
       if (item?.preview) load();
     } catch (e: any) {
@@ -145,6 +147,13 @@ export default function Feed() {
   const fresh = tab === 'open' ? byScore(items.filter((x) => !votedAtLoad.has(x.id)), score) : items;
   const [forYou, rest] = splitByInterest(fresh, picked);
   const done = tab === 'open' ? items.filter((x) => votedAtLoad.has(x.id)) : [];
+  // "What are you about to buy?" goes in the list, where people are looking: under the card they just
+  // voted on, or after the 3rd card when they arrive already past the threshold.
+  const listed = [...forYou, ...rest];
+  const nudgeAt =
+    tab === 'open' && showPostNudge
+      ? (lastVoted && listed.some((x) => x.id === lastVoted) ? lastVoted : listed[Math.min(2, listed.length - 1)]?.id)
+      : undefined;
   const sections = [
     { key: 'forYou', data: forYou },
     { key: 'rest', data: rest },
@@ -198,15 +207,6 @@ export default function Feed() {
             </Pressable>
           ) : null}
           {tab === 'open' && toDecide ? <DecideCard r={toDecide} onAnswer={(o) => answerDecide(toDecide, o)} /> : null}
-          {tab === 'open' && showPostNudge && nudge ? (
-            <PostNudge
-              votes={nudge.votes}
-              onDismiss={() => {
-                dismissPostNudge(nudge.votes);
-                setNudge({ ...nudge, dismissedAt: nudge.votes });
-              }}
-            />
-          ) : null}
           {err ? <Text style={s.err}>{err}</Text> : null}
         </View>
       }
@@ -228,6 +228,17 @@ export default function Feed() {
             onPress={() => router.push(`/request/${item.id}`)}
             authorBanned={banned.has(item.user_id)}
           />
+          {item.id === nudgeAt && nudge ? (
+            <View style={{ marginTop: 14 }}>
+              <PostNudge
+                votes={nudge.votes}
+                onDismiss={() => {
+                  dismissPostNudge(nudge.votes);
+                  setNudge({ ...nudge, dismissedAt: nudge.votes });
+                }}
+              />
+            </View>
+          ) : null}
         </View>
       )}
     />

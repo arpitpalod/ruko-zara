@@ -3,10 +3,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 /**
  * Feed nudges, one at a time:
  * - "Did you buy it?" for your arzi whose voting closed (asked once per arzi on this device).
- * - "Now post yours" after your 5th vote, if you haven't posted in the last 7 days. "Not now"
+ * - "Now post yours" after your 7th vote, if you haven't posted in the last 7 days. "Not now"
  *   hides it until 20 more votes.
  */
-export const POST_NUDGE_AFTER = 5;
+export const POST_NUDGE_AFTER = 7;
 export const POST_NUDGE_AGAIN_AFTER = 20;
 export const RECENT_POST_DAYS = 7;
 
