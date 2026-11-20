@@ -23,7 +23,7 @@ for t in profiles requests votes comments reports blocks admins blocked_words al
   c=$(code -H "apikey: $KEY" "$API/rest/v1/$t?select=*&limit=1")
   [[ "$c" =~ ^(401|403|404)$ ]] && ok "Outsider can't read $t" || bad "OUTSIDER CAN READ $t (HTTP $c)"
 done
-for f in is_admin guest_votes_left delete_my_account admin_set_hidden admin_set_banned admin_banned_ids alerts_take alerts_mark_sent; do
+for f in is_admin guest_votes_left delete_my_account admin_set_hidden admin_set_banned admin_banned_ids alerts_take alerts_mark_sent ig_work ig_token; do
   c=$(code -X POST -H "apikey: $KEY" -H 'Content-Type: application/json' -d '{}' "$API/rest/v1/rpc/$f")
   [[ "$c" =~ ^(401|403|404)$ ]] && ok "Outsider can't call $f" || bad "OUTSIDER CAN CALL $f (HTTP $c)"
 done

@@ -1,0 +1,43 @@
+# Puts Instagram media (social/*.jpg, social/*.mp4 on the `social` branch) on the website at
+# https://arpitpalod.github.io/ruko-zara/social/, where Instagram's API fetches them when a queued post
+# goes out. Files are only added, never removed, so posts already queued keep working.
+name: Social media files
+
+on:
+  push:
+    branches: [social]
+    paths: ['social/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gh-pages # same group as the website: one writer to the gh-pages branch at a time
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Only JPEG images (max 8 MB) and MP4 videos (max 300 MB)
+        run: |
+          bad=0
+          for f in social/*; do
+            case "$f" in
+              *.jpg|*.jpeg) [ "$(stat -c%s "$f")" -le 8388608 ] || { echo "::error::$f is over 8 MB"; bad=1; } ;;
+              *.mp4) [ "$(stat -c%s "$f")" -le 314572800 ] || { echo "::error::$f is over 300 MB"; bad=1; } ;;
+              *) echo "::error::$f: only .jpg and .mp4 go here"; bad=1 ;;
+            esac
+          done
+          exit $bad
+
+      - name: Publish to /social on the website (adds, never deletes)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./social
+          destination_dir: social
+          keep_files: true

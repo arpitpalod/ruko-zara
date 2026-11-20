@@ -49,7 +49,7 @@ async function check(): Promise<string[]> {
     t.push(hit(`${API}/rest/v1/${tb}?select=*&limit=1`, { headers: anon }).then((r) => {
       if (!CLOSED.includes(r.status)) bad.push(`OUTSIDER CAN READ ${tb} (HTTP ${r.status})`);
     }));
-  for (const f of ['is_admin', 'guest_votes_left', 'delete_my_account', 'admin_set_hidden', 'admin_set_banned', 'admin_banned_ids', 'alerts_take', 'alerts_mark_sent', 'live_check_report'])
+  for (const f of ['is_admin', 'guest_votes_left', 'delete_my_account', 'admin_set_hidden', 'admin_set_banned', 'admin_banned_ids', 'alerts_take', 'alerts_mark_sent', 'live_check_report', 'ig_work', 'ig_token'])
     t.push(hit(`${API}/rest/v1/rpc/${f}`, { method: 'POST', headers: anonJson, body: '{}' }).then((r) => {
       if (!CLOSED.includes(r.status)) bad.push(`OUTSIDER CAN CALL ${f} (HTTP ${r.status})`);
     }));

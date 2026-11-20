@@ -70,9 +70,11 @@ jobs:
             cp dist/index.html dist/404.html   # deep links like /request/<id> load the app instead of a 404
             # A reload on a dev page lands here (GitHub Pages has one 404 page): send it back to the dev site.
             sed -i 's|<head>|<head><script>if(location.pathname.indexOf("/ruko-zara/dev/")===0)location.replace("/ruko-zara/dev/")</script>|' dist/404.html
-            # Keep the dev site that lives next to the live one.
-            if git fetch -q --depth=1 origin gh-pages 2>/dev/null && git cat-file -e FETCH_HEAD:dev 2>/dev/null; then
-              git archive FETCH_HEAD dev | tar -x -C dist
+            # Keep the dev site and the Instagram media (/social) that live next to the live one.
+            if git fetch -q --depth=1 origin gh-pages 2>/dev/null; then
+              for keep in dev social; do
+                if git cat-file -e "FETCH_HEAD:$keep" 2>/dev/null; then git archive FETCH_HEAD "$keep" | tar -x -C dist; fi
+              done
             fi
           fi
           touch dist/.nojekyll               # keep the _expo folder
