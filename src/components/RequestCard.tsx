@@ -1,5 +1,5 @@
 import { ArrowUpRight, BadgeCheck, Ban, Check, CirclePause, EyeOff, IconText, PartyPopper, ShoppingBag, ShoppingCart, type LucideIcon } from './Icon';
-import { Card, Chip } from './ui';
+import { Card } from './ui';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
@@ -141,23 +141,21 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
       ) : null}
       {canVote && picking ? (
         <View style={s.why}>
-          <Text style={s.whyT}>{t('reason.prompt')}</Text>
-          <View style={s.chips}>
-            {REASONS[picking].map((code) => {
-              const side = picking === 'approve' ? { fg: M.onYesContainer, border: M.yes, pressedBg: M.yes, pressedFg: M.onYes } : { fg: M.onNoContainer, border: M.no, pressedBg: M.no, pressedFg: M.onNo };
-              return (
-                <Chip
-                  key={code}
+          <Text style={s.whyT}>{t(picking === 'approve' ? 'reason.whyYes' : 'reason.whyNo')}</Text>
+          <View style={s.grid}>
+            {REASONS[picking].map((code) => (
+              <View key={code} style={s.cell}>
+                <ReasonBtn
                   label={t(`reason.${code}` as Key)}
-                  colors={side}
+                  c={picking === 'approve' ? { bg: M.yesContainer, fg: M.onYesContainer, solid: M.yes } : { bg: M.noContainer, fg: M.onNoContainer, solid: M.no }}
                   onPress={() => {
                     setPicking(null);
                     onVote!(r.id, picking, code);
                   }}
                   testID={`reason-${code}`}
                 />
-              );
-            })}
+              </View>
+            ))}
           </View>
         </View>
       ) : null}
@@ -168,8 +166,8 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
 }
 
 /**
- * Buy it / Skip it: a connected pair (Material 3 Expressive button group). The tapped side rounds
- * out fully; your vote turns solid with a check mark.
+ * Buy it / Skip it: a connected pair (Material 3 button group), always the same shape. The tapped
+ * side gets an outline in its colour; your vote turns solid with a check mark.
  */
 function VoteBtn(p: {
   label: string;
@@ -183,8 +181,6 @@ function VoteBtn(p: {
   // Solid: your vote. Outlined in the side's colour: reasons open for this side, vote not cast yet.
   const solid = p.active && !p.open;
   const fg = solid ? '#FFFFFF' : p.c.fg;
-  const round = p.active || p.open;
-  const inner = round ? R.full : R.sm;
   const I = solid ? Check : p.icon;
   return (
     <Pressable
@@ -192,7 +188,7 @@ function VoteBtn(p: {
       style={({ pressed }) => [
         s.btn,
         { backgroundColor: solid ? p.c.solid : p.c.bg },
-        p.side === 'left' ? { borderTopRightRadius: inner, borderBottomRightRadius: inner } : { borderTopLeftRadius: inner, borderBottomLeftRadius: inner },
+        p.side === 'left' ? { borderTopRightRadius: R.sm, borderBottomRightRadius: R.sm } : { borderTopLeftRadius: R.sm, borderBottomLeftRadius: R.sm },
         p.open && { borderWidth: 2, borderColor: p.c.solid },
         pressed && { opacity: 0.85 },
       ]}
@@ -201,6 +197,20 @@ function VoteBtn(p: {
     >
       <I size={18} color={fg} strokeWidth={2.4} />
       <Text style={[s.btnT, { color: fg }]}>{p.label}</Text>
+    </Pressable>
+  );
+}
+
+/** One reason, filled in its side's light colour; solid while pressed. Picking it casts the vote. */
+function ReasonBtn(p: { label: string; c: { bg: string; fg: string; solid: string }; onPress: () => void; testID: string }) {
+  return (
+    <Pressable
+      onPress={p.onPress}
+      testID={p.testID}
+      accessibilityRole="button"
+      style={({ pressed }) => [s.reasonBtn, { backgroundColor: pressed ? p.c.solid : p.c.bg }]}
+    >
+      {({ pressed }) => <Text style={[s.reasonT, { color: pressed ? '#FFFFFF' : p.c.fg }]}>{p.label}</Text>}
     </Pressable>
   );
 }
@@ -260,7 +270,11 @@ const s = StyleSheet.create({
   btnT: { fontSize: 15, lineHeight: 20, fontWeight: '700' },
   why: { marginTop: 14 },
   whyT: { ...T.titleSmall, color: M.onSurfaceVariant, marginBottom: 8 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // Two equal columns: 4 reasons make a 2×2, 3 make 2 + 1.
+  grid: { flexDirection: 'row', flexWrap: 'wrap', margin: -4 },
+  cell: { width: '50%', padding: 4 },
+  reasonBtn: { flex: 1, minHeight: 48, borderRadius: R.md, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, paddingVertical: 8 },
+  reasonT: { ...T.labelLarge, fontWeight: '700', textAlign: 'center' },
   tally: { marginTop: 16, gap: 10 },
   tallyH: { ...T.titleSmall, color: M.onSurface, marginBottom: 2 },
   tallyCover: { ...T.bodySmall, color: M.onSurfaceVariant },
