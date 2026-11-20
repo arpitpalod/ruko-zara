@@ -41,7 +41,7 @@ export default function Feed() {
   const [left, setLeft] = useState<number | null>(null);
   const [banned, setBanned] = useState<Set<string>>(new Set()); // admins only
   const scrollY = useRef(new Animated.Value(0)).current; // shrinks the savings header
-  const { picked, toggle, clear } = useInterests();
+  const { picked, auto, toggle, clear, learn } = useInterests();
   // One nudge at a time on the Vote tab: "Did you buy it?" first, then "Now post yours".
   const mine = useMine();
   const [nudge, setNudge] = useState<NudgeState | null>(null);
@@ -72,13 +72,14 @@ export default function Feed() {
         setItems(which === 'open' ? rows.filter((r) => !user.id || r.user_id !== user.id) : rows);
         shown.current = rows.length > 0;
         setVotedAtLoad(new Set(rows.filter((r) => r.my_vote).map((r) => r.id)));
+        learn(rows); // until someone picks "Show first" themselves, their votes pick it
       } catch (e: any) {
         setErr(friendly(e, t));
       } finally {
         setLoading(false);
       }
     },
-    [tab, user.id, user.email, user.isAdmin, t],
+    [tab, user.id, user.email, user.isAdmin, t, learn],
   );
 
   useFocusEffect(
@@ -179,6 +180,7 @@ export default function Feed() {
               <Chip key={c} label={catLabel(c, t)} selected={picked.includes(c)} onPress={() => toggle(c)} />
             ))}
           </ScrollView>
+          {auto && picked.length > 0 ? <Text style={s.autoHint}>{t('feed.interestsAuto')}</Text> : null}
           {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
           {left !== null && left <= 5 && tab === 'open' ? (
             <Pressable onPress={() => router.push('/login')} style={s.guest}>
@@ -228,6 +230,7 @@ const s = StyleSheet.create({
   sectionH: { ...T.titleSmall, color: M.onSurfaceVariant, marginTop: 8, marginBottom: 10 },
   chips: { gap: 8, alignItems: 'center', paddingRight: 8 },
   chipsLabel: { ...T.labelMedium, color: M.onSurfaceVariant, marginRight: 2 },
+  autoHint: { ...T.bodySmall, color: M.onSurfaceVariant, marginTop: -4 },
   demo: { ...T.labelMedium, color: M.onSurfaceVariant, backgroundColor: M.surfaceContainerHigh, alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: R.sm, overflow: 'hidden' },
   err: { ...T.body, color: M.no },
   guest: { backgroundColor: M.primaryContainer, borderRadius: R.lg, paddingHorizontal: 16, paddingVertical: 12 },

@@ -217,6 +217,7 @@ const en = {
   'feed.interests': 'Show first',
   'feed.all': 'All',
   'feed.otherInterests': 'Everything else',
+  'feed.interestsAuto': 'Picked from your votes. Tap to change.',
 } as const;
 
 export type Key = keyof typeof en;
@@ -421,6 +422,7 @@ const hi: Dict = {
   'feed.interests': 'पहले दिखाएँ',
   'feed.all': 'सब',
   'feed.otherInterests': 'बाक़ी सब',
+  'feed.interestsAuto': 'आपके वोट से चुना गया। बदलने के लिए टैप करें।',
 };
 
 const hinglish: Dict = {
@@ -622,6 +624,7 @@ const hinglish: Dict = {
   'feed.interests': 'Pehle dikhao',
   'feed.all': 'Sab',
   'feed.otherInterests': 'Baaki sab',
+  'feed.interestsAuto': 'Aapke votes se chuna. Badalne ke liye tap karo.',
 };
 
 const DICTS: Record<Lang, Dict> = { en, hi, hinglish };

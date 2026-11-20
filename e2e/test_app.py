@@ -123,6 +123,24 @@ def test_interest_picker_puts_picks_first(page):
     page.get_by_text("Everything else", exact=True).wait_for()
 
 
+def test_votes_pick_show_first(page):
+    """From 3 votes on, 'Show first' follows what you vote on, until you pick yourself (21 Nov)."""
+    hint = "Picked from your votes. Tap to change."
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    assert page.get_by_text(hint).count() == 0
+    for i in range(3):
+        page.get_by_text("Buy it", exact=True).nth(i).click()
+        page.get_by_text("Worth the price", exact=True).first.click()
+        page.get_by_text(re.compile(r"^\d+% say buy it$")).nth(i).wait_for()
+    assert page.get_by_text(hint).count() == 0, "cards reordered mid-voting"
+    page.get_by_text("Results", exact=True).click()
+    page.get_by_text("Vote", exact=True).click()
+    page.get_by_text(hint).wait_for()
+    page.get_by_text("All", exact=True).click()  # their own choice from now on
+    page.get_by_text(hint).wait_for(state="detached")
+
+
 def test_english_mode_is_english(page):
     open_app(page, "English")
     page.get_by_text("Buy it", exact=True).first.wait_for()
