@@ -4,7 +4,7 @@ import { CaptchaHost } from '../components/CaptchaHost';
 import { AllRequestsButton } from '../components/AllRequestsButton';
 import { LanguageButton } from '../components/LanguageButton';
 import { arrivedOn } from '../lib/entry';
-import { LogoFontReady, useLoadLogoFont } from '../components/Logo';
+import { Logo, LogoFontReady, useLoadLogoFont } from '../components/Logo';
 import { LanguageProvider, useT } from '../lib/i18n';
 import { SessionProvider } from '../lib/session';
 import { M, T } from '../lib/theme';
@@ -40,6 +40,7 @@ function Nav() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: M.surface },
         headerRight: () => <LanguageButton />,
+        headerTitle: () => <Logo size={20} />, // the logo on every page; `title` still names the browser tab
       }}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -47,7 +48,7 @@ function Nav() {
         name="request/[id]"
         options={({ route }) =>
           arrivedOn(String((route.params as { id?: string } | undefined)?.id ?? ''))
-            ? { title: '', headerLeft: () => <AllRequestsButton /> } // came from a shared link: say where back goes
+            ? { title: t('title.request'), headerTitle: () => null, headerLeft: () => <AllRequestsButton /> } // shared link: the card below carries the logo
             : { title: t('title.request') }
         }
       />

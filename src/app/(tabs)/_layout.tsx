@@ -32,8 +32,8 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: t('tab.feed'), headerTitle: () => <Logo />, tabBarIcon: icon('home') }} />
-      <Tabs.Screen name="new" options={{ title: t('tab.new'), headerTitle: t('tab.new'), tabBarIcon: icon('new') }} />
-      <Tabs.Screen name="mine" options={{ title: t('tab.mine'), headerTitle: t('tab.mine'), tabBarIcon: icon('mine') }} />
+      <Tabs.Screen name="new" options={{ title: t('tab.new'), headerTitle: () => <Logo />, tabBarIcon: icon('new') }} />
+      <Tabs.Screen name="mine" options={{ title: t('tab.mine'), headerTitle: () => <Logo />, tabBarIcon: icon('mine') }} />
     </Tabs>
   );
 }

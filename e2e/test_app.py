@@ -252,7 +252,7 @@ def test_reasons_tally_after_voting(page):
     page.goto(BASE + "/request/r1")
     page.get_by_text("Share on WhatsApp").wait_for()
     assert page.get_by_text("Why people voted").count() == 0, "reasons shown before voting"
-    page.get_by_text("Skip it", exact=True).click()
+    page.get_by_text("Skip it", exact=True).last.click()  # the first one is in the intro card's sentence
     page.get_by_text("Wait for a sale", exact=True).click()
     tally = page.get_by_test_id("reason-tally")
     tally.wait_for()
