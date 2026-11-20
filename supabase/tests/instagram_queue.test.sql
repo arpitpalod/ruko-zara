@@ -5,6 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 select * from no_plan();
+alter table private.alerts disable trigger alerts_wake_sender;  -- no real emails from tests
 
 \set SITE 'https://arpitpalod.github.io/ruko-zara/social/'
 \set U '{"sub":"99999999-9999-4999-8999-000000000001","role":"authenticated","is_anonymous":false}'
