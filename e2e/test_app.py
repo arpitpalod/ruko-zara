@@ -488,3 +488,72 @@ def test_ok_to_feature_only_on_your_own_arzi(page):
     page.goto(BASE + "/request/r1")
     page.get_by_text("Share on WhatsApp", exact=True).wait_for()
     assert page.get_by_test_id("feature-own").count() == 0
+
+
+# ── QA sweep, 21 Nov ──────────────────────────────────────────────────────────
+
+def _fresh(page):
+    page.goto(BASE + "/?new=1")
+    page.get_by_text("English", exact=True).click()
+    page.get_by_test_id("intro-go").click()
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+
+
+def _vote(page, i):
+    page.get_by_text("Buy it", exact=True).nth(i).click()
+    page.get_by_text("You need it", exact=True).click()
+    page.wait_for_timeout(200)
+
+
+def test_post_card_stays_put_and_keeps_typing(page):
+    """The 'post yours' card doesn't jump to the next voted card, and what was typed survives more votes."""
+    page.add_init_script("localStorage.setItem('rz.votesCast', '5')")  # 5 votes from an earlier visit
+    _fresh(page)
+    _vote(page, 0)
+    _vote(page, 1)
+    card = page.get_by_test_id("post-nudge")
+    card.wait_for()
+    page.get_by_test_id("nudge-item").fill("Standing desk")
+    _vote(page, 2)
+    page.wait_for_timeout(300)
+    buy = page.get_by_text("Buy it", exact=True)
+    # still between the 2nd card (where it appeared) and the 3rd (just voted), measured at the same moment
+    ys = [buy.nth(1).bounding_box()["y"], card.bounding_box()["y"], buy.nth(2).bounding_box()["y"]]
+    assert ys[0] < ys[1] < ys[2], f"the card moved: {ys}"
+    assert page.eval_on_selector_all("input", "els => els.some(e => e.value === 'Standing desk')"), "typing lost"
+
+
+def test_post_card_for_someone_who_voted_on_everything(page):
+    _fresh(page)
+    for i in range(page.get_by_text("Buy it", exact=True).count()):
+        _vote(page, i)
+    page.get_by_text("Results", exact=True).click()
+    page.get_by_text(re.compile("No results yet|Crowd says|% say buy it")).first.wait_for()
+    page.get_by_text("Vote", exact=True).click()
+    page.get_by_text(re.compile(r"^You voted \(\d+\)")).wait_for()
+    page.get_by_test_id("post-nudge").wait_for()
+
+
+def test_no_everything_else_heading_on_its_own(page):
+    _fresh(page)
+    page.get_by_text("Fashion", exact=True).first.click()   # no open Fashion arzi in the demo
+    page.wait_for_timeout(400)
+    assert page.get_by_text("Everything else", exact=True).count() == 0
+
+
+def test_shared_link_to_a_removed_arzi(page):
+    page.goto(BASE + "/request/doesnotexist?src=wa&lang=en")
+    page.get_by_text(re.compile("not found")).wait_for()
+    page.get_by_test_id("what-is").wait_for()
+    page.get_by_text("Vote on more requests", exact=True).click()
+    page.get_by_text("What do you shop for?", exact=True).wait_for()
+
+
+def test_third_interest_unticked_in_time_stays(page):
+    page.goto(BASE + "/")
+    page.get_by_text("English", exact=True).click()
+    for c in ("Gadgets", "Travel", "Health"):
+        page.get_by_test_id(f"intro-{c}").click()
+    page.get_by_test_id("intro-Health").click()   # changed mind within the half second
+    page.wait_for_timeout(900)
+    assert page.get_by_text("What do you shop for?", exact=True).count() == 1

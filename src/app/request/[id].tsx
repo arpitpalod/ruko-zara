@@ -172,15 +172,22 @@ export default function RequestDetail() {
     });
   };
 
-  if (!loaded) return null;
-  if (!r) return <Text style={s.empty}>{t('detail.notFound')}</Text>;
-  // Just voted on someone else's arzi: ask what next, right under the result.
-  const votedHere = !!r.my_vote && !own(r.user_id);
   const toFeed = () => {
     leftArrival();
     if (router.canGoBack()) router.back();
     else router.replace('/');
   };
+  if (!loaded) return null;
+  if (!r)
+    return (
+      <ScrollView contentContainerStyle={s.wrap}>
+        {arrivedOn(String(id)) ? <WhatIsCard /> : null}
+        <Text style={s.empty}>{t('detail.notFound')}</Text>
+        <Button label={t('next.more')} size="lg" block onPress={toFeed} />
+      </ScrollView>
+    );
+  // Just voted on someone else's arzi: ask what next, right under the result.
+  const votedHere = !!r.my_vote && !own(r.user_id);
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
@@ -336,7 +343,7 @@ const GREY = { bg: 'transparent', fg: M.onSurfaceVariant, border: M.outlineVaria
 
 const s = StyleSheet.create({
   wrap: { padding: 16, gap: 12, paddingBottom: 24 },
-  empty: { ...T.body, textAlign: 'center', color: M.onSurfaceVariant, marginTop: 40 },
+  empty: { ...T.body, textAlign: 'center', color: M.onSurfaceVariant, marginVertical: 24 },
   err: { ...T.body, color: M.no },
   cHidden: { ...T.labelMedium, color: M.onSurfaceVariant },
   cAdmin: { ...T.labelMedium, color: M.onSurfaceVariant, alignSelf: 'flex-start' },

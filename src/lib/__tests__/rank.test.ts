@@ -16,11 +16,15 @@ describe('trending order', () => {
   it('keeps a very popular arzi above a brand-new one', () => {
     expect(trendScore(r('hit', 24, 150), now)).toBeGreaterThan(trendScore(r('new', 0, 0), now));
   });
-  it('lets an ignored arzi sink as it ages', () => {
-    expect(trendScore(r('a', 1, 0), now)).toBeGreaterThan(trendScore(r('b', 10, 0), now));
+  it('keeps a new arzi near the top until its first 5 votes (first day only)', () => {
+    expect(trendScore(r('night', 5, 0), now)).toBe(trendScore(r('new', 0, 0), now));
+    expect(trendScore(r('night', 5, 0), now)).toBeGreaterThan(trendScore(r('older', 24, 30), now));
+  });
+  it('lets an ignored arzi sink after its first day', () => {
+    expect(trendScore(r('a', 1, 0), now)).toBeGreaterThan(trendScore(r('b', 30, 0), now));
   });
   it('sorts by score and keeps unscored items last', () => {
-    const items = [r('a', 10, 0), r('b', 0, 0), r('c', 1, 0)];
+    const items = [r('a', 30, 0), r('b', 0, 0), r('c', 1, 0)];
     const score = new Map([['a', trendScore(items[0], now)], ['b', trendScore(items[1], now)]]);
     expect(byScore(items, score).map((x) => x.id)).toEqual(['b', 'a', 'c']);
   });

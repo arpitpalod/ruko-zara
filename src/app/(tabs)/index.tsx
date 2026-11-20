@@ -5,7 +5,7 @@ import { Animated, Pressable, ScrollView, SectionList, StyleSheet, Text, View } 
 import { Chip, Segmented } from '../../components/ui';
 import { InstallHint } from '../../components/InstallHint';
 import { RequestCard } from '../../components/RequestCard';
-import { DecideCard, PostNudge } from '../../components/FeedNudges';
+import { DecideCard, EMPTY_DRAFT, PostNudge, type PostDraft } from '../../components/FeedNudges';
 import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { UpdateBanner } from '../../components/UpdateBanner';
@@ -46,6 +46,8 @@ export default function Feed() {
   const { picked, auto, asked, toggle, clear, learn, finishIntro } = useInterests();
   const [score, setScore] = useState<Map<string, number>>(new Map());
   const [lastVoted, setLastVoted] = useState<string | null>(null);
+  const nudgeAnchor = useRef<string | null>(null);
+  const [draft, setDraft] = useState<PostDraft>(EMPTY_DRAFT); // what they typed in the "post yours" card
   // One nudge at a time on the Vote tab: "Did you buy it?" first, then "Now post yours".
   const mine = useMine();
   const [nudge, setNudge] = useState<NudgeState | null>(null);
@@ -76,7 +78,12 @@ export default function Feed() {
         setItems(which === 'open' ? rows.filter((r) => !user.id || r.user_id !== user.id) : rows);
         shown.current = rows.length > 0;
         setVotedAtLoad(new Set(rows.filter((r) => r.my_vote).map((r) => r.id)));
-        learn(rows); // until someone picks "Show first" themselves, their votes pick it
+        // Until someone picks "Show first" themselves, their votes pick it. Only from the Vote tab: the
+        // Results tab holds a different set, and learning from both made the picks flip between tabs.
+        if (which === 'open') learn(rows);
+        // A fresh list: the "post yours" card finds its place again.
+        nudgeAnchor.current = null;
+        setLastVoted(null);
         // Trending order, fixed at load so cards don't jump while someone votes.
         const now = Date.now();
         setScore(new Map(rows.map((r) => [r.id, trendScore(r, now)])));
@@ -149,11 +156,16 @@ export default function Feed() {
   const done = tab === 'open' ? items.filter((x) => votedAtLoad.has(x.id)) : [];
   // "What are you about to buy?" goes in the list, where people are looking: under the card they just
   // voted on, or after the 3rd card when they arrive already past the threshold.
+  // The card appears under the card they just voted on (or the 3rd card), then stays there: moving it on
+  // every vote made the list jump and threw away what they'd typed. Someone who has voted on everything
+  // open still gets it, on top of what they voted on.
   const listed = [...forYou, ...rest];
-  const nudgeAt =
-    tab === 'open' && showPostNudge
-      ? (lastVoted && listed.some((x) => x.id === lastVoted) ? lastVoted : listed[Math.min(2, listed.length - 1)]?.id)
-      : undefined;
+  const ids = [...listed, ...done].map((x) => x.id);
+  if (!(tab === 'open' && showPostNudge)) nudgeAnchor.current = null;
+  else if (!nudgeAnchor.current || !ids.includes(nudgeAnchor.current))
+    nudgeAnchor.current =
+      lastVoted && ids.includes(lastVoted) ? lastVoted : (listed[Math.min(2, listed.length - 1)]?.id ?? done[0]?.id ?? null);
+  const nudgeAt = nudgeAnchor.current;
   const sections = [
     { key: 'forYou', data: forYou },
     { key: 'rest', data: rest },
@@ -214,7 +226,7 @@ export default function Feed() {
         if (loading && items.length === 0) return null;
         if (section.key === 'forYou' && forYou.length === 0 && rest.length === 0)
           return <Text style={s.empty}>{tab === 'open' ? t('feed.emptyVote') : t('feed.emptyResults')}</Text>;
-        if (section.key === 'rest' && rest.length > 0) return <Text style={s.sectionH}>{t('feed.otherInterests')}</Text>;
+        if (section.key === 'rest' && rest.length > 0 && forYou.length > 0) return <Text style={s.sectionH}>{t('feed.otherInterests')}</Text>;
         if (section.key === 'done' && section.data.length > 0)
           return <Text style={s.sectionH}>{t('feed.votedHeader', { n: section.data.length })}</Text>;
         return null;
@@ -231,6 +243,8 @@ export default function Feed() {
           {item.id === nudgeAt && nudge ? (
             <View style={{ marginTop: 14 }}>
               <PostNudge
+                draft={draft}
+                setDraft={setDraft}
                 votes={nudge.votes}
                 picked={picked}
                 onDismiss={() => {

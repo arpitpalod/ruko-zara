@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useEffect, useRef, type ComponentRef } from 'react';
 import { catLabel } from '../lib/format';
 import { useT } from '../lib/i18n';
 import { M, R, T } from '../lib/theme';
@@ -44,12 +44,29 @@ const IDEA_KEYS: Record<string, string> = {
  * type the item and price right here (or tap an idea), then "Ask mine" asks the category, ordered by
  * the person's interests, and opens the full form with all of that filled in.
  */
-export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked: string[]; onDismiss: () => void }) {
+export type PostDraft = { item: string; price: string; cat: string | null; open: boolean };
+export const EMPTY_DRAFT: PostDraft = { item: '', price: '', cat: null, open: false };
+
+export function PostNudge({
+  votes,
+  picked,
+  onDismiss,
+  draft,
+  setDraft,
+}: {
+  votes: number;
+  picked: string[];
+  onDismiss: () => void;
+  /** Kept by the feed, so a reload or a re-render never loses what was typed. */
+  draft: PostDraft;
+  setDraft: (f: (d: PostDraft) => PostDraft) => void;
+}) {
   const { t } = useT();
-  const [item, setItem] = useState('');
-  const [price, setPrice] = useState('');
-  const [cat, setCat] = useState<string | null>(null);
-  const [open, setOpen] = useState(false); // the category grid, opened under the buttons
+  const { item, price, cat, open } = draft; // `open`: the category grid under the buttons
+  const setItem = (v: string) => setDraft((d) => ({ ...d, item: v }));
+  const setPrice = (v: string) => setDraft((d) => ({ ...d, price: v }));
+  const setCat = (v: string | null) => setDraft((d) => ({ ...d, cat: v }));
+  const setOpen = (f: (o: boolean) => boolean) => setDraft((d) => ({ ...d, open: f(d.open) }));
   const grid = useRef<ComponentRef<typeof View>>(null);
   useEffect(() => {
     // Bring the opened grid into view (web; the phone app's list scrolls by hand).
@@ -64,10 +81,7 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
       <View style={s.top}>
         <TextInput
           value={item}
-          onChangeText={(v) => {
-            setItem(v);
-            setCat(null); // typed their own: ask the category
-          }}
+          onChangeText={(v) => setDraft((d) => ({ ...d, item: v, cat: null }))} // typed their own: ask the category
           placeholder={t('nudge.ask')}
           placeholderTextColor={M.onSurface}
           maxLength={80}
@@ -94,10 +108,7 @@ export function PostNudge({ votes, picked, onDismiss }: { votes: number; picked:
                 key={c}
                 label={t(IDEA_KEYS[c] as never)}
                 selected={cat === c}
-                onPress={() => {
-                  setItem(t(IDEA_KEYS[c] as never));
-                  setCat(c);
-                }}
+                onPress={() => setDraft((d) => ({ ...d, item: t(IDEA_KEYS[c] as never), cat: c }))}
                 testID={`nudge-idea-${c}`}
               />
             ))}
