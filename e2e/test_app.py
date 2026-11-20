@@ -390,8 +390,42 @@ def test_now_post_yours_after_7_votes(page):
     nudge.wait_for()
     assert "You've helped 7 people decide." in nudge.inner_text()
     assert nudge.bounding_box()["y"] > page.get_by_text("Buy it", exact=True).nth(6).bounding_box()["y"], "not under the voted card"
-    nudge.get_by_text("Not now", exact=True).click()
+    nudge.get_by_test_id("nudge-later").click()
     nudge.wait_for(state="detached")
+
+
+def test_post_card_carries_into_the_form(page):
+    """Feed card: type the item and price, 'Ask mine', pick a category: the form opens with all three filled (21 Nov)."""
+    page.goto(BASE + "/?new=1")
+    page.get_by_text("English", exact=True).click()
+    page.get_by_test_id("intro-Health").click()
+    page.get_by_text("Show my feed", exact=True).click()
+    for i in range(7):
+        page.get_by_text("Buy it", exact=True).nth(i).click()
+        page.get_by_text("You need it", exact=True).click()
+        page.wait_for_timeout(150)
+    nudge = page.get_by_test_id("post-nudge")
+    nudge.wait_for()
+    assert "Your turn to ask." in nudge.inner_text()
+    ideas = [c.get_attribute("data-testid") for c in nudge.locator("[data-testid^=nudge-idea-]").all()]
+    assert ideas[0] == "nudge-idea-Health", ideas  # their interests first
+    page.get_by_test_id("nudge-item").fill("Standing desk")
+    page.get_by_test_id("nudge-price").fill("18,500")
+    page.get_by_test_id("nudge-ask").click()
+    cats = [c.get_attribute("data-testid") for c in nudge.locator("[data-testid^=nudge-cat-]").all()]
+    assert cats[0] == "nudge-cat-Health", cats
+    page.get_by_test_id("nudge-cat-Ghar").click()
+    page.wait_for_function("""() => [...document.querySelectorAll('input,textarea')].some((i) => i.value === 'Standing desk')""")
+    values = page.eval_on_selector_all("input,textarea", "els => els.map((e) => e.value)")
+    assert "18500" in values, values
+
+
+def test_three_interests_go_straight_to_feed(page):
+    page.goto(BASE + "/")
+    page.get_by_text("English", exact=True).click()
+    for c in ("Gadgets", "Travel", "Health"):
+        page.get_by_test_id(f"intro-{c}").click()
+    page.get_by_text("Buy it", exact=True).first.wait_for()  # no button press needed
 
 
 def test_share_result_card(page):

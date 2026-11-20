@@ -232,6 +232,7 @@ export default function Feed() {
             <View style={{ marginTop: 14 }}>
               <PostNudge
                 votes={nudge.votes}
+                picked={picked}
                 onDismiss={() => {
                   dismissPostNudge(nudge.votes);
                   setNudge({ ...nudge, dismissedAt: nudge.votes });

@@ -1,5 +1,5 @@
 import { IconText, Link2 } from '../../components/Icon';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, CheckRow, Chip, Field as Input } from '../../components/ui';
@@ -25,6 +25,15 @@ export default function NewRequest() {
   const [linkText, setLinkText] = useState('');
   const [hours, setHours] = useState<number>(24);
   const [featureOk, setFeatureOk] = useState(false);
+  // Started from the feed's "What are you about to buy?" card: carry over what they typed and the category.
+  const from = useLocalSearchParams<{ item?: string; price?: string; category?: string }>();
+  useEffect(() => {
+    if (!from.item && !from.price && !from.category) return;
+    if (from.item) setItem(String(from.item).slice(0, 80));
+    if (from.price) setPrice(String(from.price).replace(/\D/g, '').slice(0, 8));
+    if (from.category && (CATEGORIES as readonly string[]).includes(String(from.category))) setCategory(String(from.category));
+    router.setParams({ item: undefined, price: undefined, category: undefined });
+  }, [from.item, from.price, from.category]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 

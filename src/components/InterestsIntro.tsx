@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { catLabel } from '../lib/format';
 import { useT } from '../lib/i18n';
@@ -7,11 +7,20 @@ import { CATEGORIES } from '../lib/types';
 import { Logo } from './Logo';
 import { Button, Chip } from './ui';
 
+const MAX = 3;
+
 /** First time on the feed: "What do you shop for?" in their language. Optional; it orders the feed, never filters it. */
 export function InterestsIntro({ onDone }: { onDone: (picks: string[]) => void }) {
   const { t } = useT();
   const [picks, setPicks] = useState<string[]>([]);
-  const toggle = (c: string) => setPicks((p) => (p.includes(c) ? p.filter((x) => x !== c) : [...p, c]));
+  const toggle = (c: string) =>
+    setPicks((p) => (p.includes(c) ? p.filter((x) => x !== c) : p.length >= MAX ? p : [...p, c]));
+  // The 3rd pick is the last: a short beat so the tick is seen, then the feed (no button to press).
+  useEffect(() => {
+    if (picks.length < MAX) return;
+    const timer = setTimeout(() => onDone(picks), 600);
+    return () => clearTimeout(timer);
+  }, [picks, onDone]);
   return (
     <ScrollView style={{ backgroundColor: M.surface }} contentContainerStyle={s.wrap}>
       <View style={{ alignItems: 'center', marginBottom: 8 }}>
