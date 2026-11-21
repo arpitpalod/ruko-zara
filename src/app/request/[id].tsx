@@ -1,10 +1,12 @@
-import { Ban, CircleCheck, Eye, EyeOff, IconText, MessageCircle, Send, Share2 } from '../../components/Icon';
+import { Ban, Camera, CircleCheck, Eye, EyeOff, IconText, MessageCircle, Send, Share2 } from '../../components/Icon';
 import { Button, Card, CheckRow, Field } from '../../components/ui';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ComponentRef } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { RequestCard } from '../../components/RequestCard';
 import { NextCard } from '../../components/FeedNudges';
+import { AskCard } from '../../components/AskCard';
+import { ShareCardModal } from '../../components/ShareCardModal';
 import { ShareResult } from '../../components/ShareResult';
 import { WhatIsCard } from '../../components/WhatIsCard';
 import { canShareResult } from '../../lib/verdict';
@@ -36,6 +38,7 @@ export default function RequestDetail() {
   const [confirmBan, setConfirmBan] = useState<string | null>(null);
   const [reasons, setReasons] = useState<ReasonCount[]>([]);
   const [sharing, setSharing] = useState(false); // the result card's preview
+  const [asking, setAsking] = useState(false); // the Instagram Story card's preview (own open arzi)
 
   const load = useCallback(async () => {
     try {
@@ -238,6 +241,22 @@ export default function RequestDetail() {
             )
           }
         />
+        {own(r.user_id) && timeLeft(r.closes_at, t) ? (
+          <Button label={t('ask.button')} icon={Camera} variant="outlined" size="lg" block onPress={() => setAsking(true)} testID="share-story" />
+        ) : null}
+        {asking ? (
+          <ShareCardModal
+            title={t('ask.title')}
+            card={(ref) => <AskCard cardRef={ref} r={r} />}
+            file="ruko-zara-ask.png"
+            text={t('ask.text', { item: r.item, link: requestUrl(r.id, 'igs', lang) })}
+            copy={requestUrl(r.id, 'igs', lang)}
+            hint={t('ask.hint')}
+            copiedNote={t('ask.copied')}
+            onClose={() => setAsking(false)}
+            testID="share-story"
+          />
+        ) : null}
         {votedHere ? null : <Button label={t('detail.more')} variant="outlined" size="lg" block onPress={toFeed} />}
         {own(r.user_id) && !r.preview ? (
           <CheckRow label={t('feature.ask')} checked={!!r.feature_ok} onChange={toggleFeature} testID="feature-own" />

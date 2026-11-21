@@ -557,3 +557,44 @@ def test_third_interest_unticked_in_time_stays(page):
     page.get_by_test_id("intro-Health").click()   # changed mind within the half second
     page.wait_for_timeout(900)
     assert page.get_by_text("What do you shop for?", exact=True).count() == 1
+
+
+def test_share_open_arzi_to_instagram_story(page):
+    """Your open arzi: 'Share to Instagram Story' makes a 1080x1920 'Should I buy this?' image and copies the link (21 Nov)."""
+    page.context.grant_permissions(["clipboard-read", "clipboard-write"])
+    page.add_init_script("Object.defineProperty(navigator, 'canShare', { value: undefined })")
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("Story test speaker")
+    page.get_by_placeholder("e.g. 8999").fill("4999")
+    page.get_by_placeholder("Need or want? What happened to the old one?").fill("Old one broke, parties every month")
+    page.get_by_text("Send request", exact=True).click()
+    page.get_by_placeholder("you@email.com").fill("tester@example.com")
+    page.get_by_text("Send code", exact=True).click()
+    page.get_by_placeholder("Code").fill("123456")
+    page.get_by_text("Verify", exact=True).click()
+    page.get_by_text("Story test speaker").first.wait_for()
+    page.get_by_test_id("share-story").click()
+    card = page.get_by_test_id("ask-card")
+    card.wait_for()
+    text = card.inner_text()
+    assert "Should I buy this?" in text and "Story test speaker" in text and "Buy it" in text, text
+    page.wait_for_timeout(800)  # the image is made while the preview shows
+    with page.expect_download() as dl:
+        page.get_by_test_id("share-story-go").click()
+    with open(dl.value.path(), "rb") as f:
+        head = f.read(24)
+    assert head[:8] == b"\x89PNG\r\n\x1a\n"
+    assert (int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")) == (1080, 1920)
+    page.get_by_test_id("share-story-note").wait_for()
+    assert "Link copied" in page.get_by_test_id("share-story-note").inner_text()
+    copied = page.evaluate("navigator.clipboard.readText()")
+    assert "/request/" in copied and "src=igs" in copied, copied
+
+
+def test_no_story_button_on_others_arzi(page):
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.goto(BASE + "/request/r1")
+    page.get_by_text("Share on WhatsApp").wait_for()
+    assert page.get_by_test_id("share-story").count() == 0
