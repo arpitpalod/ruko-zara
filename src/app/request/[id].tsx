@@ -185,7 +185,8 @@ export default function RequestDetail() {
     return (
       <ScrollView contentContainerStyle={s.wrap}>
         {arrivedOn(String(id)) ? <WhatIsCard /> : null}
-        <Text style={s.empty}>{t('detail.notFound')}</Text>
+        {/* A failed load (bad network) says so, not "removed"; the page retries every 5 seconds. */}
+        <Text style={s.empty}>{msg ?? t('detail.notFound')}</Text>
         <Button label={t('next.more')} size="lg" block onPress={toFeed} />
       </ScrollView>
     );
