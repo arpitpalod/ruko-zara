@@ -1,6 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
+import { GOOGLE_FAILED, googleOutcome } from './googleReturn';
 import { AppState, Platform } from 'react-native';
 import { getCaptchaToken, wantCaptcha } from './captcha';
 import type { ReasonCount } from './reasons';
@@ -34,28 +35,28 @@ export function createSupabaseApi(url: string, key: string): Api {
   }
 
   /**
-   * Back from Google. A one-time ?code= in the address has just become the session: remove it, or a reload
-   * would try it again and fail. With an error: if they didn't cancel, the Google account most likely
-   * belongs to an existing Ruko Zara account (already linked, or same email), so sign in to that one,
-   * as with an email that already has an account. Tried once only, so it can never loop.
+   * Back from Google with an error (see googleOutcome). Only "that Google account is already someone's"
+   * switches accounts; anything else keeps the person as they were (a guest keeps their votes) and the
+   * login screen says it didn't finish. Switching is tried once only, so it can never loop.
    */
   async function afterGoogle(): Promise<boolean> {
     if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
     const url = new URL(window.location.href);
-    const q = new URLSearchParams(url.search + '&' + url.hash.slice(1));
-    const error = q.get('error') ?? q.get('error_code');
-    if (!error) return false;
+    const outcome = googleOutcome(new URLSearchParams(url.search + '&' + url.hash.slice(1)));
+    if (!outcome) return false;
     ['error', 'error_code', 'error_description', 'code', 'state', 'sb_flow_id'].forEach((k) => url.searchParams.delete(k));
     url.hash = '';
     window.history.replaceState(null, '', url.toString());
     const RETRY = 'rz.googleRetry';
-    if (q.get('error') === 'access_denied' || window.sessionStorage.getItem(RETRY)) {
-      window.sessionStorage.removeItem(RETRY);
-      return false;
+    const retried = window.sessionStorage.getItem(RETRY);
+    window.sessionStorage.removeItem(RETRY);
+    if (outcome === 'switch' && !retried) {
+      window.sessionStorage.setItem(RETRY, '1');
+      await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: url.toString() } });
+      return true; // leaving for Google again
     }
-    window.sessionStorage.setItem(RETRY, '1');
-    await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: url.toString() } });
-    return true; // leaving for Google again
+    if (outcome !== 'cancelled') window.sessionStorage.setItem(GOOGLE_FAILED, '1');
+    return false;
   }
 
   function tidyCode() {

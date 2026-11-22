@@ -1,4 +1,6 @@
 import { router } from 'expo-router';
+import { Platform } from 'react-native';
+import { GOOGLE_FAILED } from './googleReturn';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api } from './api';
 import { rememberLoginFrom } from './loginReturn';
@@ -44,6 +46,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const remembered = rememberSource(); // ?src=… on the link they opened
     const signedIn = (u: User) => {
       setUser(u);
+      // Back from a Google sign-in that didn't finish: the login screen again, saying so.
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && !u.email && window.sessionStorage.getItem(GOOGLE_FAILED)) openLogin();
       remembered.then(() => sendSourceOnce((src) => api.setSource(src)));
     };
     const off = api.onSignedIn(signedIn);

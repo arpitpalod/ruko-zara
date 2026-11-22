@@ -637,3 +637,13 @@ def test_new_form_survives_a_reload(page):
     page.reload()
     page.get_by_text("New request", exact=True).first.click()
     page.wait_for_function("() => [...document.querySelectorAll('input,textarea')].some((i) => i.value === 'Half written arzi')")
+
+
+def test_google_that_did_not_finish_reopens_login(page):
+    """Back from Google without finishing (e.g. over 5 minutes): login again with a clear message, still a guest."""
+    page.add_init_script("sessionStorage.setItem('rz.googleFailed', '1')")
+    page.goto(BASE + "/")
+    page.get_by_text("English", exact=True).click()
+    page.get_by_text("Google sign-in didn't finish. Please try again.", exact=True).wait_for()
+    page.get_by_test_id("google-signin").wait_for()
+    assert page.get_by_text("Sign in to post, comment and vote freely", exact=True).count() == 1

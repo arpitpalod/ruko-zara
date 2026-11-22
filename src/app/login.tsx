@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { GoogleButton } from '../components/GoogleButton';
 import { Button, Field } from '../components/ui';
@@ -7,6 +7,7 @@ import { friendly } from '../lib/errors';
 import { api, isDemo } from '../lib/api';
 import { useT } from '../lib/i18n';
 import { LEGAL, WEB_BASE, openLink } from '../lib/legal';
+import { GOOGLE_FAILED } from '../lib/googleReturn';
 import { googleOn, loginReturnUrl } from '../lib/loginReturn';
 import { useSession } from '../lib/session';
 import { M, R, T } from '../lib/theme';
@@ -21,6 +22,7 @@ export default function Login() {
   const [mode, setMode] = useState<CodeMode | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [googleErr, setGoogleErr] = useState<string | null>(null); // shown right under the Google button
 
   const clean = email.trim().toLowerCase();
   const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
@@ -41,17 +43,23 @@ export default function Login() {
 
   // Google (website): a guest's account gets the Google sign-in added, so their votes and arzi stay theirs.
   const showGoogle = googleOn(isDemo, user.isAdmin);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined' || !window.sessionStorage.getItem(GOOGLE_FAILED)) return;
+    window.sessionStorage.removeItem(GOOGLE_FAILED);
+    setGoogleErr(t('login.googleFailed'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const google = async () => {
     if (busy) return;
     setBusy(true);
-    setErr(null);
+    setGoogleErr(null);
     try {
       const r = await api.signInWithGoogle(loginReturnUrl(new URL(WEB_BASE).pathname));
       if (r === 'redirecting') return; // off to Google; the page comes back signed in
       setUser(r);
       router.back();
     } catch (e: any) {
-      setErr(friendly(e, t));
+      setGoogleErr(friendly(e, t));
       setBusy(false);
     }
   };
@@ -73,14 +81,15 @@ export default function Login() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={s.wrap} keyboardShouldPersistTaps="handled">
-        <Text style={s.h}>{t('login.title')}</Text>
-        <Text style={s.p}>{t('login.why')}</Text>
+        <Text style={s.h}>{showGoogle ? t('login.titleSignIn') : t('login.title')}</Text>
+        <Text style={s.p}>{showGoogle ? t('login.whySignIn') : t('login.why')}</Text>
 
         {!mode ? (
           <>
             {showGoogle ? (
               <>
                 <GoogleButton label={t('login.google')} onPress={google} disabled={busy} />
+                {googleErr ? <Text style={s.err}>{googleErr}</Text> : null}
                 <Text style={s.or}>{t('login.orEmail')}</Text>
               </>
             ) : null}
