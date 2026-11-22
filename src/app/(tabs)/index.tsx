@@ -13,7 +13,7 @@ import { api, isDemo } from '../../lib/api';
 import { friendly, isGuestLimit } from '../../lib/errors';
 import { applyVote, catLabel } from '../../lib/format';
 import { useT } from '../../lib/i18n';
-import { useUser } from '../../lib/session';
+import { useUser, openLogin } from '../../lib/session';
 import { M, R, T } from '../../lib/theme';
 import { InterestsIntro } from '../../components/InterestsIntro';
 import { splitByInterest, useInterests } from '../../lib/interests';
@@ -112,7 +112,7 @@ export default function Feed() {
   const onVote = async (id: string, v: Verdict, reason: VoteReason) => {
     const item = items.find((x) => x.id === id);
     const isNew = !item?.my_vote;
-    if (isNew && left === 0) return router.push('/login');
+    if (isNew && left === 0) return openLogin();
     // A preview has no split to update yet: mark the vote, then load the real numbers.
     setItems((xs) => xs.map((x) => (x.id === id ? (x.preview ? { ...x, my_vote: v } : applyVote(x, v)) : x)));
     try {
@@ -128,7 +128,7 @@ export default function Feed() {
       setErr(friendly(e, t));
       if (isGuestLimit(e)) {
         setLeft(0);
-        router.push('/login');
+        openLogin();
       }
       load();
     }
@@ -214,7 +214,7 @@ export default function Feed() {
           {auto && picked.length > 0 ? <Text style={s.autoHint}>{t('feed.interestsAuto')}</Text> : null}
           {isDemo ? <Text style={s.demo}>{t('feed.demo')}</Text> : null}
           {left !== null && left <= 5 && tab === 'open' ? (
-            <Pressable onPress={() => router.push('/login')} style={s.guest}>
+            <Pressable onPress={() => openLogin()} style={s.guest}>
               <IconText icon={Vote} size={18} color={M.onPrimaryContainer} style={s.guestT}>{left > 0 ? t('feed.guestLeft', { n: left }) : t('feed.guestOut')}</IconText>
             </Pressable>
           ) : null}

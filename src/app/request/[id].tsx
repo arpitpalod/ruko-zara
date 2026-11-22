@@ -16,7 +16,7 @@ import { ago, applyVote, inr, timeLeft } from '../../lib/format';
 import { arrivedOn, leftArrival } from '../../lib/entry';
 import { requestUrl, shareOnWhatsApp } from '../../lib/share';
 import { useT } from '../../lib/i18n';
-import { requireLogin, useUser } from '../../lib/session';
+import { requireLogin, useUser, openLogin } from '../../lib/session';
 import { M, R, T } from '../../lib/theme';
 import type { ReasonCount, VoteReason } from '../../lib/reasons';
 import type { Comment, FeedItem, Verdict } from '../../lib/types';
@@ -88,7 +88,7 @@ export default function RequestDetail() {
       load(); // results and reasons, now that you've voted
     } catch (e: any) {
       setMsg(friendly(e, t));
-      if (isGuestLimit(e)) router.push('/login');
+      if (isGuestLimit(e)) openLogin();
       load();
     }
   };

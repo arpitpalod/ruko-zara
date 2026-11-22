@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api } from './api';
+import { rememberLoginFrom } from './loginReturn';
 import { rememberSource, sendSourceOnce } from './source';
 import type { User } from './types';
 
@@ -19,8 +20,14 @@ export function useUser(): User {
 /** Voting, posting and commenting need a verified email. Returns false (and opens login) if missing. */
 export function requireLogin(user: User): boolean {
   if (user.email) return true;
-  router.push('/login');
+  openLogin();
   return false;
+}
+
+/** Opens the login screen, remembering this page (Google sign-in returns here after a full page load). */
+export function openLogin() {
+  rememberLoginFrom();
+  router.push('/login');
 }
 
 /** Stand-in until sign-in finishes: no id, no email. Never matches anyone's arzi. */

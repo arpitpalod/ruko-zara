@@ -225,6 +225,10 @@ export const mockApi: Api = {
     ME.email = email;
     return delay({ ...ME });
   },
+  async signInWithGoogle() {
+    ME.email = 'demo.google@gmail.com';
+    return delay({ ...ME });
+  },
   async deleteAccount() {
     for (let i = rows.length - 1; i >= 0; i--) if (rows[i].user_id === ME.id) rows.splice(i, 1);
     ME.email = null;

@@ -13,7 +13,8 @@ function must<T>(r: { data: T | null; error: { message: string } | null }): T {
 
 export function createSupabaseApi(url: string, key: string): Api {
   const sb = createClient(url, key, {
-    auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
+    // Website: Google sign-in comes back with a one-time ?code= in the address, exchanged for the session here.
+    auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: Platform.OS === 'web', flowType: 'pkce' },
   });
 
   // Refresh tokens only while the app is in the foreground (Supabase recommendation for RN).
@@ -32,8 +33,44 @@ export function createSupabaseApi(url: string, key: string): Api {
     return { id: uid, handle: p.handle, email: u.email || null, isAdmin: admin.data === true };
   }
 
+  /**
+   * Back from Google. A one-time ?code= in the address has just become the session: remove it, or a reload
+   * would try it again and fail. With an error: if they didn't cancel, the Google account most likely
+   * belongs to an existing Ruko Zara account (already linked, or same email), so sign in to that one,
+   * as with an email that already has an account. Tried once only, so it can never loop.
+   */
+  async function afterGoogle(): Promise<boolean> {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return false;
+    const url = new URL(window.location.href);
+    const q = new URLSearchParams(url.search + '&' + url.hash.slice(1));
+    const error = q.get('error') ?? q.get('error_code');
+    if (!error) return false;
+    ['error', 'error_code', 'error_description', 'code', 'state', 'sb_flow_id'].forEach((k) => url.searchParams.delete(k));
+    url.hash = '';
+    window.history.replaceState(null, '', url.toString());
+    const RETRY = 'rz.googleRetry';
+    if (q.get('error') === 'access_denied' || window.sessionStorage.getItem(RETRY)) {
+      window.sessionStorage.removeItem(RETRY);
+      return false;
+    }
+    window.sessionStorage.setItem(RETRY, '1');
+    await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: url.toString() } });
+    return true; // leaving for Google again
+  }
+
+  function tidyCode() {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has('code')) return;
+    url.searchParams.delete('code');
+    window.history.replaceState(null, '', url.toString());
+    window.sessionStorage.removeItem('rz.googleRetry');
+  }
+
   async function startSession(): Promise<User> {
-    let session = (await sb.auth.getSession()).data.session;
+    if (await afterGoogle()) return new Promise<User>(() => {}); // the page is about to change
+    let session = (await sb.auth.getSession()).data.session; // (on the website this also takes in a Google ?code=)
+    tidyCode();
     if (!session) {
       // Bot check; if it can't run, try anyway (the server decides whether a token is required).
       const captchaToken = await getCaptchaToken().catch(() => undefined);
@@ -101,6 +138,16 @@ export function createSupabaseApi(url: string, key: string): Api {
       const u = r.data.user ?? (await sb.auth.getUser()).data.user;
       if (!u) throw new Error('Verify nahi ho paya, dobara try karo');
       return toUser(u);
+    },
+
+    async signInWithGoogle(returnTo) {
+      await ensure().catch(() => {}); // a guest sign-in still running must not replace this later
+      const session = (await sb.auth.getSession()).data.session;
+      const r = session?.user?.is_anonymous
+        ? await sb.auth.linkIdentity({ provider: 'google', options: { redirectTo: returnTo } })
+        : await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: returnTo } });
+      if (r.error) throw new Error(r.error.message);
+      return 'redirecting';
     },
 
     async adminSetBanned(userId, ban, reason) {

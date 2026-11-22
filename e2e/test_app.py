@@ -598,3 +598,42 @@ def test_no_story_button_on_others_arzi(page):
     page.goto(BASE + "/request/r1")
     page.get_by_text("Share on WhatsApp").wait_for()
     assert page.get_by_test_id("share-story").count() == 0
+
+
+# ── Google sign-in, 22 Nov (the demo signs in at once; the real site goes to Google and back) ──
+
+def test_google_signin_from_login(page):
+    open_app(page, "English")
+    page.get_by_text("Buy it", exact=True).first.wait_for()
+    page.get_by_text("My requests", exact=True).first.click()
+    page.get_by_text("Verify email: post, comment, vote without limits", exact=True).click()
+    page.get_by_test_id("google-signin").wait_for()
+    assert page.get_by_text("or get a code by email", exact=True).count() == 1
+    page.get_by_test_id("google-signin").click()
+    page.get_by_test_id("google-signin").wait_for(state="detached")  # back on My requests, signed in
+    assert page.get_by_text("Verify email: post, comment, vote without limits", exact=True).count() == 0
+
+
+def test_google_signin_posts_the_waiting_arzi(page):
+    """Fill the form, Send, choose Google: the arzi posts itself once signed in."""
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("Google test kettle")
+    page.get_by_placeholder("e.g. 8999").fill("1999")
+    page.get_by_placeholder("Need or want? What happened to the old one?").fill("Old kettle leaks every morning")
+    page.get_by_text("Send request", exact=True).click()
+    page.get_by_test_id("google-signin").click()
+    page.get_by_text("Share on WhatsApp").wait_for()
+    page.get_by_text("Google test kettle").first.wait_for()
+
+
+def test_new_form_survives_a_reload(page):
+    """The form is kept until posted (Google sign-in comes back with a fresh page)."""
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("Half written arzi")
+    page.get_by_placeholder("Need or want? What happened to the old one?").fill("Still thinking about it")
+    page.wait_for_timeout(700)
+    page.reload()
+    page.get_by_text("New request", exact=True).first.click()
+    page.wait_for_function("() => [...document.querySelectorAll('input,textarea')].some((i) => i.value === 'Half written arzi')")

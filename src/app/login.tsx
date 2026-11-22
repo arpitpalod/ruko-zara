@@ -1,18 +1,20 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { GoogleButton } from '../components/GoogleButton';
 import { Button, Field } from '../components/ui';
 import { friendly } from '../lib/errors';
 import { api, isDemo } from '../lib/api';
 import { useT } from '../lib/i18n';
-import { LEGAL, openLink } from '../lib/legal';
+import { LEGAL, WEB_BASE, openLink } from '../lib/legal';
+import { googleOn, loginReturnUrl } from '../lib/loginReturn';
 import { useSession } from '../lib/session';
 import { M, R, T } from '../lib/theme';
 import type { CodeMode } from '../lib/types';
 
 /** Email login with a one-time code. An anonymous user keeps their requests and votes. */
 export default function Login() {
-  const { setUser } = useSession();
+  const { user, setUser } = useSession();
   const { t } = useT();
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -33,6 +35,23 @@ export default function Login() {
     } catch (e: any) {
       setErr(friendly(e, t));
     } finally {
+      setBusy(false);
+    }
+  };
+
+  // Google (website): a guest's account gets the Google sign-in added, so their votes and arzi stay theirs.
+  const showGoogle = googleOn(isDemo, user.isAdmin);
+  const google = async () => {
+    if (busy) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const r = await api.signInWithGoogle(loginReturnUrl(new URL(WEB_BASE).pathname));
+      if (r === 'redirecting') return; // off to Google; the page comes back signed in
+      setUser(r);
+      router.back();
+    } catch (e: any) {
+      setErr(friendly(e, t));
       setBusy(false);
     }
   };
@@ -59,6 +78,12 @@ export default function Login() {
 
         {!mode ? (
           <>
+            {showGoogle ? (
+              <>
+                <GoogleButton label={t('login.google')} onPress={google} disabled={busy} />
+                <Text style={s.or}>{t('login.orEmail')}</Text>
+              </>
+            ) : null}
             <Field
               value={email}
               onChangeText={setEmail}
@@ -127,5 +152,6 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between' },
   err: { ...T.body, color: M.no },
   legal: { ...T.bodySmall, fontSize: 12, color: M.onSurfaceVariant, textAlign: 'center' },
+  or: { ...T.bodySmall, color: M.onSurfaceVariant, textAlign: 'center' },
   legalLink: { color: M.primary, fontWeight: '700', textDecorationLine: 'underline' },
 });

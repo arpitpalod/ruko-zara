@@ -103,6 +103,11 @@ export interface Api {
   block(userId: string): Promise<void>;
   sendEmailCode(email: string): Promise<CodeMode>;
   verifyEmailCode(email: string, code: string, mode: CodeMode): Promise<User>;
+  /**
+   * Google sign-in (website). A guest keeps their votes and arzi (the Google account is added to the guest
+   * account). Leaves the site and returns to `returnTo` already signed in ('redirecting'); the demo signs in at once.
+   */
+  signInWithGoogle(returnTo: string): Promise<User | 'redirecting'>;
   /** Deletes the account and all its data, then starts a fresh anonymous session. */
   deleteAccount(): Promise<User>;
   /** Admin only: hide or unhide an arzi or comment for everyone. */

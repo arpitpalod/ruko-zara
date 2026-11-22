@@ -1,4 +1,5 @@
 import { IconText, Link2 } from '../../components/Icon';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -11,6 +12,9 @@ import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { M, T } from '../../lib/theme';
 import { CATEGORIES, DURATIONS } from '../../lib/types';
+
+const DRAFT = 'rz.newDraft';
+const PENDING = 'rz.postAfterLogin';
 
 /** Nayi Arzi — the purchase request form. Writing the "why" is half the cure. */
 export default function NewRequest() {
@@ -37,6 +41,38 @@ export default function NewRequest() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // The form is kept on this device until it's posted: Google sign-in leaves the site and comes back with
+  // a fresh page, and a half-written arzi shouldn't be lost to that (or to a closed tab).
+  const restored = useRef(false);
+  useEffect(() => {
+    AsyncStorage.multiGet([DRAFT, PENDING])
+      .then(([[, d], [, p]]) => {
+        if (d) {
+          const v = JSON.parse(d);
+          setItem((x) => x || String(v.item ?? ''));
+          setPrice((x) => x || String(v.price ?? ''));
+          if ((CATEGORIES as readonly string[]).includes(v.category) && !from.category) setCategory(v.category);
+          setReason((x) => x || String(v.reason ?? ''));
+          setAlternative((x) => x || String(v.alternative ?? ''));
+          setLinkText((x) => x || String(v.linkText ?? ''));
+          if (DURATIONS.includes(v.hours)) setHours(v.hours);
+          setFeatureOk(v.featureOk === true);
+        }
+        if (p === '1') pendingPost.current = true; // they pressed Send, then went to sign in
+      })
+      .catch(() => {})
+      .finally(() => (restored.current = true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!restored.current) return;
+    const timer = setTimeout(() => {
+      const empty = !item && !price && !reason && !alternative && !linkText;
+      (empty ? AsyncStorage.removeItem(DRAFT) : AsyncStorage.setItem(DRAFT, JSON.stringify({ item, price, category, reason, alternative, linkText, hours, featureOk }))).catch(() => {});
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [item, price, category, reason, alternative, linkText, hours, featureOk]);
+
   const priceNum = Number(price || 0);
   const link = linkText.trim() ? extractLink(linkText) : null;
   const linkBad = linkText.trim().length > 0 && !link;
@@ -53,16 +89,23 @@ export default function NewRequest() {
   }, [user.email]);
   useFocusEffect(
     useCallback(() => {
-      if (!user.email) pendingPost.current = false; // closed the login screen without verifying
-    }, [user.email]),
+      // Back from the login screen without signing in. (Not while the page is still starting up: after
+      // Google, the person arrives here before their sign-in has finished loading.)
+      if (user.id && !user.email) {
+        pendingPost.current = false;
+        AsyncStorage.removeItem(PENDING).catch(() => {});
+      }
+    }, [user.id, user.email]),
   );
 
   const submit = async () => {
     if (!valid || busy) return;
     if (!requireLogin(user)) {
       pendingPost.current = true; // post automatically once the email is verified
+      AsyncStorage.setItem(PENDING, '1').catch(() => {}); // and across a Google sign-in's page reload
       return;
     }
+    AsyncStorage.removeItem(PENDING).catch(() => {});
     setBusy(true);
     setErr(null);
     try {

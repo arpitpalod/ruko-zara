@@ -13,7 +13,7 @@ import { inr } from '../../lib/format';
 import { LANGS, useT } from '../../lib/i18n';
 import { LEGAL, WEB_BASE, openLink } from '../../lib/legal';
 import { shareOnWhatsApp } from '../../lib/share';
-import { useSession } from '../../lib/session';
+import { useSession, openLogin } from '../../lib/session';
 import { M, R, T } from '../../lib/theme';
 import type { FeedItem, Outcome } from '../../lib/types';
 
@@ -107,7 +107,7 @@ export default function Mine() {
           {user.email ? (
             <IconText icon={BadgeCheck} color={M.yes} style={s.accT}>{t('mine.verified', { email: user.email })}</IconText>
           ) : (
-            <Button label={t('mine.verify')} size="lg" block onPress={() => router.push('/login')} />
+            <Button label={t('mine.verify')} size="lg" block onPress={() => openLogin()} />
           )}
           <View style={{ gap: 8 }}>
             <Text style={s.accT}>{t('mine.language')} · भाषा</Text>
