@@ -1,7 +1,7 @@
 import { ArrowUpRight, BadgeCheck, Ban, Check, CirclePause, EyeOff, IconText, PartyPopper, ShoppingBag, ShoppingCart, type LucideIcon } from './Icon';
 import { Card } from './ui';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
 import { useT, type Key } from '../lib/i18n';
@@ -35,6 +35,9 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
   const viewer = useUser();
   // Which side's reasons are open. A vote is cast only when a reason is picked (one more tap).
   const [picking, setPicking] = useState<Verdict | null>(null);
+  // The shop's product photo, when the server found one. A photo that fails to load is simply left out.
+  const [broken, setBroken] = useState(false);
+  const photo = real.image && !broken ? real.image : null;
   // Example arzi carry demo vote counts; they're added for display and always tagged "demo".
   const demo = (real.demo_approve ?? 0) + (real.demo_reject ?? 0) > 0;
   const r = demo
@@ -58,16 +61,30 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
       {viewer.isAdmin && real.hidden ? <IconText icon={EyeOff} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.hiddenBadge')}</IconText> : null}
       {viewer.isAdmin && real.feature_ok ? <IconText icon={Check} size={14} color={M.onSurfaceVariant} box={s.flag} style={s.flagT}>{t('admin.featureOk')}</IconText> : null}
 
-      <View style={s.top}>
-        <Text style={s.item} numberOfLines={full ? undefined : 2}>
-          {r.item}
-        </Text>
-        <Text style={s.price}>{inr(r.price_inr)}</Text>
+      {full && photo ? (
+        <Pressable onPress={r.link ? () => openLink(r.link!) : undefined} style={s.photoBig} accessibilityLabel={t('card.photo', { item: r.item })} testID="photo">
+          <Image source={{ uri: photo }} style={s.fill} resizeMode="contain" onError={() => setBroken(true)} accessibilityIgnoresInvertColors />
+        </Pressable>
+      ) : null}
+      <View style={s.head}>
+        {!full && photo ? (
+          <View style={s.thumb} testID="photo">
+            <Image source={{ uri: photo }} style={s.fill} resizeMode="contain" onError={() => setBroken(true)} accessibilityLabel={t('card.photo', { item: r.item })} accessibilityIgnoresInvertColors />
+          </View>
+        ) : null}
+        <View style={s.headText}>
+          <View style={s.top}>
+            <Text style={s.item} numberOfLines={full ? undefined : 2}>
+              {r.item}
+            </Text>
+            <Text style={s.price}>{inr(r.price_inr)}</Text>
+          </View>
+          <Text style={s.meta} numberOfLines={1}>
+            {catLabel(r.category, t)} · {ago(r.created_at, t)} · {r.handle}
+            {mine ? t('card.you') : ''}
+          </Text>
+        </View>
       </View>
-      <Text style={s.meta} numberOfLines={1}>
-        {catLabel(r.category, t)} · {ago(r.created_at, t)} · {r.handle}
-        {mine ? t('card.you') : ''}
-      </Text>
 
       <Text style={s.reason} numberOfLines={full ? undefined : 2}>
         {r.reason}
@@ -248,6 +265,12 @@ function ReasonTally({ reasons, votes }: { reasons: ReasonCount[]; votes: number
 }
 
 const s = StyleSheet.create({
+  head: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  headText: { flex: 1, minWidth: 0 },
+  // Product photos sit on white, like on the shop's own page.
+  thumb: { width: 60, height: 60, borderRadius: R.sm, backgroundColor: '#FFFFFF', borderWidth: StyleSheet.hairlineWidth, borderColor: M.outlineVariant, overflow: 'hidden', padding: 3 },
+  photoBig: { height: 220, borderRadius: R.md, backgroundColor: '#FFFFFF', borderWidth: StyleSheet.hairlineWidth, borderColor: M.outlineVariant, overflow: 'hidden', padding: 12, marginBottom: 14 },
+  fill: { width: '100%', height: '100%' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   item: { ...T.titleMedium, flex: 1, color: M.onSurface },

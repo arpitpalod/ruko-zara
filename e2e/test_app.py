@@ -679,3 +679,17 @@ def test_shop_not_allowed_is_said_before_send(page):
     page.get_by_placeholder(re.compile("Paste")).fill("https://www.example.com/speaker")
     page.get_by_test_id("link-not-allowed").wait_for()
     assert page.get_by_role("button", name="Send request").is_disabled()
+
+
+def test_shop_photo_on_feed_and_arzi_page(page):
+    open_app(page, "English")
+    card = page.get_by_text("iPhone 17 Pro (256GB)").first
+    card.wait_for()
+    # The feed shows a small photo on arzi whose shop link has one, and none on the others.
+    assert page.get_by_role("img", name="Photo of iPhone 17 Pro (256GB) from the shop").count() == 1
+    assert page.get_by_role("img", name=re.compile("Photo of Raat 1 baje")).count() == 0
+    card.click()
+    page.wait_for_url(re.compile(r"/request/r1"))
+    big = page.get_by_test_id("photo").last
+    big.wait_for()
+    assert big.bounding_box()["height"] >= 200

@@ -34,6 +34,7 @@ const en = {
   'feed.empty': 'No requests yet. Post the first one!',
 
   'card.you': ' (you)',
+  'card.photo': 'Photo of {item} from the shop',
   'card.cheaper': 'Cheaper alternative: {alt}',
   'card.yes': 'Buy it',
   'card.no': 'Skip it',
@@ -276,6 +277,7 @@ const hi: Dict = {
   'feed.empty': 'अभी कोई अर्ज़ी नहीं। पहली अर्ज़ी आप डालें!',
 
   'card.you': ' (आप)',
+  'card.photo': 'दुकान से {item} की फ़ोटो',
   'card.cheaper': 'सस्ता विकल्प: {alt}',
   'card.yes': 'ले लो',
   'card.no': 'रहने दो',
@@ -515,6 +517,7 @@ const hinglish: Dict = {
   'feed.empty': 'Abhi koi arzi nahi. Pehli arzi tum daalo!',
 
   'card.you': ' (tum)',
+  'card.photo': 'Shop se {item} ki photo',
   'card.cheaper': 'Sasta option: {alt}',
   'card.yes': 'Le le',
   'card.no': 'Rehne de',

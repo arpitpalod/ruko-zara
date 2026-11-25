@@ -1,8 +1,14 @@
 // Link preview for the New arzi form: the product's title and photo from a shop's page, like WhatsApp shows.
 // Safety: only shops on the allowed list (allowed_link_domains), https only; redirects are followed only to
 // allowed shops (short links like amzn.in); 5-second and 1.5 MB limits; signed-in callers only (guests count,
-// the anon key alone doesn't); a per-person limit. Nothing is stored. It also tells the form when a shop
+// the anon key alone doesn't); a per-person limit. Nothing is stored in this mode. It also tells the form when a shop
 // isn't allowed, so people learn that before pressing Send, not after.
+//
+// Photo mode ({ photo_for: <arzi id> }): called by the database right after an arzi with a shop link is
+// saved (trigger requests_photo), and once for older arzi. It takes only the arzi's id: the link is read
+// from the database, never from the caller, so nobody can put their own picture on the feed. It fills
+// requests.image once, only while it's empty. Anyone may call it (the database uses the anon key); the
+// worst they can do is make us look up the right photo again, and each arzi is tried at most every 10 minutes.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { allowedHost, fetchPage, pick, titleFromLink } from './preview.ts';
 
@@ -46,6 +52,34 @@ function tooMany(who: string): boolean {
   return false;
 }
 
+const tried = new Map<string, number>(); // per arzi, this server copy: one try every 10 minutes
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+async function fillPhoto(id: string): Promise<Response> {
+  if (!UUID.test(id)) return json({ error: 'bad id' }, 400);
+  const now = Date.now();
+  if (now - (tried.get(id) ?? 0) < 10 * 60_000) return json({ skipped: 'tried recently' });
+  if (tried.size > 5000) tried.clear();
+  tried.set(id, now);
+  const { data, error } = await sb.from('requests').select('link, image').eq('id', id).maybeSingle();
+  if (error) throw error;
+  if (!data?.link || data.image) return json({ skipped: 'nothing to do' });
+  let url: URL;
+  try {
+    url = new URL(data.link);
+  } catch {
+    return json({ skipped: 'bad link' });
+  }
+  if (url.protocol === 'http:') url.protocol = 'https:';
+  const list = await allowedDomains();
+  if (url.protocol !== 'https:' || !allowedHost(url.hostname.toLowerCase(), list)) return json({ skipped: 'shop not allowed' });
+  const page = await fetchPage(url, list).catch(() => null);
+  const image = page ? pick(page.html, page.url).image : null;
+  if (!image) return json({ image: null });
+  const { error: saveError } = await sb.from('requests').update({ image }).eq('id', id).is('image', null);
+  if (saveError) throw saveError;
+  return json({ image });
+}
+
 /** The signed-in person from the (already verified) token; null for the bare anon key. */
 function caller(req: Request): string | null {
   try {
@@ -60,12 +94,19 @@ function caller(req: Request): string | null {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405);
+  const body = await req.json().catch(() => null);
+  if (body && typeof body.photo_for === 'string') {
+    try {
+      return await fillPhoto(body.photo_for);
+    } catch (e) {
+      return json({ error: (e as Error).message }, 500);
+    }
+  }
   const who = caller(req);
   if (!who) return json({ error: 'sign in first' }, 401);
   if (tooMany(who)) return json({ error: 'too many' }, 429);
   let url: URL;
   try {
-    const body = await req.json();
     url = new URL(String(body?.url ?? '').trim());
   } catch {
     return json({ error: 'bad url' }, 400);
