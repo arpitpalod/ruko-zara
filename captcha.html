@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ruko Zara · quick check</title>
+<style>
+  html, body { margin: 0; background: transparent; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 65px; }
+</style>
+</head>
+<body>
+<div id="w"></div>
+<p id="status" style="display:none;font:16px system-ui,sans-serif;text-align:center;padding:16px"></p>
+<script>
+(function () {
+  // Runs Cloudflare Turnstile and hands the one-time token to the app (Android WebView or the web app around this iframe).
+  var key = new URLSearchParams(location.search).get('k') || '';
+  // Opened directly in a browser (not inside the app): show the result, so the setup can be checked from a phone.
+  var standalone = !window.ReactNativeWebView && window.parent === window;
+  var statusEl = document.getElementById('status');
+  if (standalone) { statusEl.style.display = 'block'; statusEl.textContent = 'Checking…'; document.body.style.flexDirection = 'column'; }
+  function send(m) {
+    if (standalone) {
+      if (m.type === 'token') statusEl.textContent = '✅ Bot check is working. You can close this page.';
+      else if (m.type === 'error') statusEl.textContent = '❌ Not working — error ' + m.code;
+      else if (m.type === 'interactive') statusEl.textContent = 'Tap the box above.';
+      return;
+    }
+    m.source = 'rz-captcha';
+    var s = JSON.stringify(m);
+    if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(s);
+    else if (window.parent !== window) window.parent.postMessage(s, location.origin);
+  }
+  window.rzTurnstileLoad = function () {
+    try {
+      window.turnstile.render('#w', {
+        sitekey: key,
+        appearance: window.ReactNativeWebView ? 'interaction-only' : 'always',
+        callback: function (t) { send({ type: 'token', token: t }); },
+        'before-interactive-callback': function () { send({ type: 'interactive' }); },
+        'error-callback': function (c) { send({ type: 'error', code: String(c) }); },
+        'expired-callback': function () { send({ type: 'expired' }); }
+      });
+    } catch (e) {
+      send({ type: 'error', code: 'script' });
+    }
+  };
+  if (!key) { send({ type: 'error', code: 'script' }); return; }
+  var s = document.createElement('script');
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=rzTurnstileLoad&render=explicit';
+  s.async = true;
+  s.onerror = function () { send({ type: 'error', code: 'script' }); };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>

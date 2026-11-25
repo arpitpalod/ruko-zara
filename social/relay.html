@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Ruko Zara media relay</title>
+<p>Sending images to Instagram…</p>
+<script>
+// Opened from an Instagram tab (by a button Arpit clicks there). Instagram's page can't download
+// files from other sites itself, so this page, on our own site, reads the requested images from
+// this folder and hands them to that tab, then closes. It only ever sends to instagram.com.
+(async () => {
+  const names = (new URLSearchParams(location.search).get('f') || '').split(',').filter((n) => /^[A-Za-z0-9._-]+\.jpg$/.test(n));
+  const files = [];
+  for (const n of names) {
+    const r = await fetch('./' + n, { cache: 'no-store' });
+    if (!r.ok) throw new Error(n + ': ' + r.status);
+    files.push({ name: n, type: 'image/jpeg', buf: await r.arrayBuffer() });
+  }
+  if (window.opener) window.opener.postMessage({ rz: 'files', files }, 'https://www.instagram.com', files.map((f) => f.buf));
+  document.body.textContent = 'Sent ' + files.length + ' images. You can close this window.';
+  setTimeout(() => window.close(), 500);
+})().catch((e) => (document.body.textContent = 'Could not send: ' + e.message));
+</script>
