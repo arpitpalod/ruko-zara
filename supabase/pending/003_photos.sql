@@ -9,10 +9,16 @@
 --   demo votes and "verdict emailed" time. Those are now reset when app users post.
 -- * The feed, the arzi page and the logged-out previews return the photo.
 
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('photos', 'photos', true, 1000000, array['image/jpeg', 'image/png', 'image/webp'])
-on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
-  allowed_mime_types = excluded.allowed_mime_types;
+-- (The test copy runs without storage, so the bucket is made only where storage exists.)
+do $$
+begin
+  if to_regclass('storage.buckets') is not null then
+    insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    values ('photos', 'photos', true, 1000000, array['image/jpeg', 'image/png', 'image/webp'])
+    on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+  end if;
+end $$;
 
 alter table public.requests add column if not exists photo text
   constraint requests_photo_check check (photo is null or photo in (id::text || '.jpg', id::text || '.png', id::text || '.webp'));
