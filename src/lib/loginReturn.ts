@@ -4,11 +4,9 @@ import { Platform } from 'react-native';
  * Google sign-in leaves the site and comes back with a full page load, so a few things are kept in
  * the browser across that trip (web only; the phone app doesn't offer Google yet):
  * - where the person was when login opened, to come back to it;
- * - whether the Google button is switched on for them (?google=1 while it's being tested).
  */
 const web = Platform.OS === 'web' && typeof window !== 'undefined';
 const FROM = 'rz.loginFrom';
-const BETA = 'rz.googleBeta';
 
 function store(): Storage | null {
   try {
@@ -17,8 +15,6 @@ function store(): Storage | null {
     return null;
   }
 }
-
-if (web && new URLSearchParams(window.location.search).get('google') === '1') store()?.setItem(BETA, '1');
 
 /** Called just before opening the login screen. */
 export function rememberLoginFrom() {
@@ -33,4 +29,5 @@ export function loginReturnUrl(basePath: string): string {
   return window.location.origin + path;
 }
 
-export const googleOn = (isDemo: boolean, isAdmin: boolean) => web && (isDemo || isAdmin || store()?.getItem(BETA) === '1');
+/** Google sign-in is on for everyone on the website (25 Nov). The phone app still uses the email code. */
+export const googleOn = (_isDemo?: boolean, _isAdmin?: boolean) => web;
