@@ -27,25 +27,88 @@ export async function fetchPage(start: URL, list: string[]): Promise<{ html: str
       await res.body?.cancel();
       return null;
     }
-    const reader = res.body.getReader();
-    const parts: Uint8Array[] = [];
-    let size = 0;
-    while (size < 1_500_000) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      parts.push(value);
-      size += value.length;
-    }
-    reader.cancel().catch(() => {});
-    const all = new Uint8Array(size);
-    let at = 0;
-    for (const p of parts) {
-      all.set(p.subarray(0, Math.min(p.length, size - at)), at);
-      at += p.length;
-    }
-    return { html: new TextDecoder().decode(all), url };
+    const { bytes } = await readUpTo(res.body, 1_500_000);
+    return { html: new TextDecoder().decode(bytes), url };
   }
   return null;
+}
+
+/** Reads a response body up to max bytes; `more` says whether it was longer. */
+async function readUpTo(body: ReadableStream<Uint8Array>, max: number): Promise<{ bytes: Uint8Array; more: boolean }> {
+  const reader = body.getReader();
+  const parts: Uint8Array[] = [];
+  let size = 0;
+  let more = false;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (size >= max) {
+      more = true;
+      break;
+    }
+    parts.push(value);
+    size += value.length;
+  }
+  reader.cancel().catch(() => {});
+  const all = new Uint8Array(size);
+  let at = 0;
+  for (const p of parts) {
+    all.set(p, at);
+    at += p.length;
+  }
+  return { bytes: all, more };
+}
+
+/** A smaller copy of a shop's photo where its image server offers one (about 400 px), to keep the feed light. */
+export function smallerPhoto(src: string): string {
+  try {
+    const u = new URL(src);
+    const h = u.hostname.toLowerCase();
+    if (/(^|\.)(media-amazon|ssl-images-amazon)\.com$/.test(h)) {
+      // /images/I/71abc._SL1500_.jpg or /images/I/71abc.jpg → /images/I/71abc._SL400_.jpg
+      u.pathname = u.pathname.replace(/(\/I\/[^./]+)(\.[^/]*?)?\.(jpe?g|png|webp)$/i, '$1._SL400_.$3');
+    } else if (/(^|\.)flixcart\.com$/.test(h)) {
+      u.pathname = u.pathname.replace(/^\/image\/\d+\/\d+\//, '/image/416/416/');
+    }
+    return u.toString();
+  } catch {
+    return src;
+  }
+}
+
+/** What kind of picture the bytes really are (by their first bytes, not by what the server says). JPG, PNG, WebP only. */
+export function photoKind(b: Uint8Array): { ext: 'jpg' | 'png' | 'webp'; type: string } | null {
+  const text = (from: number, to: number) => String.fromCharCode(...b.subarray(from, to));
+  if (b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return { ext: 'jpg', type: 'image/jpeg' };
+  if (b.length > 8 && b[0] === 0x89 && text(1, 4) === 'PNG') return { ext: 'png', type: 'image/png' };
+  if (b.length > 12 && text(0, 4) === 'RIFF' && text(8, 12) === 'WEBP') return { ext: 'webp', type: 'image/webp' };
+  return null;
+}
+
+/** Downloads a product photo to keep on our own server: https only, no redirects, 5 seconds, under 1 MB, real pictures only. */
+export async function fetchPhoto(src: string): Promise<{ bytes: Uint8Array; ext: string; type: string } | null> {
+  let url: URL;
+  try {
+    url = new URL(src);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.toLowerCase();
+  // Names only: no bare addresses (127.0.0.1, [::1]) and no local names.
+  if (url.protocol !== 'https:' || host.startsWith('[') || !/[a-z]/.test(host.split('.').pop() ?? '') || !host.includes('.')) return null;
+  const res = await fetch(url, {
+    redirect: 'manual',
+    headers: { 'User-Agent': UA, Accept: 'image/webp,image/png,image/jpeg' },
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok || !res.body) {
+    await res.body?.cancel();
+    return null;
+  }
+  const { bytes, more } = await readUpTo(res.body, 1_000_000);
+  if (more || bytes.length > 1_000_000) return null;
+  const kind = photoKind(bytes);
+  return kind ? { bytes, ...kind } : null;
 }
 
 const decode = (s: string) =>

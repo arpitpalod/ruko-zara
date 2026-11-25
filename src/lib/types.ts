@@ -34,8 +34,8 @@ export interface FeedItem {
   my_vote: Verdict | null;
   /** Optional shop link (allowed shopping sites only). */
   link: string | null;
-  /** Product photo from the shop link. Set by the server only, never by the poster. */
-  image?: string | null;
+  /** Product photo's file name on our server (see photoUrl). Set by the server only, never by the poster. */
+  photo?: string | null;
   /** Demo vote counts (example arzi only) — always shown with a "demo" tag. */
   demo_approve?: number;
   demo_reject?: number;

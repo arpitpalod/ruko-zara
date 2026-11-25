@@ -23,7 +23,7 @@ const handles: Record<string, string> = {
 const rows: Row[] = [
   { id: 'r1', user_id: 'u1', item: 'iPhone 17 Pro (256GB)', price_inr: 134900, category: 'Gadgets',
     reason: 'Mera iPhone 13 theek chal raha hai, bas camera upgrade chahiye aur sab office mein naya le aaye hain.',
-    alternative: 'Battery change ₹6,500 mein', closes_at: at(18), outcome: null, created_at: at(-6), link: 'https://www.apple.com/in/iphone/', image: DEMO_PRODUCT },
+    alternative: 'Battery change ₹6,500 mein', closes_at: at(18), outcome: null, created_at: at(-6), link: 'https://www.apple.com/in/iphone/', photo: DEMO_PRODUCT },
   { id: 'r2', user_id: 'u2', item: 'Raat 1 baje Biryani order', price_inr: 480, category: 'Khana',
     reason: 'Ghar pe dal chawal pada hai par mann nahi kar raha. Aaj ka din bahut lamba tha.',
     alternative: 'Maggi bana lo', closes_at: at(0.5), outcome: null, created_at: at(-23.5), link: null },
@@ -47,7 +47,7 @@ const rows: Row[] = [
     alternative: 'Pehle 1 mahine ka pass', closes_at: at(30), outcome: null, created_at: at(-2), link: null },
   { id: 'r12', user_id: 'u5', item: 'Coffee machine (espresso + frother)', price_inr: 10000, category: 'Khana',
     reason: 'Café pe roz ₹220 ka cup jaata hai. Machine 3 mahine mein paisa wasool kar degi.',
-    alternative: 'French press ₹1,000', closes_at: at(40), outcome: null, created_at: at(-1), link: 'https://www.amazon.in/dp/B0DEMO1234', image: DEMO_PRODUCT },
+    alternative: 'French press ₹1,000', closes_at: at(40), outcome: null, created_at: at(-1), link: 'https://www.amazon.in/dp/B0DEMO1234', photo: DEMO_PRODUCT },
   // Closed and not marked yet: the feed asks "Did you buy it?" about this one.
   { id: 'r10', user_id: 'me', item: 'Bluetooth party speaker', price_inr: 3499, category: 'Gadgets',
     reason: 'Ghar pe dosto ke saath music ke liye. Purana speaker kharab ho gaya.',
@@ -157,8 +157,8 @@ export const mockApi: Api = {
     const id = `r${++seq}`;
     const { duration_hours, ...fields } = r;
     // Like the live server: an Amazon link gets its product photo (the poster can't set one).
-    const image = fields.link && /amazon|amzn/.test(fields.link) ? DEMO_PRODUCT : null;
-    rows.push({ ...fields, id, user_id: ME.id, closes_at: at(Math.min(duration_hours, 168)), outcome: null, created_at: new Date().toISOString(), image });
+    const photo = fields.link && /amazon|amzn/.test(fields.link) ? DEMO_PRODUCT : null;
+    rows.push({ ...fields, id, user_id: ME.id, closes_at: at(Math.min(duration_hours, 168)), outcome: null, created_at: new Date().toISOString(), photo });
     votes.set(id, new Map());
     simulateCrowd(id);
     return delay(id);

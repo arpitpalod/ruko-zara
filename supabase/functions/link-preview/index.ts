@@ -6,11 +6,13 @@
 //
 // Photo mode ({ photo_for: <arzi id> }): called by the database right after an arzi with a shop link is
 // saved (trigger requests_photo), and once for older arzi. It takes only the arzi's id: the link is read
-// from the database, never from the caller, so nobody can put their own picture on the feed. It fills
-// requests.image once, only while it's empty. Anyone may call it (the database uses the anon key); the
-// worst they can do is make us look up the right photo again, and each arzi is tried at most every 10 minutes.
+// from the database, never from the caller, so nobody can put their own picture on the feed. The photo is
+// copied to our own storage (bucket "photos", <arzi id>.jpg/png/webp, a small ~400 px copy where the shop
+// offers one), so visitors' phones never load it from the shop. requests.photo is filled once, only while
+// empty. Anyone may call it (the database uses the anon key); the worst they can do is make us look up the
+// right photo again, and each arzi is tried at most every 10 minutes.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { allowedHost, fetchPage, pick, titleFromLink } from './preview.ts';
+import { allowedHost, fetchPage, fetchPhoto, pick, smallerPhoto, titleFromLink } from './preview.ts';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -60,9 +62,9 @@ async function fillPhoto(id: string): Promise<Response> {
   if (now - (tried.get(id) ?? 0) < 10 * 60_000) return json({ skipped: 'tried recently' });
   if (tried.size > 5000) tried.clear();
   tried.set(id, now);
-  const { data, error } = await sb.from('requests').select('link, image').eq('id', id).maybeSingle();
+  const { data, error } = await sb.from('requests').select('link, photo').eq('id', id).maybeSingle();
   if (error) throw error;
-  if (!data?.link || data.image) return json({ skipped: 'nothing to do' });
+  if (!data?.link || data.photo) return json({ skipped: 'nothing to do' });
   let url: URL;
   try {
     url = new URL(data.link);
@@ -73,11 +75,19 @@ async function fillPhoto(id: string): Promise<Response> {
   const list = await allowedDomains();
   if (url.protocol !== 'https:' || !allowedHost(url.hostname.toLowerCase(), list)) return json({ skipped: 'shop not allowed' });
   const page = await fetchPage(url, list).catch(() => null);
-  const image = page ? pick(page.html, page.url).image : null;
-  if (!image) return json({ image: null });
-  const { error: saveError } = await sb.from('requests').update({ image }).eq('id', id).is('image', null);
+  const found = page ? pick(page.html, page.url).image : null;
+  if (!found) return json({ photo: null, why: 'no photo on the page' });
+  const small = smallerPhoto(found);
+  const got = (await fetchPhoto(small).catch(() => null)) ?? (small !== found ? await fetchPhoto(found).catch(() => null) : null);
+  if (!got) return json({ photo: null, why: 'photo could not be downloaded' });
+  const photo = `${id}.${got.ext}`;
+  const { error: upError } = await sb.storage
+    .from('photos')
+    .upload(photo, got.bytes, { contentType: got.type, upsert: true, cacheControl: '31536000' });
+  if (upError) throw upError;
+  const { error: saveError } = await sb.from('requests').update({ photo }).eq('id', id).is('photo', null);
   if (saveError) throw saveError;
-  return json({ image });
+  return json({ photo, bytes: got.bytes.length });
 }
 
 /** The signed-in person from the (already verified) token; null for the bare anon key. */

@@ -1,4 +1,5 @@
-import { cleanTitle, pick, titleFromLink } from '../../../supabase/functions/link-preview/preview';
+import { cleanTitle, photoKind, pick, smallerPhoto, titleFromLink } from '../../../supabase/functions/link-preview/preview';
+import { photoUrl } from '../photo';
 
 describe('link preview: reading a shop page', () => {
   it('shortens Amazon titles to an item name', () => {
@@ -26,5 +27,34 @@ describe('link preview: reading a shop page', () => {
 
   it('a robot-check page is no preview', () => {
     expect(pick('<title>Robot Check</title>', new URL('https://www.amazon.in/dp/X'))).toEqual({ title: null, image: null });
+  });
+});
+
+describe('product photos kept on our server', () => {
+  it('asks Amazon and Flipkart for a ~400 px copy', () => {
+    expect(smallerPhoto('https://m.media-amazon.com/images/I/71Ab+cD-9L._SL1500_.jpg')).toBe('https://m.media-amazon.com/images/I/71Ab+cD-9L._SL400_.jpg');
+    expect(smallerPhoto('https://m.media-amazon.com/images/I/61xyzABC.jpg')).toBe('https://m.media-amazon.com/images/I/61xyzABC._SL400_.jpg');
+    expect(smallerPhoto('https://rukminim2.flixcart.com/image/832/832/xif0q/mattress/abc.jpeg?q=70')).toBe(
+      'https://rukminim2.flixcart.com/image/416/416/xif0q/mattress/abc.jpeg?q=70',
+    );
+    expect(smallerPhoto('https://www.ikea.com/in/en/images/products/x.jpg')).toBe('https://www.ikea.com/in/en/images/products/x.jpg');
+    expect(smallerPhoto('not a url')).toBe('not a url');
+  });
+
+  it('keeps only real JPG, PNG and WebP pictures', () => {
+    expect(photoKind(new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0]))?.ext).toBe('jpg');
+    expect(photoKind(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]))?.ext).toBe('png');
+    expect(photoKind(new TextEncoder().encode('RIFF1234WEBPVP8 '))?.ext).toBe('webp');
+    expect(photoKind(new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>'))).toBeNull();
+    expect(photoKind(new TextEncoder().encode('<html>nope</html>'))).toBeNull();
+  });
+
+  it('builds the photo address from the file name only', () => {
+    const id = '0e1f2a3b-4c5d-4e6f-8a9b-0c1d2e3f4a5b';
+    expect(photoUrl(`${id}.jpg`, 'https://x.supabase.co')).toBe(`https://x.supabase.co/storage/v1/object/public/photos/${id}.jpg`);
+    expect(photoUrl('https://evil.example.com/x.jpg', 'https://x.supabase.co')).toBeNull();
+    expect(photoUrl('../secret.jpg', 'https://x.supabase.co')).toBeNull();
+    expect(photoUrl(null, 'https://x.supabase.co')).toBeNull();
+    expect(photoUrl('data:image/png;base64,AAAA', undefined)).toBe('data:image/png;base64,AAAA');
   });
 });

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ago, catLabel, domainOf, inr, timeLeft, verdictText } from '../lib/format';
 import { openLink } from '../lib/legal';
+import { photoUrl } from '../lib/photo';
 import { useT, type Key } from '../lib/i18n';
 import { REASONS, sideOf, type ReasonCount, type VoteReason } from '../lib/reasons';
 import { useUser } from '../lib/session';
@@ -37,7 +38,7 @@ export function RequestCard({ r: real, meId, onVote, onPress, full, authorBanned
   const [picking, setPicking] = useState<Verdict | null>(null);
   // The shop's product photo, when the server found one. A photo that fails to load is simply left out.
   const [broken, setBroken] = useState(false);
-  const photo = real.image && !broken ? real.image : null;
+  const photo = broken ? null : photoUrl(real.photo);
   // Example arzi carry demo vote counts; they're added for display and always tagged "demo".
   const demo = (real.demo_approve ?? 0) + (real.demo_reject ?? 0) > 0;
   const r = demo

@@ -1,21 +1,29 @@
--- Product photos on arzi (Arpit's OK, 25 Nov).
--- * requests.image: the product photo from the arzi's shop link. Only the server sets it: the link-preview
---   function ("photo_for" mode) reads the link from the database itself and fills the photo once.
---   A trigger asks for it right after an arzi with a link is saved. Posting never waits for or fails on it.
+-- Product photos on arzi (Arpit's OK, 25 Nov; kept on our own server at his suggestion).
+-- * Storage bucket "photos": public to view, only the server can add files (no upload rules for app users).
+-- * requests.photo: the photo's file name, which can only be "<this arzi's id>.jpg/png/webp", so it can
+--   never point anywhere else. Only the server sets it: the link-preview function ("photo_for" mode) reads
+--   the link from the database itself, copies a small version of the shop's photo into the bucket, and
+--   fills this once. A trigger asks for it right after an arzi with a link is saved. Posting never waits
+--   for or fails on it.
 -- * Safety fix found while adding it: people posting an arzi could also send their own vote totals,
 --   demo votes and "verdict emailed" time. Those are now reset when app users post.
 -- * The feed, the arzi page and the logged-out previews return the photo.
 
-alter table public.requests add column if not exists image text
-  constraint requests_image_check check (image is null or (char_length(image) <= 1200 and image ~ '^https://[^\s]+$'));
-grant select (image) on public.requests to authenticated;
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', true, 1000000, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+alter table public.requests add column if not exists photo text
+  constraint requests_photo_check check (photo is null or photo in (id::text || '.jpg', id::text || '.png', id::text || '.webp'));
+grant select (photo) on public.requests to authenticated;
 
 -- App users post arzi; the server alone sets these. (Not security definer: current_user is the caller.)
 create or replace function private.reset_server_fields() returns trigger
 language plpgsql set search_path = '' as $$
 begin
   if current_user in ('anon', 'authenticated') then
-    new.image := null;
+    new.photo := null;
     new.vote_yes := 0;
     new.vote_no := 0;
     new.verified_yes := 0;
@@ -82,7 +90,7 @@ create or replace view public.request_feed with (security_invoker = true) as
     (r.verified_yes + case when mv.verdict = 'approve'::public.verdict and mv.self_banned and mv.self_verified then 1 else 0 end) as verified_approve,
     (r.verified_no + case when mv.verdict = 'reject'::public.verdict and mv.self_banned and mv.self_verified then 1 else 0 end) as verified_reject,
     r.feature_ok,
-    r.image
+    r.photo
    from public.requests r
      join public.profiles p on p.id = r.user_id
      left join lateral (
@@ -100,7 +108,7 @@ create function public.public_feed(kind text default 'open')
 returns table(id uuid, handle text, item text, price_inr integer, category text, reason text, alternative text,
   closes_at timestamptz, outcome public.outcome, created_at timestamptz, link text, approve_count integer,
   reject_count integer, vote_total integer, comment_count integer, demo_approve integer, demo_reject integer,
-  preview boolean, verified_approve integer, verified_reject integer, image text)
+  preview boolean, verified_approve integer, verified_reject integer, photo text)
 language sql stable security definer set search_path = '' as $$
   select r.id, p.handle, r.item, r.price_inr, r.category, r.reason, r.alternative,
          r.closes_at, r.outcome, r.created_at, r.link,
@@ -114,7 +122,7 @@ language sql stable security definer set search_path = '' as $$
          o.is_open,
          case when o.is_open then 0 else r.verified_yes end,
          case when o.is_open then 0 else r.verified_no end,
-         r.image
+         r.photo
   from public.requests r
   join public.profiles p on p.id = r.user_id
   cross join lateral (select r.closes_at > now() as is_open) o
@@ -132,7 +140,7 @@ create function public.public_request(target uuid)
 returns table(id uuid, handle text, item text, price_inr integer, category text, reason text, alternative text,
   closes_at timestamptz, outcome public.outcome, created_at timestamptz, link text, approve_count integer,
   reject_count integer, vote_total integer, comment_count integer, demo_approve integer, demo_reject integer,
-  preview boolean, verified_approve integer, verified_reject integer, image text)
+  preview boolean, verified_approve integer, verified_reject integer, photo text)
 language sql stable security definer set search_path = '' as $$
   select r.id, p.handle, r.item, r.price_inr, r.category, r.reason, r.alternative,
          r.closes_at, r.outcome, r.created_at, r.link,
@@ -146,7 +154,7 @@ language sql stable security definer set search_path = '' as $$
          o.is_open,
          case when o.is_open then 0 else r.verified_yes end,
          case when o.is_open then 0 else r.verified_no end,
-         r.image
+         r.photo
   from public.requests r
   join public.profiles p on p.id = r.user_id
   cross join lateral (select r.closes_at > now() as is_open) o
