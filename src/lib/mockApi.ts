@@ -5,6 +5,10 @@ import type { Api, Comment, FeedItem, Verdict } from './types';
 
 // Dev site: open it with ?admin=1 to see the app as an admin (demo data only, nothing real).
 const asAdmin = typeof window !== 'undefined' && /[?&]admin=1\b/.test(window.location?.search ?? '');
+/** A drawn stand-in product photo for the demo's link preview. */
+const DEMO_PRODUCT =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAIAAABt+uBvAAABZklEQVR42u3cUU7DMAwA0NXaSRGcahP34oszcAMuwAorsZ1Uz99VYr/NSdZW274+Py7icQQCQIAAAQIECBAgAQgQIECAAAECJAABGhXX9gxeXt/2L3i/3xrT27pu2v/qMolUNdABl16pOqAhNPVMsahO0pg9QHmVFBjlttgfC9hplv+PMC/Q2P276zSQBbRfz+FikoatBtopY0gN2eO3/dQYlf3a56AfP96kkgrminV1Ho08du+P5U5uxZnEKutO1/ixaHOVNZobZn1AlZtx3lxxsuV5eFZxgq9P6ozWoHygOftrVG5xjv7Km1eLAQJ0mfN2x2xPRJPyibzdoXJ3y8snUvfOGqPUfCL7ZJFtlJ2PRRoQIECAAAECBEgAAgQIECBAgAAJQIAAAQJ0UqBnn0/O9pbrs9dHak6Nb7mOyifycprtJc5j+Wz+qtQiDQgQIECAAAESgAABAgQIECBAAhAgQIDmiG9H45v708IR2wAAAABJRU5ErkJggg==';
+
 const ME: { id: string; handle: string; email: string | null; isAdmin: boolean } = { id: 'me', handle: 'Kanjoos Kabootar 42', email: null, isAdmin: asAdmin };
 const H = 3.6e6;
 const at = (hoursFromNow: number) => new Date(Date.now() + hoursFromNow * H).toISOString();
@@ -224,6 +228,12 @@ export const mockApi: Api = {
     if (code !== '123456') throw new Error('Galat code (demo mein 123456 daalo)');
     ME.email = email;
     return delay({ ...ME });
+  },
+  async linkPreview(url: string) {
+    const site = (url.match(/^https?:\/\/([^/:?#]+)/i)?.[1] ?? '').replace(/^www\./i, '').toLowerCase();
+    if (/notallowed|example\./.test(site)) return delay({ allowed: false, site });
+    if (/amazon|amzn/.test(site)) return delay({ allowed: true, site, title: 'Sony WH-1000XM5 Wireless Noise Cancelling Headphones', image: DEMO_PRODUCT });
+    return delay({ allowed: true, site, title: null, image: null });
   },
   async signInWithGoogle() {
     ME.email = 'demo.google@gmail.com';

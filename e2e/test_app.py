@@ -647,3 +647,35 @@ def test_google_that_did_not_finish_reopens_login(page):
     page.get_by_text("Google sign-in didn't finish. Please try again.", exact=True).wait_for()
     page.get_by_test_id("google-signin").wait_for()
     assert page.get_by_text("Sign in to post, comment and vote freely", exact=True).count() == 1
+
+
+# ── Link preview on the New form, 25 Nov (the demo answers like the real fetcher) ──
+
+def test_link_preview_fills_the_item(page):
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").wait_for()
+    page.get_by_placeholder(re.compile("Paste")).fill("Check this out https://amzn.in/d/abc123")
+    page.get_by_test_id("link-preview").wait_for()
+    assert "Sony WH-1000XM5" in page.get_by_test_id("link-preview").inner_text()
+    page.wait_for_function("() => [...document.querySelectorAll('input')].some((i) => i.value.startsWith('Sony WH-1000XM5'))")
+
+
+def test_link_preview_keeps_what_they_typed(page):
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("My own name")
+    page.get_by_placeholder(re.compile("Paste")).fill("https://www.amazon.in/dp/B0TEST")
+    page.get_by_test_id("link-preview").wait_for()
+    assert page.eval_on_selector_all("input", "els => els.some(e => e.value === 'My own name')")
+
+
+def test_shop_not_allowed_is_said_before_send(page):
+    open_app(page, "English")
+    page.get_by_text("New request", exact=True).first.click()
+    page.get_by_placeholder("e.g. Noise-cancelling headphones").fill("Test speaker")
+    page.get_by_placeholder("e.g. 8999").fill("2999")
+    page.get_by_placeholder("Need or want? What happened to the old one?").fill("Old one broke last week")
+    page.get_by_placeholder(re.compile("Paste")).fill("https://www.example.com/speaker")
+    page.get_by_test_id("link-not-allowed").wait_for()
+    assert page.get_by_role("button", name="Send request").is_disabled()

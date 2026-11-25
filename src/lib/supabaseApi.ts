@@ -151,6 +151,18 @@ export function createSupabaseApi(url: string, key: string): Api {
       return 'redirecting';
     },
 
+    async linkPreview(url) {
+      await ensure();
+      const { data, error } = await sb.functions.invoke('link-preview', { body: { url } });
+      if (error || !data || typeof data.allowed !== 'boolean') return null;
+      return {
+        allowed: data.allowed,
+        site: String(data.site ?? ''),
+        title: typeof data.title === 'string' ? data.title : null,
+        image: typeof data.image === 'string' && data.image.startsWith('https://') ? data.image : null,
+      };
+    },
+
     async adminSetBanned(userId, ban, reason) {
       await ensure();
       must(await sb.rpc('admin_set_banned', { target: userId, ban, reason: reason ?? null }));

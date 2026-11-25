@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Platform } from 'react-native';
+import './beta'; // reads ?preview=1 etc. once, at start
 import { GOOGLE_FAILED } from './googleReturn';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { api } from './api';

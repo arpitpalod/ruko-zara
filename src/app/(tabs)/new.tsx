@@ -6,12 +6,14 @@ import { Animated, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text,
 import { Button, CheckRow, Chip, Field as Input } from '../../components/ui';
 import { SavingsHeader, trackScroll } from '../../components/SavingsHeader';
 import { friendly } from '../../lib/errors';
-import { api } from '../../lib/api';
+import { api, isDemo } from '../../lib/api';
+import { previewOn } from '../../lib/beta';
+import { LinkPreviewCard } from '../../components/LinkPreviewCard';
 import { catLabel, domainOf, extractLink, inr } from '../../lib/format';
 import { useT } from '../../lib/i18n';
 import { requireLogin, useUser } from '../../lib/session';
 import { M, T } from '../../lib/theme';
-import { CATEGORIES, DURATIONS } from '../../lib/types';
+import { CATEGORIES, DURATIONS, type LinkPreview } from '../../lib/types';
 
 const DRAFT = 'rz.newDraft';
 const PENDING = 'rz.postAfterLogin';
@@ -76,7 +78,34 @@ export default function NewRequest() {
   const priceNum = Number(price || 0);
   const link = linkText.trim() ? extractLink(linkText) : null;
   const linkBad = linkText.trim().length > 0 && !link;
-  const valid = item.trim().length >= 2 && priceNum > 0 && reason.trim().length >= 10 && !linkBad;
+
+  // The shop link's product name and photo (and whether the shop is allowed at all), fetched once the
+  // link has stopped changing. An empty item name gets the product's name, which they can edit.
+  const [preview, setPreview] = useState<{ link: string; p: LinkPreview | null } | null>(null);
+  const showPreview = previewOn(isDemo);
+  useEffect(() => {
+    if (!showPreview || !link) return;
+    let stale = false;
+    const timer = setTimeout(() => {
+      setPreview({ link, p: null });
+      api
+        .linkPreview(link)
+        .catch(() => null)
+        .then((p) => {
+          if (stale) return;
+          setPreview({ link, p });
+          if (p?.allowed && p.title) setItem((x) => (x.trim() ? x : p.title!.slice(0, 80)));
+        });
+    }, 700);
+    return () => {
+      stale = true;
+      clearTimeout(timer);
+    };
+  }, [link, showPreview]);
+  const shown = preview && preview.link === link ? preview : null;
+  const loadingPreview = !!shown && shown.p === null;
+  const shopRefused = shown?.p?.allowed === false; // said before Send, not after
+  const valid = item.trim().length >= 2 && priceNum > 0 && reason.trim().length >= 10 && !linkBad && !shopRefused;
 
   // Fill everything first; if login is needed, the arzi posts itself right after the email is verified.
   const pendingPost = useRef(false);
@@ -185,7 +214,14 @@ export default function NewRequest() {
             keyboardType="url"
             maxLength={600}
           />
-          {link ? <IconText icon={Link2} size={13} color={M.onSurfaceVariant} style={s.hint}>{domainOf(link)}</IconText> : null}
+          {shown?.p?.allowed && (shown.p.title || shown.p.image) ? (
+            <LinkPreviewCard p={shown.p} />
+          ) : link ? (
+            <IconText icon={Link2} size={13} color={M.onSurfaceVariant} style={s.hint}>
+              {loadingPreview ? t('new.previewing') : domainOf(link)}
+            </IconText>
+          ) : null}
+          {shopRefused ? <Text style={[s.hint, { color: M.no }]} testID="link-not-allowed">{t('new.linkNotAllowed')}</Text> : null}
           {linkBad ? <Text style={[s.hint, { color: M.no }]}>{t('new.linkBad')}</Text> : null}
         </Field>
 

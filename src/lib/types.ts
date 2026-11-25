@@ -108,6 +108,8 @@ export interface Api {
    * account). Leaves the site and returns to `returnTo` already signed in ('redirecting'); the demo signs in at once.
    */
   signInWithGoogle(returnTo: string): Promise<User | 'redirecting'>;
+  /** The shop link's product name and photo (null when it couldn't be checked at all). */
+  linkPreview(url: string): Promise<LinkPreview | null>;
   /** Deletes the account and all its data, then starts a fresh anonymous session. */
   deleteAccount(): Promise<User>;
   /** Admin only: hide or unhide an arzi or comment for everyone. */
@@ -119,3 +121,6 @@ export interface Api {
 }
 
 export const CATEGORIES = ['Gadgets', 'Fashion', 'Khana', 'Beauty', 'Ghar', 'Travel', 'Fun', 'Health', 'Other'] as const;
+
+/** What a shop link shows: whether the shop is allowed, and the product's name and photo when the shop lets us read them. */
+export type LinkPreview = { allowed: boolean; site: string; title?: string | null; image?: string | null };
