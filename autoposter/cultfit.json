@@ -1,0 +1,14 @@
+{
+  "dur": 22,
+  "tag": "Asli request · Ruko Zara",
+  "check": [2.8, 6.6, 9.8, 15, 18.2, 21],
+  "card": {"label": "Janta se poocha", "title": "Dost ka Cult.fit pass, ₹15,000 ka ₹10,000 mein", "price": "₹10,000", "pct": 88, "color": "RED", "said": "said Rehne de", "votes": "8 mein se 7 votes"},
+  "scenes": [
+    {"t0": 0, "t1": 3.8, "lines": [["Dost ka Cult pass.", 470, 64, "WH", 900], ["₹15,000 ka,", 600, 104, "OR", 900, 0.5], ["₹10,000 mein.", 720, 84, "WH", 900, 1.2]]},
+    {"t0": 3.8, "t1": 7.6, "lines": [["10 mahine baaki.", 500, 84, "WH", 900], ["Centre ghar se", 630, 56, "GR", 700, 0.8], ["5 minute door.", 700, 56, "GR", 700, 0.8]]},
+    {"t0": 7.6, "t1": 10.8, "lines": [["Deal", 540, 120, "WH", 900], ["ya jhol?", 670, 120, "OR", 900, 0.5]]},
+    {"t0": 10.8, "t1": 16.2, "card": true},
+    {"t0": 16.2, "t1": 19.4, "lines": [["Aur plan B?", 450, 84, "WH", 900], ["Regular gym ₹1,000/mahina.", 580, 50, "GR", 700, 0.6], ["10 mahine =", 680, 64, "WH", 800, 1.3], ["wahi ₹10,000.", 770, 80, "OR", 900, 1.3]]},
+    {"t0": 19.4, "t1": 99, "logo": true, "lines": [["Ruko Zara", 620, 96, "OR", 900], ["Khareedne se pehle", 750, 54, "WH", 700], ["janta se pooch lo.", 825, 54, "WH", 700], ["Free · link in bio", 980, 42, "GR", 600]]}
+  ]
+}
